@@ -27,8 +27,6 @@ fi
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
-ml kraken/0.10.5 perl/5.12.3 krona/2.7 Python3/3.5.2
-
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
@@ -70,7 +68,11 @@ kraken --version
 echo "[:] Running kraken.  Output: ${1}.kraken / ${1}.classified"
 # Runs kraken in paired reads mode
 if [ "${3}" = "paired" ]; then
-	kraken --paired --db "${kraken_mini_db}" --preload --fastq-input --threads "${procs}" --output "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" --classified-out "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.classified" "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq" "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq"
+	##### Non singularity way
+	# kraken --paired --db "${kraken_mini_db}" --preload --fastq-input --threads "${procs}" --output "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" --classified-out "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.classified" "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq" "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq"
+	##### Singularity way
+	singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${OUTDATADIR}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --paired --db /DATABASES/minikrakenDB/  --preload --fastq-input --threads 4 --output /OUTDIR/kraken/${2}Assembly/${1}_${3}.kraken --classified-out /OUTDIR/kraken/${2}Assembly/${1}_${3}.classified /INPUT/${1}_R1_001.paired.fq /INPUT/${1}_R2_001.paired.fq
+
 # Runs kraken in single end mode on the concatenated single read file
 elif [ "${3}" = "single" ]; then
 	kraken --db "${kraken_mini_db}" --preload --fastq-input --threads "${procs}" --output "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" --classified-out "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.classified ${OUTDATADIR}/FASTQs/${1}.single.fastq"
