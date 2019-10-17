@@ -72,16 +72,12 @@ if [ "${3}" = "paired" ]; then
 	# kraken --paired --db "${kraken_mini_db}" --preload --fastq-input --threads "${procs}" --output "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" --classified-out "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.classified" "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq" "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq"
 	##### Singularity way
 	singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${OUTDATADIR}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --paired --db /DATABASES/minikrakenDB/  --preload --fastq-input --threads 4 --output /OUTDIR/kraken/${2}Assembly/${1}_${3}.kraken --classified-out /OUTDIR/kraken/${2}Assembly/${1}_${3}.classified /INPUT/${1}_R1_001.paired.fq /INPUT/${1}_R2_001.paired.fq
-
-# Runs kraken in single end mode on the concatenated single read file
-elif [ "${3}" = "single" ]; then
-	kraken --db "${kraken_mini_db}" --preload --fastq-input --threads "${procs}" --output "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" --classified-out "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.classified ${OUTDATADIR}/FASTQs/${1}.single.fastq"
 # Runs kraken on the assembly
 elif [ "${3}" = "assembled" ]; then
 	##### Non-singularity way
 	###kraken --db "${kraken_mini_db}" --preload --threads "${procs}" --output "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" --classified-out "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.classified" "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta"
 	##### Singularity way
-	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/minikrakenDB/  --preload --fastq-input --threads ${procs} --output /OUTDIR/kraken/${2}Assembly/${1}_${3}.kraken --classified-out /OUTDIR/kraken/${2}Assembly/${1}_${3}.classified /INPUT/${1}_scaffolds_trimmed.fasta
+	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/minikrakenDB/  --preload --threads ${procs} --output /OUTDIR/kraken/${2}Assembly/${1}_${3}.kraken --classified-out /OUTDIR/kraken/${2}Assembly/${1}_${3}.classified /INPUT/${1}_scaffolds_trimmed.fasta
 	# Attempting to weigh contigs and produce standard krona and list output using a modified version of Rich's weighting scripts (will also be done on pure contigs later)
 	echo "1"
 	ml Python3/3.5.4
