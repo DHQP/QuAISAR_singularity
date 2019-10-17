@@ -78,7 +78,10 @@ elif [ "${3}" = "single" ]; then
 	kraken --db "${kraken_mini_db}" --preload --fastq-input --threads "${procs}" --output "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" --classified-out "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.classified ${OUTDATADIR}/FASTQs/${1}.single.fastq"
 # Runs kraken on the assembly
 elif [ "${3}" = "assembled" ]; then
-	kraken --db "${kraken_mini_db}" --preload --threads "${procs}" --output "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" --classified-out "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.classified" "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta"
+	##### Non-singularity way
+	###kraken --db "${kraken_mini_db}" --preload --threads "${procs}" --output "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" --classified-out "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.classified" "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta"
+	##### Singularity way
+	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/minikrakenDB/  --preload --fastq-input --threads ${procs} --output /OUTDIR/kraken/${2}Assembly/${1}_${3}.kraken --classified-out /OUTDIR/kraken/${2}Assembly/${1}_${3}.classified /INPUT/${1}_scaffolds_trimmed.fasta
 	# Attempting to weigh contigs and produce standard krona and list output using a modified version of Rich's weighting scripts (will also be done on pure contigs later)
 	echo "1"
 	python3 ${shareScript}/Kraken_Assembly_Converter_2_Exe.py -i "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken"
@@ -86,7 +89,11 @@ elif [ "${3}" = "assembled" ]; then
 	#kraken-translate --db "${kraken_mini_db}" "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.kraken" > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.labels"
 	# Create an mpa report
 	echo "3"
-	kraken-mpa-report --db "${kraken_mini_db}" "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.kraken" > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.mpa"
+	##### Non singularity way
+	### kraken-mpa-report --db "${kraken_mini_db}" "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.kraken" > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.mpa"
+	##### Singularity way
+	singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}_BP.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.mpa"
+	
 	# Convert mpa to krona file
 	echo "4"
 	python3 "${shareScript}/Metaphlan2krona.py" -p "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.mpa" -k "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.krona"
@@ -101,6 +108,7 @@ elif [ "${3}" = "assembled" ]; then
 	ktImportText "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.krona" -o "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted_BP_krona.html"
 	# Runs the extractor for pulling best taxonomic hit from a kraken run
 	echo "8"
+
 	"${shareScript}/best_hit_from_kraken.sh" "${1}" "${2}" "${3}_BP" "${4}" "kraken"
 else
 	echo "Argument combination is incorrect"
