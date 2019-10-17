@@ -15,7 +15,7 @@ fi
 #
 # Description: Script to use srst2 to attempt to find AR genes in parllel with assembly searches by other tools. This uses an alternate DB of genes
 #
-# Usage: ./run_srst2AR_altDB.sh   sample_name   MiSeq_Run_ID	path_to_alternate_DB
+# Usage: ./run_srst2AR_altDB.sh   sample_name   MiSeq_Run_ID
 #
 # Output location: default_config.sh_output_location/run_ID/sample_name/srst2/
 #
@@ -90,7 +90,7 @@ echo "--input_pe ${processed}/${2}/${1}/trimmed/${1}_S1_L001_R1_001.fastq.gz ${p
 ##### Non singularity way
 ### srst2 --input_pe "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz" "${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz" --output "${processed}/${2}/${1}/srst2/${1}_ResGANNCBI" --gene_db "${ResGANNCBI_srst2}"
 ##### Singularity way
-singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${processed}/${2}/${1}/srst2:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/0.2.0--py27_2 srst2 --input_pe /INPUT/${1}_S1_L001_R1_001.fastq.gz /INPUT/${1}_S1_L001_R2_001.fastq.gz --output /OUTDIR/${1}_ResGANNCBI --gene_db /DATABASES/${ResGANNCBI_srst2_filename}
+singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${processed}/${2}/${1}/srst2:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /INPUT/${1}_S1_L001_R1_001.fastq.gz /INPUT/${1}_S1_L001_R2_001.fastq.gz --output /OUTDIR/${1}_ResGANNCBI --gene_db /DATABASES/${ResGANNCBI_srst2_filename}
 
 # Cleans up leftover files
 rm -r "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz"
