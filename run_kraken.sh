@@ -97,13 +97,22 @@ elif [ "${3}" = "assembled" ]; then
 	python3 "${shareScript}/Metaphlan2krona.py" -p "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.mpa" -k "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.krona"
 	# Create taxonomy list file from kraken file
 	echo "5"
-	kraken-report --db "${kraken_mini_db}" "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.kraken" > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.list"
+	##### Non singularity way
+	### kraken-report --db "${kraken_mini_db}" "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.kraken" > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.list"
+	##### Singularity way
+	singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}_BP.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.list"
+
+
 	# Weigh taxonomy list file
 	#echo "6"
 	#python3 ${shareScript}/Kraken_Assembly_Summary_Exe.py -k "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.kraken" -l "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.labels" -t "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.list" -o "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP_data.list"
 	# Run the krona graph generator from krona output
 	echo "7"
-	ktImportText "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.krona" -o "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted_BP_krona.html"
+	##### Non singularity way
+	### ktImportText "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.krona" -o "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted_BP_krona.html"
+	### Singularity way
+	singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT docker://quay.io/biocontainers/krona:2.7--0 ktImportText /INPUT/${1}_${3}_weighted.krona -o /INPUT/${1}_${3}_weighted_BP_krona.html
+
 	# Runs the extractor for pulling best taxonomic hit from a kraken run
 	echo "8"
 
@@ -115,17 +124,31 @@ fi
 
 # Run the metaphlan generator on the kraken output
 echo "[:] Generating metaphlan compatible report."
-kraken-mpa-report --db "${kraken_mini_db}" "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.mpa"
+##### Non singularity way
+### kraken-mpa-report --db "${kraken_mini_db}" "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.mpa"
+##### Singularity way
+singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.mpa"
+
+
 # Run the krona generator on the metaphlan output
 echo "[:] Generating krona output for ${1}."
 # Convert mpa to krona file
 python3 "${shareScript}/Metaphlan2krona.py" -p "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.mpa" -k "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.krona"
 # Run the krona graph generator from krona output
-ktImportText "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.krona" -o "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.html"
+##### Non singularity way
+### ktImportText "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.krona" -o "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.html"
+##### Singularity way
+singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT docker://quay.io/biocontainers/krona:2.7--0 ktImportText /INPUT/${1}_${3}.krona -o /INPUT/${1}_${3}.html
+
 
 # Creates the taxonomy list file from the kraken output
-echo "[:] Creating alternate report for taxonomic extraction"
-kraken-report --db "${kraken_mini_db}" "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.list"
+##### Non singularity way
+### echo "[:] Creating alternate report for taxonomic extraction"
+### kraken-report --db "${kraken_mini_db}" "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.list"
+##### Singularity way
+singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.list"
+
+
 # Parses the output for the best taxonomic hit
 echo "[:] Extracting best taxonomic matches"
 # Runs the extractor for pulling best taxonomic hit from a kraken run
