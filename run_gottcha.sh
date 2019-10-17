@@ -90,19 +90,20 @@ fi
 
 
 ### Gottcha Taxonomy Classifier ### in species mode
+##### Non singularity way
 gottcha.pl --mode all --outdir "${OUTDATADIR}/gottcha/gottcha_S" --input "${OUTDATADIR}/trimmed/${1}.paired.fq" --database "${gottcha_db}"
-
-gzip "${OUTDATADIR}/trimmed/${1}.paired.fq"
-
-# Return perl to 5.22.1
-#. "${shareScript}/module_changers/perl_5123_to_5221.sh"
+##### Singularity way
+singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${OUTDATADIR}/gottcha/gottcha_S:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/gottcha:1.0--pl526_2 gottcha.pl --mode all --outdir /OUTDIR --input /INPUT/trimmed/${1}.paired.fq --database /DATABASES/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species
 
 # Create the krona graphs from each of the analyses
+
+##### Non singularity way
 ml krona
-
 ktImportText "${OUTDATADIR}/gottcha/gottcha_S/${1}_temp/${1}.lineage.tsv" -o "${OUTDATADIR}/gottcha/${1}_species.krona.html"
-
 ml -krona
+##### Singularity way
+singularity -s exec -B ${OUTDATADIR}/gottcha/gottcha_S/${1}_temp:/INPUT -B ${OUTDATADIR}/gottcha:/OUTDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /INPUT/${1}.lineage.tsv -o OUTDATADIR/${1}_species.krona.html
+
 #Create a best hit from gottcha1 file
 "${shareScript}/best_hit_from_gottcha1.sh" "${1}" "${2}"
 
