@@ -57,7 +57,7 @@ OUTDATADIR="${processed}/${4}/${1}"
 if [ ! -d "$OUTDATADIR/kraken" ]; then
 	echo "Creating $OUTDATADIR/kraken"
 	mkdir -p "$OUTDATADIR/kraken/${2}Assembly"
-elif [ ! -d "$OUTDATADIR/kraken/{2}Assembly" ]; then
+elif [ ! -d "$OUTDATADIR/kraken/${2}Assembly" ]; then
 	echo "Creating $OUTDATADIR/kraken/${2}Assembly"
 	mkdir -p "$OUTDATADIR/kraken/${2}Assembly"
 fi
@@ -90,7 +90,7 @@ elif [ "${3}" = "assembled" ]; then
 	##### Non singularity way
 	### kraken-mpa-report --db "${kraken_mini_db}" "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.kraken" > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.mpa"
 	##### Singularity way
-	singularity -s exec -B ${OUTDATADIR}/kraken/Assembly/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}_BP.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.mpa"
+	singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}_BP.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.mpa"
 
 	# Convert mpa to krona file
 	echo "4"
