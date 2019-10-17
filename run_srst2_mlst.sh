@@ -26,9 +26,6 @@ fi
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
-ml srst2 bowtie2/2.2.4
-ml
-
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
@@ -94,7 +91,10 @@ cd "${processed}/${2}/${1}/MLST/srst2"
 
 
 #python2 ${shareScript}/srst2-master/scripts/getmlst.py --species "${genus} ${species}" > "${processed}/${2}/${1}/MLST/srst2/getmlst.out"
-getmlst.py --species "${genus} ${species}" > "${processed}/${2}/${1}/MLST/srst2/getmlst.out"
+##### Non singularity way
+### getmlst.py --species "${genus} ${species}" > "${processed}/${2}/${1}/MLST/srst2/getmlst.out"
+##### Singularity way
+singularity -s exec docker://quay.io/biocontainers/srst2:0.2.0--py27_2 getmlst.py --species "${genus} ${species}" > "${processed}/${2}/${1}/MLST/srst2/getmlst.out"
 
 db_name="Pasteur"
 # Checks for either of the 2 databases that have multiple scheme types and runs both
@@ -144,7 +144,12 @@ fi
 echo "--input_pe ${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz ${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz --output ${processed}/${2}/${1}/MLST/srst2 --mlst_db ${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}"
 # Run the srst2 command to find MLST types
 #python2 ${shareScript}/srst2-master/scripts/srst2.py --input_pe "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz" "${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz" --output "${processed}/${2}/${1}/srst2/${1}_ResGANNCBI" --gene_db "${ResGANNCBI_srst2}"
-srst2 --input_pe "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz" "${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz" --output "${processed}/${2}/${1}/MLST/srst2/${1}" --mlst_db "${mlst_db}" --mlst_definitions "${mlst_defs}" --mlst_delimiter "${mlst_delimiter}"
+##### Non singularity way
+### srst2 --input_pe "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz" "${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz" --output "${processed}/${2}/${1}/MLST/srst2/${1}" --mlst_db "${mlst_db}" --mlst_definitions "${mlst_defs}" --mlst_delimiter "${mlst_delimiter}"
+##### Singularity way
+
+singularity -s exec -B ${processed}/${2}/${1}/srst2:/WDIR -B ${alt_DB_path}:/DATABASES docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /WDIR/${1}_S1_L001_R1_001.fastq.gz /WDIR/${1}_S1_L001_R2_001.fastq.gz --output /WDIR/MLST/srst2/${1} --mlst_db /WDIR/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+
 
 today=$(date "+%Y-%m-%d")
 
@@ -159,5 +164,3 @@ fi
 if [[ -f "${processed}/${2}/${1}/MLST/${1}__${1}.${genus}_${species}.sorted.bam" ]]; then
 	rm -r "${processed}/${2}/${1}/MLST/${1}__${1}.${genus}_${species}.sorted.bam"
 fi
-
-ml -srst2 -bowtie2/2.2.4

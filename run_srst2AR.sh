@@ -90,7 +90,7 @@ echo "--input_pe ${processed}/${2}/${1}/trimmed/${1}_S1_L001_R1_001.fastq.gz ${p
 ##### Non singularity way
 ### srst2 --input_pe "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz" "${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz" --output "${processed}/${2}/${1}/srst2/${1}_ResGANNCBI" --gene_db "${ResGANNCBI_srst2}"
 ##### Singularity way
-singularity -s exec -B ${OUTDATADIR}/srst2:/WDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /WDIR/${1}_S1_L001_R1_001.fastq.gz /WDIR/${1}_S1_L001_R2_001.fastq.gz --output /WDIR/${1}_ResGANNCBI --gene_db /DATABASES/${ResGANNCBI_srst2_filename}
+singularity -s exec -B ${processed}/${2}/${1}/srst2:/WDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /WDIR/${1}_S1_L001_R1_001.fastq.gz /WDIR/${1}_S1_L001_R2_001.fastq.gz --output /WDIR/${1}_ResGANNCBI --gene_db /DATABASES/${ResGANNCBI_srst2_filename}
 
 # Cleans up leftover files
 rm -r "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz"

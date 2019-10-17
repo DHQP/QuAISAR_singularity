@@ -26,8 +26,6 @@ fi
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
-ml srst2 bowtie2/2.2.4
-
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
@@ -38,10 +36,6 @@ elif [[ "$1" = "-h" ]]; then
 	echo "Output location is ${processed}/run_ID/srst2"
 	exit 0
 fi
-
-alt_DB_path=${3}
-alt_DB=$(echo ${alt_DB_path##*/} | cut -d'.' -f1)
-alt_DB=${alt_DB//_srst2/}
 
 # Create output folder
 if [[ ! -d "${processed}/${2}/${1}/srst2" ]]; then
@@ -79,7 +73,15 @@ echo "--input_pe ${processed}/${2}/${1}/trimmed/${1}_S1_L001_R1_001.fastq.gz ${p
 
 # Submit command to run srst2 on alternate DB
 #python2 ${shareScript}/srst2-master/scripts/srst2.py --input_pe "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz" "${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz" --output "${processed}/${2}/${1}/srst2/${1}_${alt_DB}" --gene_db "${alt_DB_path}"
-srst2 --input_pe "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz" "${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz" --output "${processed}/${2}/${1}/srst2/${1}_${alt_DB}" --gene_db "${alt_DB_path}"
+##### Non singularity way
+### srst2 --input_pe "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz" "${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz" --output "${processed}/${2}/${1}/srst2/${1}_${alt_DB}" --gene_db "${alt_DB_path}"
+##### Singularity way
+alt_DB_filename=$(echo "${alt_DB}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
+alt_DB_path=$(echo "${resGANNOT_srst2}" | rev | cut -d'/' -f2- | rev | cut -d'_' -f1,2)
+alt_DB=$(echo ${alt_DB_path##*/} | cut -d'.' -f1)
+alt_DB=${alt_DB//_srst2/}
+singularity -s exec -B ${processed}/${2}/${1}/srst2:/WDIR -B ${alt_DB_path}:/DATABASES docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /WDIR/${1}_S1_L001_R1_001.fastq.gz /WDIR/${1}_S1_L001_R2_001.fastq.gz --output /WDIR/${1}_${alt_DB} --gene_db /DATABASES/${alt_DB_filename}
+
 
 # Clean up extra files
 rm -r "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz"
@@ -96,5 +98,3 @@ find ${processed}/${2}/${1}/srst2 -type f -name "*_${alt_DB}__*" | while read FI
 	#echo "${filename}"
   mv "${FILE}" "${dirname}/${filename}"
 done
-
-ml -srst2 -bowtie2/2.2.4
