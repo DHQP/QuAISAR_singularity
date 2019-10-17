@@ -19,7 +19,7 @@ fi
 #
 # Output location: default_config.sh_output_location/run_ID/sample_name/Assembly
 #
-# Modules required: SPAdes/3.10.1
+# Modules required: SPAdes/3.13.0
 #
 # v1.0 (10/3/2019)
 #
