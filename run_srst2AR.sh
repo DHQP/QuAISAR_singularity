@@ -87,7 +87,10 @@ echo "--input_pe ${processed}/${2}/${1}/trimmed/${1}_S1_L001_R1_001.fastq.gz ${p
 
 # Calls srst2 with the options for AR discovery
 #python2 ${shareScript}/srst2-master/scripts/srst2.py --input_pe "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz" "${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz" --output "${processed}/${2}/${1}/srst2/${1}_ResGANNCBI" --gene_db "${ResGANNCBI_srst2}"
-srst2 --input_pe "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz" "${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz" --output "${processed}/${2}/${1}/srst2/${1}_ResGANNCBI" --gene_db "${ResGANNCBI_srst2}"
+##### Non singularity way
+### srst2 --input_pe "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz" "${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz" --output "${processed}/${2}/${1}/srst2/${1}_ResGANNCBI" --gene_db "${ResGANNCBI_srst2}"
+##### Singularity way
+singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${processed}/${2}/${1}/srst2:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/0.2.0--py27_2 srst2 --input_pe /INPUT/${1}_S1_L001_R1_001.fastq.gz /INPUT/${1}_S1_L001_R2_001.fastq.gz --output /OUTDIR/${1}_ResGANNCBI --gene_db /DATABASES/${ResGANNCBI_srst2_filename}
 
 # Cleans up leftover files
 rm -r "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz"
