@@ -100,7 +100,7 @@ elif [ "${3}" = "assembled" ]; then
 	##### Non singularity way
 	### kraken-report --db "${kraken_mini_db}" "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.kraken" > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.list"
 	##### Singularity way
-	singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}_BP.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.list"
+	singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}_BP.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.list"
 
 
 	# Weigh taxonomy list file
@@ -146,7 +146,7 @@ singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT docker://quay.io
 ### echo "[:] Creating alternate report for taxonomic extraction"
 ### kraken-report --db "${kraken_mini_db}" "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken" > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.list"
 ##### Singularity way
-singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.list"
+singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.list"
 
 
 # Parses the output for the best taxonomic hit
