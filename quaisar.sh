@@ -149,11 +149,16 @@ else
 	mkdir -p "$OUTDATADIR/$filename/removedAdapters"
 fi
 
-# Run bbduk
-ml BBMap/38.26
-bbduk.sh -"${bbduk_mem}" threads="${procs}" in="${OUTDATADIR}/${filename}/FASTQs/${filename}_R1_001.fastq" in2="${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq" out="${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R1.fsq" out2="${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R2.fsq" ref="${phiX_location}" k="${bbduk_k}" hdist="${bbduk_hdist}"
+##### Non Singularity way
+### ml BBMap/38.26
+### Run bbduk
+### bbduk.sh -"${bbduk_mem}" threads="${procs}" in="${OUTDATADIR}/${filename}/FASTQs/${filename}_R1_001.fastq" in2="${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq" out="${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R1.fsq" out2="${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R2.fsq" ref="${phiX_location}" k="${bbduk_k}" hdist="${bbduk_hdist}"
 
-# singularity -s exec -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806/FASTQs:/FASTQs -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806:/OUTDATADIR -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/databases:/DATABASES docker://quay.io/thanhleviet/bbtools bbduk.sh -Xmx20g threads=4 in=/FASTQs/N19E181565-01-TN-M05283-190806_R1_001.fastq in2=/FASTQs/N19E181565-01-TN-M05283-190806_R2_001.fastq out=/OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R1.fsq out2=/OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=31 hdist=1
+##### Singularity way
+### Pure no variable singularity call. Single instance worked
+### singularity -s exec -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806/FASTQs:/FASTQs -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806:/OUTDATADIR -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/databases:/DATABASES docker://quay.io/thanhleviet/bbtools bbduk.sh -Xmx20g threads=4 in=/FASTQs/N19E181565-01-TN-M05283-190806_R1_001.fastq in2=/FASTQs/N19E181565-01-TN-M05283-190806_R2_001.fastq out=/OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R1.fsq out2=/OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=31 hdist=1
+### Singularity call with variables
+singularity -s exec -B ${OUTDATADIR}/${filename}/FASTQs:/INPUT -B ${OUTDATADIR}/${filename}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/thanhleviet/bbtools bbduk.sh -${bbduk_mem} threads=${procs} in=/INPUT/${filename}_R1_001.fastq in2=INPUT/${filename}_R2_001.fastq out=/OUTDIR/removedAdapters/${filename}-noPhiX-R1.fsq out2=/OUTDIR/removedAdapters/${filename}-noPhiX-R2.fsq ref=${phiX_location} k=${bbduk_k} hdist=${bbduk_hdist}
 
 # Get end time of bbduk and calculate run time and append to time summary (and sum to total time used)
 end=$SECONDS
@@ -171,21 +176,23 @@ if [ ! -d "$OUTDATADIR/$filename/trimmed" ]; then
 	mkdir -p "$OUTDATADIR/$filename/trimmed"
 fi
 
-ml trimmomatic/0.36
-# Run trimmomatic
-trimmomatic "${trim_endtype}" -"${trim_phred}" -threads "${procs}" "${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R1.fsq" "${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R2.fsq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R1_001.paired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R1_001.unpaired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R2_001.paired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R2_001.unpaired.fq" ILLUMINACLIP:"${trim_adapter_location}:${trim_seed_mismatch}:${trim_palindrome_clip_threshold}:${trim_simple_clip_threshold}:${trim_min_adapt_length}:${trim_complete_palindrome}" SLIDINGWINDOW:"${trim_window_size}:${trim_window_qual}" LEADING:"${trim_leading}" TRAILING:"${trim_trailing}" MINLEN:"${trim_min_length}"
-# Get end time of trimmomatic and calculate run time and append to time summary (and sum to total time used)
+##### Non Singularity way
+###ml trimmomatic/0.35
+### Run trimmomatic
+### trimmomatic "${trim_endtype}" -"${trim_phred}" -threads "${procs}" "${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R1.fsq" "${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R2.fsq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R1_001.paired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R1_001.unpaired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R2_001.paired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R2_001.unpaired.fq" ILLUMINACLIP:"${trim_adapter_location}:${trim_seed_mismatch}:${trim_palindrome_clip_threshold}:${trim_simple_clip_threshold}:${trim_min_adapt_length}:${trim_complete_palindrome}" SLIDINGWINDOW:"${trim_window_size}:${trim_window_qual}" LEADING:"${trim_leading}" TRAILING:"${trim_trailing}" MINLEN:"${trim_min_length}"
 
-# Pure no variable singularity call
-#singularity -s exec -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806/removedAdapters:/INPUT -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806:/OUTDATADIR -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/databases:/DATABASES docker://quay.io/biocontainers/trimmomatic:0.36--5 trimmomatic PE -phred33 -threads 4 /OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R1.fsq /OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R2.fsq /OUTDATADIR/trimmed/N19E181565-01-TN-M05283-190806_R1_001.paired.fq /OUTDATADIR/trimmed/N19E181565-01-TN-M05283-190806_R1_001.unpaired.fq /OUTDATADIR/trimmed/N19E181565-01-TN-M05283-190806_R2_001.paired.fq /OUTDATADIR/trimmed/N19E181565-01-TN-M05283-190806_R2_001.unpaired.fq ILLUMINACLIP:/DATABASES/adapters.fasta:2:30:10:8:TRUE SLIDINGWINDOW:20:30 LEADING:20 TRAILING:20 MINLEN:50
+##### Singularity way
+### Pure no variable singularity call. Single instance worked
+### singularity -s exec -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806/removedAdapters:/INPUT -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806:/OUTDATADIR -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/databases:/DATABASES docker://quay.io/biocontainers/trimmomatic:0.36--5 trimmomatic PE -phred33 -threads 4 /OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R1.fsq /OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R2.fsq /OUTDATADIR/trimmed/N19E181565-01-TN-M05283-190806_R1_001.paired.fq /OUTDATADIR/trimmed/N19E181565-01-TN-M05283-190806_R1_001.unpaired.fq /OUTDATADIR/trimmed/N19E181565-01-TN-M05283-190806_R2_001.paired.fq /OUTDATADIR/trimmed/N19E181565-01-TN-M05283-190806_R2_001.unpaired.fq ILLUMINACLIP:/DATABASES/adapters.fasta:2:30:10:8:TRUE SLIDINGWINDOW:20:30 LEADING:20 TRAILING:20 MINLEN:50
 # Singularity with variables
-#singularity -s exec -B ${OUTDATADIR}/${filename}/removedAdapters:/INPUT -B ${OUTDATADIR}/${filename}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/trimmomatic:0.36--5 trimmomatic "${trim_endtype}" -"${trim_phred}" -threads "${procs}" "${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R1.fsq" "${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R2.fsq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R1_001.paired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R1_001.unpaired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R2_001.paired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R2_001.unpaired.fq" ILLUMINACLIP:"${trim_adapter_location}:${trim_seed_mismatch}:${trim_palindrome_clip_threshold}:${trim_simple_clip_threshold}:${trim_min_adapt_length}:${trim_complete_palindrome}" SLIDINGWINDOW:"${trim_window_size}:${trim_window_qual}" LEADING:"${trim_leading}" TRAILING:"${trim_trailing}" MINLEN:"${trim_min_length}"
+singularity -s exec -B ${OUTDATADIR}/${filename}/removedAdapters:/INPUT -B ${OUTDATADIR}/${filename}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/trimmomatic:0.36--5 trimmomatic ${trim_endtype} -${trim_phred} -threads ${procs} /INPUT/${filename}-noPhiX-R1.fsq /INPUT/${filename}-noPhiX-R2.fsq /OUTDIR/trimmed/${filename}_R1_001.paired.fq /OUTDIR/trimmed/${filename}_R1_001.unpaired.fq /OUTDIR/trimmed/${filename}_R2_001.paired.fq /OUTDIR/trimmed/${filename}_R2_001.unpaired.fq ILLUMINACLIP:${trim_adapter_location}:${trim_seed_mismatch}:${trim_palindrome_clip_threshold}:${trim_simple_clip_threshold}:${trim_min_adapt_length}:${trim_complete_palindrome} SLIDINGWINDOW:${trim_window_size}:${trim_window_qual} LEADING:${trim_leading} TRAILING:${trim_trailing} MINLEN:${trim_min_length}
 
+# Get end time of trimmomatic and calculate run time and append to time summary (and sum to total time used)
 end=$SECONDS
 timeTrim=$((end - start))
 echo "Trimming - ${timeTrim} seconds" >> "${time_summary}"
 totaltime=$((totaltime + timeTrim))
-ml -trimmomatic/0.36
+ml -trimmomatic/0.35
 
 # Check differences after QC and trimming (also for gottcha proper read count for assessing unclassified reads)
 # Get start time for qc check on trimmed reads
@@ -217,7 +224,13 @@ echo "----- Running Kraken on cleaned reads -----"
 # Get start time of kraken on reads
 start=$SECONDS
 # Run kraken
-"${shareScript}/run_kraken.sh" "${filename}" pre paired "${project}"
+
+
+
+#############  Pull code from wrapper
+##### singularity changed in wrapper
+ "${shareScript}/run_kraken.sh" "${filename}" pre paired "${project}"
+
 # Get end time of kraken on reads and calculate run time and append to time summary (and sum to total time used)
 end=$SECONDS
 timeKrak=$((end - start))

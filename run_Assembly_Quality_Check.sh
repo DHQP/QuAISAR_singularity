@@ -28,8 +28,6 @@ fi
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
-ml quast/4.3 Python2/2.7.15
-
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
@@ -55,20 +53,21 @@ fi
 # Sets the parent output folder as the sample name folder in the processed samples folder in MMB_Data
 OUTDATADIR="${processed}/${2}/${1}"
 
-
 echo "Checking Assembly QC with QUAST"
 # Run QUAST
 # Save current directory and move to output directory because it doesnt know how to redirect output
-owd="$(pwd)"
+
 if [[ "${do_plasFlow_only}" != "true" ]]; then
 	# Checks for output folder existence and creates creates if not
 	if [ ! -d "$OUTDATADIR/Assembly_Stats" ]; then
 		echo "Creating $OUTDATADIR/Assembly_Stats"
 		mkdir -p "$OUTDATADIR/Assembly_Stats"
 	fi
-	cd "${OUTDATADIR}/Assembly_Stats"
 	# Call QUAST
-	python2 "/apps/x86_64/quast/quast-4.3/quast.py" -o "${OUTDATADIR}/Assembly_Stats" "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta"
+	##### Non singularity way
+	### python2 "/apps/x86_64/quast/quast-4.3/quast.py" -o "${OUTDATADIR}/Assembly_Stats" "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta"
+	##### Singularity way
+	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/Assembly_Stats:/OUTDIR docker://quay.io/biocontainers/quast:5.0.2--py35pl526ha92aebf_0 quast.py -o /OUTDIR /INPUT/${1}_scaffolds_trimmed.fasta
 	mv "${OUTDATADIR}/Assembly_Stats/report.txt" "${OUTDATADIR}/Assembly_Stats/${1}_report.txt"
 	mv "${OUTDATADIR}/Assembly_Stats/report.tsv" "${OUTDATADIR}/Assembly_Stats/${1}_report.tsv"
 fi
@@ -77,17 +76,15 @@ if [[ -s "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_pla
 		echo "Creating $OUTDATADIR/Assembly_Stats_plasFlow"
  		mkdir -p "$OUTDATADIR/Assembly_Stats_plasFlow"
  	fi
- 	python2 "/apps/x86_64/quast/quast-4.3/quast.py" -o "${OUTDATADIR}/Assembly_Stats_plasFlow" "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta"
- 	mv "${OUTDATADIR}/Assembly_Stats_plasFlow/report.txt" "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.txt"
+	##### Non singularity way
+ 	### python2 "/apps/x86_64/quast/quast-4.3/quast.py" -o "${OUTDATADIR}/Assembly_Stats_plasFlow" "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta"
+	##### Singularity way
+	singularity -s exec -B ${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly:/INPUT -B ${OUTDATADIR}/Assembly_Stats_plasFlow:/OUTDIR docker://quay.io/biocontainers/quast:5.0.2--py35pl526ha92aebf_0 quast.py -o /OUTDIR /INPUT/${1}_plasmid_assembly_trimmed.fasta
+	mv "${OUTDATADIR}/Assembly_Stats_plasFlow/report.txt" "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.txt"
  	mv "${OUTDATADIR}/Assembly_Stats_plasFlow/report.tsv" "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv"
  else
 	echo "No plasFlow assembly (${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta)"
 fi
-
-# Return to original directory
-cd "${owd}"
-
-ml -quast/4.3 -Python/2.7.15
 
 #Show that the script seemingly completed successfully
 exit 0

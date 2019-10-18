@@ -27,8 +27,6 @@ fi
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
-ml prokka/1.12 perl/5.12.3
-
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
@@ -58,7 +56,11 @@ fi
 ### Prokka to identify genes in ###
 echo "Running Prokka for gene identification"
 # Run prokka
-prokka --outdir "${OUTDATADIR}/prokka" "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta"
+##### Non singularity way
+### prokka --outdir "${OUTDATADIR}/prokka" "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta"
+##### Singularity way
+singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/prokka:/OUTDIR docker://quay.io/prokka:1.12--4 prokka --outdir /OUTDIR /INPUT/${1}_scaffolds_trimmed.fasta
+
 #Rename all PROKKA files with sample name instead of date
 if [ ! -d "${OUTDATADIR}/prokka" ]; then
 	echo "prokka did not complete...exiting"

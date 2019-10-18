@@ -26,8 +26,6 @@ fi
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
-ml SPAdes/3.13.0
-
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
@@ -50,16 +48,10 @@ fi
 # Sets the output folder to the sample_name folder in processed samples
 OUTDATADIR="${processed}/${3}/${1}"
 
-#Calls spades depending on if it is supposed to look for plasmids or not, all other arguments are the same and pulled from config.sh
-if [ "${2}" = "normal" ]; then
-	spades.py --careful --memory "${spades_max_memory}" --only-assembler --pe1-1 "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq" --pe1-2 "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq" --pe1-s "${OUTDATADIR}/trimmed/${1}.single.fq" -o "${OUTDATADIR}/Assembly" --phred-offset "${phred}" -t "${procs}"
-# elif [ "${2}" = "plasmid" ]; then
-# 	spades.py --plasmid --careful --memory "${spades_max_memory}" --only-assembler --pe1-1 "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq" --pe1-2 "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq" --pe1-s "${OUTDATADIR}/trimmed/${1}.single.fq" -o "${OUTDATADIR}/plasmidAssembly" --phred-offset "${phred}" -t "${procs}"
-else
-	echo "Unknown type requested...not running SPAdes"
-fi
-
-ml -SPAdes/3.13.0
+##### Non singularity way
+###	spades.py --careful --memory "${spades_max_memory}" --only-assembler --pe1-1 "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq" --pe1-2 "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq" --pe1-s "${OUTDATADIR}/trimmed/${1}.single.fq" -o "${OUTDATADIR}/Assembly" --phred-offset "${phred}" -t "${procs}"
+##### Singularity way
+singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${OUTDATADIR}/Assembly:/OUTDIR docker://quay.io/biocontainers/spades:3.13.0--0 spades.py --careful --memory "${spades_max_memory}" --only-assembler --pe1-1 /INPUT/${1}_R1_001.paired.fq --pe1-2 /INPUT/${1}_R2_001.paired.fq --pe1-s /INPUT/${1}.single.fq -o /OUTDIR --phred-offset "${phred}" -t "${procs}"
 
 #Script exited gracefully (unless something else inside failed)
 exit 0
