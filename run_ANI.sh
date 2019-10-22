@@ -220,7 +220,10 @@ fi
 #Calls pyani on local db folder
 python -V
 #python "${shareScript}/pyani/average_nucleotide_identity.py" -i "${OUTDATADIR}/ANI/localANIDB" -o "${OUTDATADIR}/ANI/aniM" --write_excel
-average_nucleotide_identity.py -i "${OUTDATADIR}/ANI/localANIDB" -o "${OUTDATADIR}/ANI/aniM" --write_excel
+##### Non singularity way
+### average_nucleotide_identity.py -i "${OUTDATADIR}/ANI/localANIDB" -o "${OUTDATADIR}/ANI/aniM" --write_excel
+### Singularity way
+singularity -s exec -B ${OUTDATADIR}/ANI/localANIDB:/INPUT -B ${OUTDATADIR}/ANI/aniM:/OUTDIR docker://quay.io/pyani:0.2.7--py35h24bf2e0_1 average_nucleotide_identity.py -i /INPUT -o /OUTDIR --write_excel
 
 #Extracts the query sample info line for percentage identity from the percent identity file
 while IFS='' read -r line || [ -n "$line" ]; do

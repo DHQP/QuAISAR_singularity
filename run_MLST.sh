@@ -58,10 +58,18 @@ fi
 # Call mlst against the given mlst DB
 #. "${shareScript}/module_changers/perl_5221_to_5161mt.sh"
 if [[ "${3}" = "-f" ]]; then
-	mlst --scheme "${4}" "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta" > "${OUTDATADIR}/MLST/${1}_${4}.mlst"
+	##### Non singularity
+	### 	mlst --scheme "${4}" "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta" > "${OUTDATADIR}/MLST/${1}_${4}.mlst"
+	### Singularity way
+	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT docker://quay.io/biocontainers/mlst:2.16--0 mlst --scheme "${4}" /INPUT/${1}_scaffolds_trimmed.fasta > "${OUTDATADIR}/MLST/${1}_${4}.mlst"
+
 # Call mlst using built autoidentifier
 else
-	mlst "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta" > "${OUTDATADIR}/MLST/${1}.mlst"
+	##### Non singularity
+	### 	mlst "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta" > "${OUTDATADIR}/MLST/${1}_${4}.mlst"
+	### Singularity way
+	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT docker://quay.io/biocontainers/mlst:2.16--0 mlst /INPUT/${1}_scaffolds_trimmed.fasta > "${OUTDATADIR}/MLST/${1}_${4}.mlst"
+
 fi
 #. "${shareScript}/module_changers/perl_5161mt_to_5221.sh"
 #Script exited gracefully (unless something else inside failed)
