@@ -92,6 +92,8 @@ fi
 if [[ "${force}" == "true" ]]; then
 	echo "Checking against ALL plasmids, but unlikely to find anything"
 	plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
+	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/prokka:/OUTDIR docker://quay.io/plasmidFinder:2.1--0
+
 	# Rename all files to include ID
 	mv ${OUTDATADIR}/Hit_in_genome_seq.fsa ${OUTDATADIR}/${1}_Hit_in_genome_seq_entero.fsa
 	mv ${OUTDATADIR}/Plasmid_seq.fsa ${OUTDATADIR}/${1}_Plasmid_seq_enetero.fsa
@@ -99,6 +101,8 @@ if [[ "${force}" == "true" ]]; then
 	mv ${OUTDATADIR}/results_tab.txt ${OUTDATADIR}/${1}_results_tab_entero.txt
 	mv ${OUTDATADIR}/results_table.txt ${OUTDATADIR}/${1}_results_table_entero.txt
 	plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p gram_positive
+	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/prokka:/OUTDIR docker://quay.io/plasmidFinder:2.1--0
+
 	# Rename all files to include ID
 	mv ${OUTDATADIR}/Hit_in_genome_seq.fsa ${OUTDATADIR}/${1}_Hit_in_genome_seq_gramp.fsa
 	mv ${OUTDATADIR}/Plasmid_seq.fsa ${OUTDATADIR}/${1}_Plasmid_seq_gramp.fsa
