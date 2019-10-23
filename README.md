@@ -3,6 +3,7 @@
 Version of quaisar to be made into container
 
 Table with all Tools and versions used, along with example commands for each
+
 |	Tool	|	Function	|	Version	|	Newest  	|	command	|	command 2	|	Notes	|
 |	---	|	---	|	---	|	---	|	---	|	---	|	---	|
 |	BBDuk 	|	Remove PhiX reads	|	BBMap(38.26)	|	38.26(38.42)	|	bbduk.sh - Xmx20g threads=12 in=raw_R1.fastq in2=raw_R2.fastq out=noPhiX_R1.fsq out2=noPhiX_R2.fsq ref=phiX_adapter.fasta k=31 hdist=1	|		|		|
@@ -24,6 +25,7 @@ Table with all Tools and versions used, along with example commands for each
 
 
 Flag table of output summaries
+
 Title|ALERT|WARNING|FAILED
 ---|---|---|---
 Time|-time_summary.txt missing ||
