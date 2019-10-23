@@ -3,10 +3,10 @@
 Version of quaisar to be made into container
 
 Table with all Tools and versions used, along with example commands for each
-Tool	|	Function/command	|	Version	|	Newest  	|	command	|	command 2	|	Notes
+Tool	|	Function	|	Version	|	Newest	|	command	|	command 2	|	Notes
 ---	|	---	|	---	|	---	|	---	|	---	|	---
-BBDuk 	|	Remove PhiX reads	|	BBMap(38.26)	|	38.26(38.42)	|	bbduk.sh - Xmx20g threads=12 in=raw_R1.fastq in2=raw_R2.fastq out=noPhiX_R1.fsq out2=noPhiX_R2.fsq ref=phiX_adapter.fasta k=31 hdist=1	|		|	
-Trimmomatic	|	Remove illumina adapters and filter by quality	|	0.35 	|	0.36 (0.38)	|	trimmomatic PE -phred33 -threads 12 noPhiX_R1.fsq noPhiX_R2.fsq trimmed_R1_001.paired.fq trimmed_R1_001.unpaired.fq trimmed_R2_001.paired.fq trimmed_R2_001.unpaired.fq ILLUMINACLIP:adapters.fasat:2:30:10:8:TRUE SLIDINGWINDOW:20:30 LEADING:20 TRAILING:20 MINLEN:50	|		|	
+BBDuk 	|	Remove PhiX reads	|	BBMap(38.26)	|	38.26(38.42)	|	bbduk.sh - Xmx20g threads=12 in=raw_R1.fastq in2=raw_R2.fastq out=noPhiX_R1.fsq out2=noPhiX_R2.fsq ref=phiX_adapter.fasta k=31 hdist=1	||
+Trimmomatic	|	Remove illumina adapters and filter by quality	|	0.35	|	0.36 (0.38)	|	trimmomatic PE -phred33 -threads 12 noPhiX_R1.fsq noPhiX_R2.fsq trimmed_R1_001.paired.fq trimmed_R1_001.unpaired.fq trimmed_R2_001.paired.fq trimmed_R2_001.unpaired.fq ILLUMINACLIP:adapters.fasat:2:30:10:8:TRUE SLIDINGWINDOW:20:30 LEADING:20 TRAILING:20 MINLEN:50	|		|	
 Kraken	|	Taxonomic Identification/Contamination Detection	|	0.10.5	|	2.0.8(2.0.7)	|	Reads: kraken --paired --db kraken_mini_db_location --preload --fastq-input --threads 12 --output sample_name.kraken --classified-out sample_name.classified  trimmed_R1_001.paired.fq trimmed_R2_001.paired.fq	|	Assembly: kraken --db kraken_mini_db_location --preload --threads 14 --output sample_name.kraken --classified-out sample_name.classified trimmed_assembly.fasta	|	
 Gottcha	|	Taxonomic Identification (Species database)	|	1.0b	|	1.0b	|	gottcha.pl --mode all --outdir output_directory --input paired.fq --database location_of_gottcha_database	|		|	· Paired.fq is the concatenated file of trimmed R1 and R2 read files
 SPAdes	|	Assembly	|	3.13.0	|	3.13.0	|	spades.py --careful --memory 32 --only-assembler --pe1-1 trimmed_R1_001.paired.fq --pe1-2 trimmed_R2_001.paired.fq --pe1-s trimmed.single.fq" -o output_directory --phred-offset 33 -t 12	|		|	
