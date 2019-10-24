@@ -15,13 +15,13 @@ fi
 #
 # Description: Creates a tsv file that matches the order of samples on the seq_log (instead of matching the list created in QuAISAR)
 #
-# Usage: ./make_Seqlog_from_list.sh run_ID
+# Usage: ./make_Seqlog_from_list.sh run_ID [year]
 #
 # Output location: /deafult_config.sh_output_location/run_ID
 #
 # Modules required: None
 #
-# v1.0 (10/3/2019)
+# v1.0.3 (10/24/2019)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -35,9 +35,18 @@ elif [[ -z "${1}" ]]; then
 	exit 1
 # Gives the user a brief usage and help section if requested with the -h option argument
 elif [[ "${1}" = "-h" ]]; then
-	echo "Usage is ./make_Seqlog_from_log.sh MiSeq_Run_ID"
+	echo "Usage is ./make_Seqlog_from_log.sh MiSeq_Run_ID [Log_year, if not current]"
 	echo "Output is saved to ${processed}/${1}/Seqlog_output.txt"
 	exit 0
+fi
+
+if [[ -z "${2}" ]]; then
+	year=2019
+elif [[ "${2}" -lt 2017 ]] || [[ "${2}" -gt 2099 ]]; then
+	echo "Year must be between 2017 and 2099, exiting"
+	exit 44
+else
+	year=${2}
 fi
 
 # Creates a dictionary of commonly found bugs to use when looking up sizes and assembly ratios later
@@ -60,15 +69,11 @@ cd "${processed}/${1}/"
 ls  *run_summary* | sort -n -t _  -k 10,10r -k 8,8r -k 9,9r > "sorted_summaries.txt"
 cd ${owd}
 
-month=$(head -n 1 "${processed}/${1}/sorted_summaries.txt" | cut -d'_' -f8)
-day=$(head -n 1 "${processed}/${1}/sorted_summaries.txt" | cut -d'_' -f9)
-year=$(head -n 1 "${processed}/${1}/sorted_summaries.txt" | cut -d'_' -f10)
-
 rm -r "${processed}/${1}/sorted_summaries.txt"
 
 # Order samples (according to logsheet) in folder if not already done so
 if [[ ! -f ${processed}/${1}/${1}_list_ordered.txt ]]; then
-	${shareScript}/order_samples.sh -p ${1}
+	${shareScript}/order_samples.sh -p ${1} -y ${year}
 	if [[ ! -s "${processed}/${1}/${1}_list_ordered.txt" ]]; then
 		echo "Isolates were not able to be sorted, something wrong with MiSeq Log entries or list file, or....?"
 		exit
@@ -101,7 +106,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 	genus_post="not_assigned"
 	species_post="not_assigned"
 	# Pulls species and genus_post information from kraken out of assembly
-	if [[ -s "${OUTDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" ]]; then
+	if [[ -s "${OUTDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP_data.txt" ]]; then
 		while IFS= read -r line  || [ -n "$line" ]; do
 			first=${line::1}
 			if [ "${first}" = "S" ]
@@ -111,7 +116,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 			then
 				genus_post=$(echo "${line}" | awk -F ' ' '{print $4}')
 			fi
-		done < "${OUTDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt"
+		done < "${OUTDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP_data.txt"
 		g_s_assembled="${genus_post} ${species_post}"
 		#echo "${g_s_assembly}"
 	elif [[ ! -f "${OUTDATADIR}/Assembly/${sample_name}_scaffolds_trimmed.fasta" ]]; then

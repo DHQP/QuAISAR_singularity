@@ -21,7 +21,7 @@ fi
 #
 # Modules required: None
 #
-# v1.0 (10/3/2019)
+# v1.0.1 (10/24/2019)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -74,7 +74,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 	genus_post="not_assigned"
 	species_post="not_assigned"
 	# Pulls species and genus_post information from kraken out of assembly
-	if [[ -s "${OUTDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" ]]; then
+	if [[ -s "${OUTDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP_data.txt" ]]; then
 		while IFS= read -r line  || [ -n "$line" ]; do
 			first=${line::1}
 			if [ "${first}" = "S" ]
@@ -84,7 +84,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 			then
 				genus_post=$(echo "${line}" | awk -F ' ' '{print $4}')
 			fi
-		done < "${OUTDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt"
+		done < "${OUTDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP_data.txt"
 		g_s_assembled="${genus_post} ${species_post}"
 		#echo "${g_s_assembly}"
 	elif [[ ! -f "${OUTDATADIR}/Assembly/${sample_name}_scaffolds_trimmed.fasta" ]]; then
