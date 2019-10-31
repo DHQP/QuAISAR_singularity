@@ -108,11 +108,13 @@ do
 		echo "Previous assembly already exists, using it (delete/rename the assembly folder at ${OUTDATADIR}/ if you'd like to try to reassemble"
 	# Run normal mode if no assembly file was found
 	else
-		if [[ "${3}" == "continue" ]] || [[ "${i}" -gt 1 ]]; then
-			"${shareScript}/run_SPAdes.sh" "${filename}" "continue" "${project}"
-		else
-			"${shareScript}/run_SPAdes.sh" "${filename}" normal "${project}"
-		fi
+		# Cant figure out why continue does not work yet
+		#if [[ "${1}" -gt 1 ]]; then
+		#	"${shareScript}/run_SPAdes.sh" "${filename}" "continue" "${project}"
+		#else
+		#	"${shareScript}/run_SPAdes.sh" "${filename}" normal "${project}"
+		#fi
+		"${shareScript}/run_SPAdes.sh" "${filename}" normal "${project}"
 	fi
 	# Removes any core dump files (Occured often during testing and tweaking of memory parameter
 	if [ -n "$(find "${shareScript}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then
