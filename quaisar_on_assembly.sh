@@ -313,8 +313,12 @@ if [[ "${family}" == "Enterobacteriaceae" ]]; then
 	totaltime=$((totaltime + timeplasflow))
 fi
 
-"${shareScript}/sample_cleaner.sh" "${filename}" "${project}"
 "${shareScript}/validate_piperun.sh" "${filename}" "${project}" > "${processed}/${project}/${filename}/${filename}_pipeline_stats.txt"
+
+status=$(tail -n1 "${processed}/${project}/${filename}/${filename}_pipeline_stats.txt" | cut -d' ' -f5)
+if [[ "${status}" != "FAILED" ]]; then
+	"${shareScript}/sample_cleaner.sh" "${filename}" "${project}"
+fi
 
 # Extra dump cleanse in case anything else failed
 	if [ -n "$(find "${shareScript}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then

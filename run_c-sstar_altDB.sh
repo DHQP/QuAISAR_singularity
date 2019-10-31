@@ -21,7 +21,7 @@ fi
 #
 # Modules required: Python3/3.5.2, ncbi-blast+/LATEST
 #
-# v1.0 (10/3/2019)
+# v1.0.1 (10/29/2019)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -134,7 +134,7 @@ fi
 # Goes through ResGANNCBI outfile and adds labels as well as resistance conferred to the beginning of the line
 # Takes .sstar file in and outputs as .sstar_grouped
 while IFS= read -r line || [ -n "$line" ]; do
-	line=${line,,}
+	line=${line}
 	#echo ${line}
 	label1=$(echo "${line}" | cut -d '	' -f3 | tr '[:upper:]' '[:lower:]')
 	label2=$(echo "${line}" | cut -d '	' -f4 | tr '[:upper:]' '[:lower:]')
@@ -163,7 +163,7 @@ while IFS= read -r line || [ -n "$line" ]; do
 	fi
 	label1=$(echo "${label1,,}" | tr -d '*?$')
 	label2=$(echo "${label2,,}" | tr -d '*?$')
-	source=$(echo "${line}" | cut -d '	' -f1 | tr -d '[:space:]')
+	source=$(echo "${line,,}" | cut -d '	' -f1 | tr -d '[:space:]')
 	resistance=$(echo "${line}" | cut -d '	' -f2 | tr -d '[:space:]')
 	contig=$(echo "${line}" | cut -d '	' -f5 | tr -d '[:space:]')
 	percent=$(echo "${line}" | cut -d '	' -f6 | cut -d'%' -f1 | tr -d '[:space:]')

@@ -17,29 +17,34 @@ fi
 # Description: Alternate version of the main QuAISAR-H pipeline that (re)starts from the assembly step, project/isolate_name must already have a populated FASTQs folder to work with
 # 	This script assumes the sample is located in the default location ($processed) specified within the config file
 #
-# Usage: ./quaisar_failed_assembly.sh isolate_name project_name
+# Usage: ./quaisar_failed_assembly.sh isolate_name project_name [continue]
 #
 # Output location: default_config.sh_output_location
 #
-# Modules required: None
+# Modules required: Python3/3.5.4
 #
-# v1.0 (10/3/2019)
+# v1.0.3 (10/30/2019)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
+
+ml Python3/3.5.4
 
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
 elif [[ "${1}" = "-h" ]]; then
-	echo "Usage is ./quaisar_failed_assembly.sh  sample_name miseq_run_ID(or_project_name)"
+	echo "Usage is ./quaisar_failed_assembly.sh  sample_name miseq_run_ID(or_project_name) [continue]"
 	echo "Populated trimmed folder needs to be present in ${2}/${1}, wherever it resides"
 	echo "Output by default is processed to processed/miseq_run_ID/sample_name"
 	exit 0
 elif [[ -z "${2}" ]]; then
 	echo "No Project/Run_ID supplied to quaisar_failed_assembly.sh, exiting"
 	exit 33
+elif [[ ! -z "${3}" ]] && [[ "${3}" != "continue" ]]; then
+	echo "Continue flag not set correctly, can ONLY be continue, exiting"
+	exit 34
 fi
 
 #Time tracker to gauge time used by each step
@@ -69,7 +74,7 @@ echo "${project}/${sample_name} started at ${global_time}"
 # unzipping paired reads for SPAdes
 if [[ ! -f ${OUTDATADIR}/${sample_name}/trimmed/${sample_name}_R1_001.paired.fq ]]; then
 		if [[ -f ${OUTDATADIR}/${sample_name}/trimmed/${sample_name}_R1_001.paired.fq.gz ]]; then
-			echo "unzipping paired1"
+			echo "Unzipping paired1"
 			gunzip < ${OUTDATADIR}/${sample_name}/trimmed/${sample_name}_R1_001.paired.fq.gz > ${OUTDATADIR}/${sample_name}/trimmed/${sample_name}_R1_001.paired.fq
 		else
 			echo "No R1 trimmed paired read, can NOT continue...exiting)"
@@ -103,7 +108,11 @@ do
 		echo "Previous assembly already exists, using it (delete/rename the assembly folder at ${OUTDATADIR}/ if you'd like to try to reassemble"
 	# Run normal mode if no assembly file was found
 	else
-		"${shareScript}/run_SPAdes.sh" "${sample_name}" normal "${project}"
+		if [[ "${3}" == "continue" ]] || [[ "${i}" -gt 1 ]]; then
+			"${shareScript}/run_SPAdes.sh" "${filename}" "continue" "${project}"
+		else
+			"${shareScript}/run_SPAdes.sh" "${filename}" normal "${project}"
+		fi
 	fi
 	# Removes any core dump files (Occured often during testing and tweaking of memory parameter
 	if [ -n "$(find "${shareScript}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then
@@ -141,8 +150,8 @@ fi
 if [[ -d ${OUTDATADIR}/${sample_name}/plasFlow ]]; then
 	rm -r ${OUTDATADIR}/${sample_name}/plasFlow
 fi
-if [[ -d ${OUTDATADIR}/${sample_name}/plasmidFinder ]]; then
-	rm -r ${OUTDATADIR}/${sample_name}/plasmidFinder
+if [[ -d ${OUTDATADIR}/${sample_name}/plasmid ]]; then
+	rm -r ${OUTDATADIR}/${sample_name}/plasmid
 fi
 if [[ -d ${OUTDATADIR}/${sample_name}/plasmid_on_plasFlow ]]; then
 	rm -r ${OUTDATADIR}/${sample_name}/plasmid_on_plasFlow
@@ -150,8 +159,15 @@ fi
 if [[ -d ${OUTDATADIR}/${sample_name}/prokka ]]; then
 	rm -r ${OUTDATADIR}/${sample_name}/prokka
 fi
-
-
+if [[ -d ${OUTDATADIR}/${sample_name}/GAMA ]]; then
+	rm -r ${OUTDATADIR}/${sample_name}/GAMA
+fi
+if [[ -d ${OUTDATADIR}/${sample_name}/Assembly_Stats ]]; then
+	rm -r ${OUTDATADIR}/${sample_name}/Assembly_Stats
+fi
+if [[ -d ${OUTDATADIR}/${sample_name}/kraken/postAssembly ]]; then
+	rm -r ${OUTDATADIR}/${sample_name}/kraken/postAssembly
+fi
 
 # Get end time of SPAdes and calculate run time and append to time summary (and sum to total time used)
 end=$SECONDS
@@ -313,8 +329,7 @@ if [ -s "${OUTDATADIR}/${sample_name}/prokka/${sample_name}_PROKKA.gbf" ] || [ -
 	busco_found=0
 	for tax in $species $genus $family $order $class $phylum $kingdom $domain
 	do
-		if [ -d "${local_DBs}/BUSCO/${tax,}_odb9" ]
-		then
+		if [ -d "${local_DBs}/BUSCO/${tax,}_odb9" ]; then
 			buscoDB="${tax,}_odb9"
 			busco_found=1
 			break
@@ -350,8 +365,9 @@ start=$SECONDS
 "${shareScript}/run_c-sstar_altDB.sh" "${sample_name}" "${csstar_gapping}" "${csstar_identity}" "${project}" "${local_DBs}/star/ResGANNOT_20180608_srst2.fasta"
 
 
-# Run GAMA on Assembly
-${shareScript}/run_GAMA.sh "${filename}" "${project}" -c
+### GAMA - finding AR Genes ###
+echo "----- Running GAMA for AR Gene identification -----"
+"${shareScript}/run_GAMA.sh" "${sample_name}" "${project}" -c
 
 # Get end time of csstar and calculate run time and append to time summary (and sum to total time used
 end=$SECONDS
@@ -362,43 +378,44 @@ totaltime=$((totaltime + timestar))
 # Get MLST profile
 echo "----- Running MLST -----"
 start=$SECONDS
-"${shareScript}/run_MLST.sh" "${filename}" "${project}"
-python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${filename}/MLST/${filename}.mlst" -t standard
+"${shareScript}/run_MLST.sh" "${sample_name}" "${project}"
+python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${sample_name}/MLST/${sample_name}.mlst" -t standard
 if [[ "${genus}_${species}" = "Acinetobacter_baumannii" ]]; then
-	"${shareScript}/run_MLST.sh" "${filename}" "${project}" "-f" "abaumannii"
-	python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${filename}/MLST/${filename}_abaumannii.mlst" -t standard
-	mv "${processed}/${project}/${filename}/MLST/${filename}_abaumannii.mlst" "${processed}/${project}/${filename}/MLST/${filename}_Oxford.mlst"
-	mv "${processed}/${project}/${filename}/MLST/${filename}.mlst" "${processed}/${project}/${filename}/MLST/${filename}_Pasteur.mlst"
+	"${shareScript}/run_MLST.sh" "${sample_name}" "${project}" "-f" "abaumannii"
+	python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${sample_name}/MLST/${sample_name}_abaumannii.mlst" -t standard
+	mv "${processed}/${project}/${sample_name}/MLST/${sample_name}_abaumannii.mlst" "${processed}/${project}/${sample_name}/MLST/${sample_name}_Oxford.mlst"
+	mv "${processed}/${project}/${sample_name}/MLST/${sample_name}.mlst" "${processed}/${project}/${sample_name}/MLST/${sample_name}_Pasteur.mlst"
 	#Check for "-", unidentified type
-	type1=$(tail -n1 ${processed}/${project}/${filename}/MLST/${filename}_abaumannii.mlst | cut -d' ' -f3)
-	type2=$(head -n1 ${processed}/${project}/${filename}/MLST/${filename}.mlst | cut -d' ' -f3)
+	type1=$(tail -n1 ${processed}/${project}/${sample_name}/MLST/${sample_name}_abaumannii.mlst | cut -d' ' -f3)
+	type2=$(head -n1 ${processed}/${project}/${sample_name}/MLST/${sample_name}.mlst | cut -d' ' -f3)
 	if [[ "${type1}" = "-" ]]; then
-		"${shareScript}/run_srst2_mlst.sh" "${filename}" "${project}" "Acinetobacter" "baumannii#1"
-		python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${filename}/MLST/${filename}_srst2_acinetobacter_baumannii-baumannii#1.mlst" -t srst2
+		"${shareScript}/run_srst2_mlst.sh" "${sample_name}" "${project}" "Acinetobacter" "baumannii#1"
+		python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${sample_name}/MLST/${sample_name}_srst2_acinetobacter_baumannii-baumannii#1.mlst" -t srst2
 	fi
 	if [[ "${type2}" = "-" ]]; then
-		"${shareScript}/run_srst2_mlst.sh" "${filename}" "${project}" "Acinetobacter" "baumannii#2"
-		python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${filename}/MLST/${filename}_srst2_acinetobacter_baumannii-baumannii#2.mlst" -t srst2
+		"${shareScript}/run_srst2_mlst.sh" "${sample_name}" "${project}" "Acinetobacter" "baumannii#2"
+		python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${sample_name}/MLST/${sample_name}_srst2_acinetobacter_baumannii-baumannii#2.mlst" -t srst2
 	fi
 elif [[ "${genus}_${species}" = "Escherichia_coli" ]]; then
 	# Verify that ecoli_2 is default and change accordingly
-	"${shareScript}/run_MLST.sh" "${filename}" "${project}" "-f" "ecoli_2"
-	python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${filename}/MLST/${filename}_ecoli_2.mlst" -t standard
-	mv "${processed}/${project}/${filename}/MLST/${filename}_ecoli_2.mlst" "${processed}/${project}/${filename}/MLST/${filename}_Pasteur.mlst"
-	mv "${processed}/${project}/${filename}/MLST/${filename}.mlst" "${processed}/${project}/${filename}/MLST/${filename}_Achtman.mlst"
-	type2=$(tail -n1 ${processed}/${project}/${filename}/MLST/${filename}_ecoli_2.mlst | cut -d' ' -f3)
-	type1=$(head -n1 ${processed}/${project}/${filename}/MLST/${filename}.mlst | cut -d' ' -f3)
+	"${shareScript}/run_MLST.sh" "${sample_name}" "${project}" "-f" "ecoli_2"
+	python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${sample_name}/MLST/${sample_name}_ecoli_2.mlst" -t standard
+	mv "${processed}/${project}/${sample_name}/MLST/${sample_name}_ecoli_2.mlst" "${processed}/${project}/${sample_name}/MLST/${sample_name}_Pasteur.mlst"
+	mv "${processed}/${project}/${sample_name}/MLST/${sample_name}.mlst" "${processed}/${project}/${sample_name}/MLST/${sample_name}_Achtman.mlst"
+	type2=$(tail -n1 ${processed}/${project}/${sample_name}/MLST/${sample_name}_ecoli_2.mlst | cut -d' ' -f3)
+	type1=$(head -n1 ${processed}/${project}/${sample_name}/MLST/${sample_name}.mlst | cut -d' ' -f3)
 	if [[ "${type1}" = "-" ]]; then
-		"${shareScript}/run_srst2_mlst.sh" "${filename}" "${project}" "Escherichia" "coli#1"
-		python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${filename}/MLST/${filename}_srst2_escherichia_coli-coli#1.mlst" -t srst2
+		"${shareScript}/run_srst2_mlst.sh" "${sample_name}" "${project}" "Escherichia" "coli#1"
+		python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${sample_name}/MLST/${sample_name}_srst2_escherichia_coli-coli#1.mlst" -t srst2
 	fi
 	if [[ "${type2}" = "-" ]]; then
-		"${shareScript}/run_srst2_mlst.sh" "${filename}" "${project}" "Escherichia" "coli#2"
-		python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${filename}/MLST/${filename}_srst2_escherichia_coli-coli#2.mlst" -t srst2
+		"${shareScript}/run_srst2_mlst.sh" "${sample_name}" "${project}" "Escherichia" "coli#2"
+		python3 "${shareScript}/check_and_fix_MLST.py" -i "${processed}/${project}/${sample_name}/MLST/${sample_name}_srst2_escherichia_coli-coli#2.mlst" -t srst2
 	fi
 else
-	mv "${processed}/${project}/${filename}/MLST/${filename}.mlst" "${processed}/${project}/${filename}/MLST/${filename}_Pasteur.mlst"
-fiend=$SECONDS
+	mv "${processed}/${project}/${sample_name}/MLST/${sample_name}.mlst" "${processed}/${project}/${sample_name}/MLST/${sample_name}_Pasteur.mlst"
+fi
+end=$SECONDS
 timeMLST=$((end - start))
 echo "MLST - ${timeMLST} seconds" >> "${time_summary_redo}"
 totaltime=$((totaltime + timeMLST))
@@ -406,7 +423,7 @@ totaltime=$((totaltime + timeMLST))
 # Try to find any plasmids
 echo "----- Identifying plasmids using plasmidFinder -----"
 start=$SECONDS
-"${shareScript}/run_plasmidFinder.sh" "${sample_name}" "${project}" "plasmid"
+"${shareScript}/run_plasmidFinder.sh" "${sample_name}" "${project}" plasmid
 end=$SECONDS
 timeplasfin=$((end - start))
 echo "plasmidFinder - ${timeplasfin} seconds" >> "${time_summary_redo}"
@@ -418,7 +435,7 @@ if [[ "${family}" == "Enterobacteriaceae" ]]; then
 	${shareScript}/run_plasFlow.sh "${sample_name}" "${project}"
 	${shareScript}/run_c-sstar_plasFlow.sh "${sample_name}" g o "${project}" -p
 	${shareScript}/run_plasmidFinder.sh "${sample_name}" "${project}" plasmid_on_plasFlow
-	${shareScript}/run_GAMA.sh "${filename}" "${project}" -p
+	${shareScript}/run_GAMA.sh "${sample_name}" "${project}" -p
 
 	end=$SECONDS
 	timeplasflow=$((end - start))
@@ -426,14 +443,18 @@ if [[ "${family}" == "Enterobacteriaceae" ]]; then
 	totaltime=$((totaltime + timeplasflow))
 fi
 
-"${shareScript}/sample_cleaner.sh" "${sample_name}" "${project}"
 "${shareScript}/validate_piperun.sh" "${sample_name}" "${project}" > "${processed}/${project}/${sample_name}/${sample_name}_pipeline_stats.txt"
 
+status=$(tail -n1 "${processed}/${project}/${sample_name}/${sample_name}_pipeline_stats.txt" | cut -d' ' -f5)
+if [[ "${status}" != "FAILED" ]]; then
+	"${shareScript}/sample_cleaner.sh" "${sample_name}" "${project}"
+fi
+
 # Extra dump cleanse in case anything else failed
-	if [ -n "$(find "${shareScript}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then
-		echo "Found core dump files at end of processing ${sample_name} and attempting to delete"
-		find "${shareScript}" -maxdepth 1 -name 'core.*' -exec rm -f {} \;
-	fi
+if [ -n "$(find "${shareScript}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then
+	echo "Found core dump files at end of processing ${sample_name} and attempting to delete"
+	find "${shareScript}" -maxdepth 1 -name 'core.*' -exec rm -f {} \;
+fi
 
 global_end_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
 
@@ -448,3 +469,5 @@ echo "
 				completed at ${global_end_time}
 
 "
+
+ml -Python3/3.5.4

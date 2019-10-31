@@ -88,11 +88,14 @@ export PYTHONPATH=$PYTHONPATH:"/apps/x86_64/busco/busco/build/lib/"
 echo "${PATH//:/$'\n'}"
 
 # Run busco on the prokka output using the database provided by command line ($2)
-run_BUSCO.py -i "${OUTDATADIR}/prokka/${1}_PROKKA.faa" -o "${1}" -l "${buscoDB}" -m prot
+##### Non singularity way
+### run_BUSCO.py -i "${OUTDATADIR}/prokka/${1}_PROKKA.faa" -o "${1}" -l "${buscoDB}" -m prot
+##### Singularity way
+singularity -s exec -B ${OUTDATADIR}/prokka:/INPUT -B ${OUTDATADIR}/busco:/OUTDIR -B ${local_DBs}/BUSCO:/DATABASES docker://quay.io/biocontainers/busco:3.0.2--py35_4 run_BUSCO.py -i /INPUT/${1}_PROKKA.faa -o /OUTDIR -l /DATABASES/${2,} -m prot
 
 
 # Moves output files to proper location and removes temp files
-mv -f "${OUTDATADIR}/run_${1}/"* "${OUTDATADIR}/BUSCO"
+mv -f "${OUTDATADIR}/busco/run_${1}/"* "${OUTDATADIR}/BUSCO"
 rm -r "${OUTDATADIR}/run_${1}"
 rm -r "${OUTDATADIR}/tmp"
 

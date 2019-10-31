@@ -49,7 +49,7 @@ krona-kraken-pstasmb|||-.krona or .html missing                                 
 post Classify||-unclassified reads >30%                     -no single species >50%|-no classified reads                                                                   -kraken_summary_assembled.txt missing
 kraken weighted|||-.kraken missing
 krona-kraken-weight|||-.krona or .html missing                                                         -kraken preassembly failed
-weighted Classify||-unclassified reads >30%                    -no single species >50%|-no classified reads                                                                                        -kraken_summary_assembled_BP_data.txt missing
+weighted Classify||-unclassified reads >30%                    -no single species >50%|-no classified reads                                                                                        -kraken_summary_assembled_BP.txt missing
 QUAST|||report.tsv missing
 Assembly ratio||-if taxonomy is not in DB|-ratio >1.2x or <.8x
 Raw coverage|-Coverage >90x||-<40x

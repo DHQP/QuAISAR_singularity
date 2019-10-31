@@ -21,7 +21,7 @@ fi
 #
 # Modules required: Python3/3.5.2, ncbi-blast+/LATEST
 #
-# v1.0 (10/3/2019)
+# v1.0.1 (10/29/2019)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -136,7 +136,7 @@ fi
 # Goes through ResGANNCBI outfile and adds labels as well as resistance conferred to the beginning of the line
 # Takes .sstar file in and outputs as .sstar_grouped
 while IFS= read -r line || [ -n "$line" ]; do
-	line=${line,,}
+	line=${line}
 	#echo ${line}
 	# Extract gene (label1) and allele (label2) from line, also force all characters to be lowercase
 	label1=$(echo "${line}" | cut -d '	' -f3 | tr '[:upper:]' '[:lower:]')
@@ -171,7 +171,7 @@ while IFS= read -r line || [ -n "$line" ]; do
 	label1=$(echo "${label1,,}" | tr -d '*?$')
 	label2=$(echo "${label2,,}" | tr -d '*?$')
 	# Extract source database that AR gene match came from
-	source=$(echo "${line}" | cut -d '	' -f1 | tr -d '[:space:]')
+	source=$(echo "${line,,}" | cut -d '	' -f1 | tr -d '[:space:]')
 	# Extract the type of resistance that is conferred by the gene
 	resistance=$(echo "${line}" | cut -d '	' -f2 | tr -d '[:space:]')
 	# Trim contig identifier of spaces
