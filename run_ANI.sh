@@ -140,7 +140,7 @@ done
 # Mashtree trimming to reduce run time for ANI
 owd=$(pwd)
 cd ${OUTDATADIR}/ANI/localANIDB/
-mashtree.pl --numcpus ${procs} *.fasta --tempdir ${OUTDATADIR}/ANI/temp > ${OUTDATADIR}/ANI/"${genus_in}_and_${1}_mashtree.dnd";
+mashtree --numcpus ${procs} *.fasta --tempdir ${OUTDATADIR}/ANI/temp > ${OUTDATADIR}/ANI/"${genus_in}_and_${1}_mashtree.dnd";
 
 
 # Get total number of isolates compared in tree
