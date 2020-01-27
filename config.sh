@@ -41,15 +41,15 @@ fi
 ############# General Options #############
 
 #Location to store all Quaisar-H pipeline run logs
-Quaisar_H_log_directory="/QuAISAR_logs"
+Quaisar_H_log_directory="/scicomp/groups/OID/NCEZID/DHQP/CEMB/QuAISAR_logs"
 #shortcut to processed samples folder
-processed="/TEST_MiSeqAnalysisFiles"
+processed="/scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles"
 # Locations of all scripts and necessary accessory files
 shareScript="$(pwd)"
 # Location to keep all temp files when doing mass qsubmissions
 mass_qsub_folder="/scicomp/groups/OID/NCEZID/DHQP/CEMB/Nick_DIR/mass_subs"
-if [[ ! -d "/CERES_home/nvx4/mass_subs" ]]; then
-	mkdir -p "/CERES_home/nvx4/mass_subs"
+if [[ ! -d "/scicomp/groups/OID/NCEZID/DHQP/CEMB/Nick_DIR/mass_subs" ]]; then
+	mkdir -p "/scicomp/groups/OID/NCEZID/DHQP/CEMB/Nick_DIR/mass_subs"
 fi
 # Location of default Outbreak Analyses files
 Phyl_OA="/scicomp/groups/OID/NCEZID/DHQP/CEMB/PhylogenyAnalysis"
@@ -74,7 +74,7 @@ all_instruments=($miseq1 $miseq2 $miseq3 $miseq4) # $pacbio)
 
 # Number of processors requested by numerous applications within the pipeline
 #--------------------Check on how BEST to use ---------------------------------#
-procs=18 # Number of processors
+procs=12 # Number of processors
 
 # Phred scoring scale to be used (33 or 64)
 phred=33
