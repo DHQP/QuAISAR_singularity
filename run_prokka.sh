@@ -59,7 +59,7 @@ echo "Running Prokka for gene identification"
 ##### Non singularity way
 ### prokka --outdir "${OUTDATADIR}/prokka" "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta"
 ##### Singularity way
-singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/prokka:/OUTDIR docker://quay.io/prokka:1.12--4 prokka --outdir /OUTDIR /INPUT/${1}_scaffolds_trimmed.fasta
+singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/prokka:/OUTDIR docker://quay.io/prokka:1.12--pl526_0 prokka --outdir /OUTDIR /INPUT/${1}_scaffolds_trimmed.fasta
 
 #Rename all PROKKA files with sample name instead of date
 if [ ! -d "${OUTDATADIR}/prokka" ]; then
