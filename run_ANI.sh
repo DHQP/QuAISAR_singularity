@@ -140,8 +140,10 @@ done
 # Mashtree trimming to reduce run time for ANI
 owd=$(pwd)
 cd ${OUTDATADIR}/ANI/localANIDB/
-mashtree --numcpus ${procs} *.fasta --tempdir ${OUTDATADIR}/ANI/temp > ${OUTDATADIR}/ANI/"${genus_in}_and_${1}_mashtree.dnd";
-
+# Non-singularity way
+#mashtree --numcpus ${procs} *.fasta --tempdir ${OUTDATADIR}/ANI/temp > ${OUTDATADIR}/ANI/"${genus_in}_and_${1}_mashtree.dnd";
+# Singularity way
+singularity -s exec -B ${OUTDATADIR}/ANI/localANIDB:/INPUT -B ${OUTDATADIR}/ANI/:/OUTDIR docker://quay.io/pyani:1.0.4--pl526h516909a_0 mashtree --numcpus ${procs} *.fasta --tempdir /OUTDIR/temp > /OUTDIR}/ANI/"${genus_in}_and_${1}_mashtree.dnd"
 
 # Get total number of isolates compared in tree
 sample_count=$(find ${OUTDATADIR}/ANI/localANIDB/ -type f | wc -l)
