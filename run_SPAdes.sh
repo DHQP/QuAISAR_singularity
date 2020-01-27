@@ -48,6 +48,11 @@ fi
 # Sets the output folder to the sample_name folder in processed samples
 OUTDATADIR="${processed}/${3}/${1}"
 
+
+if [[ ! -d "${OUTDATADIR}/Assembly" ]]; then
+	mkdir "${OUTDATADIR}/Assembly"
+fi
+
 ##### Non singularity way
 ###	spades.py --careful --memory "${spades_max_memory}" --only-assembler --pe1-1 "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq" --pe1-2 "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq" --pe1-s "${OUTDATADIR}/trimmed/${1}.single.fq" -o "${OUTDATADIR}/Assembly" --phred-offset "${phred}" -t "${procs}"
 ##### Singularity way
