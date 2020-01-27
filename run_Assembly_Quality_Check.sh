@@ -79,7 +79,8 @@ if [[ -s "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_pla
 	##### Non singularity way
  	### python2 "/apps/x86_64/quast/quast-4.3/quast.py" -o "${OUTDATADIR}/Assembly_Stats_plasFlow" "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta"
 	##### Singularity way
-	singularity -s exec -B ${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly:/INPUT -B ${OUTDATADIR}/Assembly_Stats_plasFlow:/OUTDIR docker://quay.io/biocontainers/quast:5.0.2--py35pl526ha92aebf_0 quast.py -o /OUTDIR /INPUT/${1}_plasmid_assembly_trimmed.fasta
+	#singularity -s exec -B ${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly:/INPUT -B ${OUTDATADIR}/Assembly_Stats_plasFlow:/OUTDIR docker://quay.io/biocontainers/quast:5.0.2--py35pl526ha92aebf_0 quast.py -o /OUTDIR /INPUT/${1}_plasmid_assembly_trimmed.fasta
+	singularity -s exec -B ${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly:/INPUT -B ${OUTDATADIR}/Assembly_Stats_plasFlow:/OUTDIR docker://quay.io/biocontainers/quast:5.0.1--py36pl526ha92aebf_0 quast.py -o /OUTDIR /INPUT/${1}_plasmid_assembly_trimmed.fasta
 	mv "${OUTDATADIR}/Assembly_Stats_plasFlow/report.txt" "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.txt"
  	mv "${OUTDATADIR}/Assembly_Stats_plasFlow/report.tsv" "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv"
  else
