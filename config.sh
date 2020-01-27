@@ -12,11 +12,10 @@
 #
 # Modules required: None
 #
-# v1.0 (10/3/2019)
+# v1.0.1 (1/17/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
-
 
 # Get hostname to help determine if certain tools can be run and how to specifically get others to run with the right options
 hostname=$(hostname -f)
@@ -24,13 +23,16 @@ host=$(echo ${hostname} | cut -d'.' -f1)
 #echo ${hostname}
 if [[ "${host}" = "scicomp-mue-01" ]];
 then
-	host="biolinux"
+	host="Biolinux"
 elif [[ "${host}" =~ ^("login01"|"aspen"|"login.aspen"|"login02"|"login2.aspen") ]];
 then
 	host="aspen_login"
 elif [[ "${host:0:4}" = "node" ]];
 then
 	host="cluster:${host}"
+elif [[ "${host}" = "scbs-mue-prod-01" ]];
+then
+	host="Biolinux2020"
 else
 	echo "Hostname (${host}) not recognized, exiting"
 	exit 1
@@ -39,25 +41,28 @@ fi
 ############# General Options #############
 
 #Location to store all Quaisar-H pipeline run logs
-Quaisar_H_log_directory="/scicomp/groups/OID/NCEZID/DHQP/CEMB/QuAISAR_logs"
+Quaisar_H_log_directory="/QuAISAR_logs"
 #shortcut to processed samples folder
-processed="/scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles"
+processed="/TEST_MiSeqAnalysisFiles"
 # Locations of all scripts and necessary accessory files
 shareScript="$(pwd)"
 # Location to keep all temp files when doing mass qsubmissions
 mass_qsub_folder="/scicomp/groups/OID/NCEZID/DHQP/CEMB/Nick_DIR/mass_subs"
-if [[ ! -d "/scicomp/groups/OID/NCEZID/DHQP/CEMB/Nick_DIR/mass_subs" ]]; then
-	mkdir -p "/scicomp/groups/OID/NCEZID/DHQP/CEMB/Nick_DIR/mass_subs"
+if [[ ! -d "/CERES_home/nvx4/mass_subs" ]]; then
+	mkdir -p "/CERES_home/nvx4/mass_subs"
 fi
-
+# Location of default Outbreak Analyses files
+Phyl_OA="/scicomp/groups/OID/NCEZID/DHQP/CEMB/PhylogenyAnalysis"
 # Local databases that are necessary for pipeline...ANI, BUSCO, star, adapters, phiX
 local_DBs="/scicomp/groups/OID/NCEZID/DHQP/CEMB/databases"
 # Scicomp databases that are necessary for pipeline...eventually refseq, kraken, gottcha,
+#--------------------Check on how to use ---------------------------------#
 scicomp_DBs="/scicomp/reference"
 # Maximum number of quaisar pipelines to be running concurrently
 max_quaisars=9999
 
 #Instruments and locations of files stored by those instruments
+#--------------------Check on how to use ---------------------------------#
 miseq1="/scicomp/instruments/17-4-4248_Illumina-MiSeq-M04765"
 miseq2="/scicomp/instruments/17-4-4248_Illumina-MiSeq-M01025"
 miseq3="/scicomp/instruments/17-5-5248_Illumina-MiSeq-M02103"
@@ -68,7 +73,8 @@ pacbio="/scicomp/instruments/23-12-651_PacBio-RSII-RS42135"
 all_instruments=($miseq1 $miseq2 $miseq3 $miseq4) # $pacbio)
 
 # Number of processors requested by numerous applications within the pipeline
-procs=12 # Number of processors
+#--------------------Check on how BEST to use ---------------------------------#
+procs=18 # Number of processors
 
 # Phred scoring scale to be used (33 or 64)
 phred=33
@@ -140,19 +146,19 @@ csstar_low=80
 csstar_other=40
 
 ##### c-SSTAR standard settings #####
-argannot_srst2=$(find ${local_DBs}/star/argannot_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+#argannot_srst2=$(find ${local_DBs}/star/argannot_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 #echo "ARG Summary found: ${argannot_srst2}"
-resFinder_srst2=$(find ${local_DBs}/star/resFinder_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+#resFinder_srst2=$(find ${local_DBs}/star/resFinder_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 #echo "RES Summary found: ${resFinder_srst2}"
-resGANNOT_srst2=$(find ${local_DBs}/star/ResGANNOT_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-resGANNOT_previous_srst2=$(find ${local_DBs}/star/ResGANNOT_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 2 | tail -n 1)
+#resGANNOT_srst2=$(find ${local_DBs}/star/ResGANNOT_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+#resGANNOT_previous_srst2=$(find ${local_DBs}/star/ResGANNOT_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 2 | tail -n 1)
 #echo "ResGANNOT Summary found: ${resGANNOT_srst2}"
 ResGANNCBI_srst2=$(find ${local_DBs}/star/ResGANNCBI_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 ResGANNCBI_previous_srst2=$(find ${local_DBs}/star/ResGANNCBI_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 2 | tail -n 1)
 #echo "ResGANNOT Summary found: ${ResGANNCBI_srst2}"
-argannot_srst2_filename=$(echo "${argannot_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
-resFinder_srst2_filename=$(echo "${resFinder_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
-ResGANNOT_srst2_filename=$(echo "${resGANNOT_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
+#argannot_srst2_filename=$(echo "${argannot_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
+#resFinder_srst2_filename=$(echo "${resFinder_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
+#ResGANNOT_srst2_filename=$(echo "${resGANNOT_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
 #echo "${ResGANNCBI_srst2}"
 ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
 #echo "${ResGANNCBI_srst2_filename}"
@@ -168,10 +174,12 @@ unclass_flag=30
 # MiniKraken DB (smaller, but effective option)
 kraken_mini_db="${local_DBs}/minikrakenDB/"
 #kraken_mini_db="/scicomp/agave/execution/database/public/references/organizations/CDC/NCEZID/kraken/cdc-20171227"
+#--------------------Check on how to use ---------------------------------#
 kraken_full_db="${scicomp_DBs}/kraken/1.0.0/kraken_db/"
 # MiniKraken DB (smaller, but effective option)
 kraken2_mini_db="${local_DBs}/minikraken2DB/"
 #kraken_mini_db="/scicomp/agave/execution/database/public/references/organizations/CDC/NCEZID/kraken/cdc-20171227"
+#--------------------Check on how to use ---------------------------------#
 kraken2_full_db="${scicomp_DBs}/kraken/2.0.0/kraken_db/"
 ### MOVE THESE TO SHARE/DBS
 # Kraken normal, specially made by Tom with bacteria,archae, and viruses
