@@ -160,8 +160,6 @@ fi
 ### Singularity call with variables
 singularity -s exec -B ${OUTDATADIR}/${filename}/FASTQs:/INPUT -B ${OUTDATADIR}/${filename}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/thanhleviet/bbtools bbduk.sh -${bbduk_mem} threads=${procs} in=/INPUT/${filename}_R1_001.fastq in2=/INPUT/${filename}_R2_001.fastq out=/OUTDIR/removedAdapters/${filename}-noPhiX-R1.fsq out2=/OUTDIR/removedAdapters/${filename}-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=${bbduk_k} hdist=${bbduk_hdist}
 
-exit
-
 # Get end time of bbduk and calculate run time and append to time summary (and sum to total time used)
 end=$SECONDS
 timeAdapt=$((end - start))
@@ -219,7 +217,7 @@ timeQCcount_trimmed=$((end - start))
 echo "QC count trimmed - ${timeQCcount_trimmed} seconds" >> "${time_summary}"
 totaltime=$((totaltime + timeQCcount))
 
-
+exit
 
 ######  Run Kraken on cleaned reads  ######
 echo "----- Running Kraken on cleaned reads -----"
