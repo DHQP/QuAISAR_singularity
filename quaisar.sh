@@ -158,7 +158,7 @@ fi
 ### Pure no variable singularity call. Single instance worked
 ### singularity -s exec -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806/FASTQs:/FASTQs -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806:/OUTDATADIR -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/databases:/DATABASES docker://quay.io/thanhleviet/bbtools bbduk.sh -Xmx20g threads=4 in=/FASTQs/N19E181565-01-TN-M05283-190806_R1_001.fastq in2=/FASTQs/N19E181565-01-TN-M05283-190806_R2_001.fastq out=/OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R1.fsq out2=/OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=31 hdist=1
 ### Singularity call with variables
-singularity -s exec -B ${OUTDATADIR}/${filename}/FASTQs:/INPUT -B ${OUTDATADIR}/${filename}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/thanhleviet/bbtools bbduk.sh -${bbduk_mem} threads=${procs} in=/INPUT/${filename}_R1_001.fastq in2=INPUT/${filename}_R2_001.fastq out=/OUTDIR/removedAdapters/${filename}-noPhiX-R1.fsq out2=/OUTDIR/removedAdapters/${filename}-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=${bbduk_k} hdist=${bbduk_hdist}
+singularity -s exec -B ${OUTDATADIR}/${filename}/FASTQs:/INPUT -B ${OUTDATADIR}/${filename}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/thanhleviet/bbtools bbduk.sh -${bbduk_mem} threads=${procs} in=/INPUT/${filename}_R1_001.fastq in2=/INPUT/${filename}_R2_001.fastq out=/OUTDIR/removedAdapters/${filename}-noPhiX-R1.fsq out2=/OUTDIR/removedAdapters/${filename}-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=${bbduk_k} hdist=${bbduk_hdist}
 
 exit
 
