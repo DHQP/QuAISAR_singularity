@@ -53,7 +53,7 @@ if [[ ! -d ${processed}/${2}/${1}/${3} ]]; then
 fi
 
 # Set output directory
-OUTDATADIR=${processed}/${2}/${1}/${3}
+OUTDATADIR=${processed}/${2}/${1}
 # Get proper input file based on output directory (whether it is full assembly or plasmid)
 # if [[ "${3}" == "plasmid_on_plasFlow" ]]; then
 # 	inpath="plasmidAssembly/${1}_plasmid_scaffolds_trimmed.fasta"
@@ -92,7 +92,7 @@ fi
 if [[ "${force}" == "true" ]]; then
 	echo "Checking against ALL plasmids, but unlikely to find anything"
 	plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
-	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/prokka:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0
+	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/${3}:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0
 
 	# Rename all files to include ID
 	mv ${OUTDATADIR}/Hit_in_genome_seq.fsa ${OUTDATADIR}/${1}_Hit_in_genome_seq_entero.fsa
@@ -102,7 +102,7 @@ if [[ "${force}" == "true" ]]; then
 	mv ${OUTDATADIR}/results_table.txt ${OUTDATADIR}/${1}_results_table_entero.txt
 
 	plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p gram_positive
-	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/prokka:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0
+	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/${3}:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0
 
 	# Rename all files to include ID
 	mv ${OUTDATADIR}/Hit_in_genome_seq.fsa ${OUTDATADIR}/${1}_Hit_in_genome_seq_gramp.fsa
