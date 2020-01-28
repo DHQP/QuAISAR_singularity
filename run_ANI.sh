@@ -145,6 +145,8 @@ cd ${OUTDATADIR}/ANI/localANIDB/
 # Singularity way
 singularity -s exec -B ${OUTDATADIR}/ANI/localANIDB:/INPUT -B ${OUTDATADIR}/ANI/:/OUTDIR docker://quay.io/mashtree:0.20--pl5.22.0_0 mashtree --numcpus ${procs} *.fasta --tempdir /OUTDIR/temp > ${OUTDATADIR}/ANI/"${genus_in}_and_${1}_mashtree.dnd"
 
+exit
+
 # Get total number of isolates compared in tree
 sample_count=$(find ${OUTDATADIR}/ANI/localANIDB/ -type f | wc -l)
 # Must remove sample of interest
