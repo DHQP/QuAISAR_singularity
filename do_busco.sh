@@ -91,7 +91,7 @@ echo "${PATH//:/$'\n'}"
 ##### Non singularity way
 ### run_BUSCO.py -i "${OUTDATADIR}/prokka/${1}_PROKKA.faa" -o "${1}" -l "${buscoDB}" -m prot
 ##### Singularity way
-singularity -s exec -B ${OUTDATADIR}/prokka:/INPUT -B ${local_DBs}/BUSCO:/DATABASES docker://quay.io/biocontainers/busco:3.0.2--py35_4 run_BUSCO.py -i /INPUT/${1}_PROKKA.faa -o ./ -l /DATABASES/${2,} -m prot
+singularity -s exec -B ${OUTDATADIR}/prokka:/INPUT -B ${local_DBs}/BUSCO:/DATABASES docker://quay.io/biocontainers/busco:3.0.2--py35_4 run_BUSCO.py -i /INPUT/${1}_PROKKA.faa -o . -l /DATABASES/${2,} -m prot
 
 
 # Moves output files to proper location and removes temp files
