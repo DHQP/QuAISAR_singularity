@@ -143,7 +143,7 @@ cd ${OUTDATADIR}/ANI/localANIDB/
 # Non-singularity way
 #mashtree --numcpus ${procs} *.fasta --tempdir ${OUTDATADIR}/ANI/temp > ${OUTDATADIR}/ANI/"${genus_in}_and_${1}_mashtree.dnd";
 # Singularity way
-singularity -s exec -B ${OUTDATADIR}/ANI/localANIDB:/INPUT -B ${OUTDATADIR}/ANI/:/OUTDIR docker://quay.io/mashtree:0.20--pl5.22.0_0 mashtree --numcpus ${procs} *.fasta --tempdir /OUTDIR/temp > ${OUTDATADIR}/ANI/"${genus_in}_and_${1}_mashtree.dnd"
+singularity -s exec -B ${OUTDATADIR}/ANI/localANIDB:/INPUT -B ${OUTDATADIR}/ANI/:/OUTDIR docker://quay.io/mashtree:0.20--pl5.22.0_0 mashtree --numcpus ${procs} /INPUT/*.fasta --tempdir /OUTDIR/temp > ${OUTDATADIR}/ANI/"${genus_in}_and_${1}_mashtree.dnd"
 
 exit
 
