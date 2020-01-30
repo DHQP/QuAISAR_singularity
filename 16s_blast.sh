@@ -79,7 +79,9 @@ owd=$(pwd)
 cd ${OUTDATADIR}/16s
 
 # Run barrnap to discover ribosomal sequences
-barrnap --kingdom bac --threads ${procs} "${OUTDATADIR}/Assembly/${sample_name}_scaffolds_trimmed.fasta" > ${OUTDATADIR}/16s/${sample_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta
+#barrnap --kingdom bac --threads ${procs} "${OUTDATADIR}/Assembly/${sample_name}_scaffolds_trimmed.fasta" > ${OUTDATADIR}/16s/${sample_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta
+
+singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT docker://quay.io/barrnap:0.8--0 barrnap --kingdom bac --threads ${procs} /INPUT/${sample_name}_scaffolds_trimmed.fasta > "${OUTDATADIR}/16s/${sample_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta"
 
 # Checks for successful output from barrnap, *rRNA_seqs.fasta
 if [[ ! -s ${OUTDATADIR}/16s/${sample_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta ]]; then
