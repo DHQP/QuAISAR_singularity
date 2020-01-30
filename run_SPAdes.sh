@@ -57,7 +57,7 @@ fi
 ###	spades.py --careful --memory "${spades_max_memory}" --only-assembler --pe1-1 "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq" --pe1-2 "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq" --pe1-s "${OUTDATADIR}/trimmed/${1}.single.fq" -o "${OUTDATADIR}/Assembly" --phred-offset "${phred}" -t "${procs}"
 ##### Singularity way
 #singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${OUTDATADIR}/Assembly:/OUTDIR docker://quay.io/biocontainers/spades:3.13.0--0 spades.py --careful --memory "${spades_max_memory}" --only-assembler --pe1-1 /INPUT/${1}_R1_001.paired.fq --pe1-2 /INPUT/${1}_R2_001.paired.fq --pe1-s /INPUT/${1}.single.fq -o /OUTDIR --phred-offset "${phred}" -t "${procs}"
-singularity -s exec docker://quay.io/biocontainers/spades:3.13.0--0 spades.py --careful --memory 16 --only-assembler --pe1-1 ${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq --pe1-2 ${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq --pe1-s ${OUTDATADIR}/trimmed/${1}.single.fq -o ${OUTDATADIR}/Assembly --phred-offset "${phred}" -t 6
+singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${OUTDATADIR}/Assembly:/OUTDIR docker://quay.io/biocontainers/spades:3.13.0--0 spades.py --careful --memory 16 --only-assembler --pe1-1 /INPUT/${1}_R1_001.paired.fq --pe1-2 /INPUT/${1}_R2_001.paired.fq --pe1-s /INPUT/${1}.single.fq -o /OUTDIR --phred-offset "${phred}" -t 6
 
 #Script exited gracefully (unless something else inside failed)
 exit 0
