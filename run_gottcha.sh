@@ -93,7 +93,7 @@ fi
 ##### Non singularity way
 ### gottcha.pl --mode all --outdir "${OUTDATADIR}/gottcha/gottcha_S" --input "${OUTDATADIR}/trimmed/${1}.paired.fq" --database "${gottcha_db}"
 ##### Singularity way
-singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${OUTDATADIR}/gottcha/gottcha_S:/OUTDIR docker://quay.io/biocontainers/gottcha:1.0--pl526_2 gottcha.pl --mode all --outdir /OUTDIR --input /INPUT/${1}.paired.fq --database ${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species
+singularity -s exec docker://quay.io/biocontainers/gottcha:1.0--pl526_2 gottcha.pl --mode all --outdir ${OUTDATADIR}/gottcha/gottcha_S --input ${OUTDATADIR}/trimmed/${1}.paired.fq --database ${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species
 
 # Create the krona graphs from each of the analyses
 
@@ -102,7 +102,7 @@ singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${OUTDATADIR}/gottcha/got
 ### ktImportText "${OUTDATADIR}/gottcha/gottcha_S/${1}_temp/${1}.lineage.tsv" -o "${OUTDATADIR}/gottcha/${1}_species.krona.html"
 ### ml -krona
 ##### Singularity way
-singularity -s exec -B ${OUTDATADIR}/gottcha/gottcha_S/${1}_temp:/INPUT -B ${OUTDATADIR}/gottcha:/OUTDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /INPUT/${1}.lineage.tsv -o /OUTDATADIR/${1}_species.krona.html
+singularity -s exec docker://quay.io/biocontainers/krona:2.7--0 ktImportText ${OUTDATADIR}/gottcha/gottcha_S/${1}_temp/${1}.lineage.tsv -o ${OUTDATADIR}/gottcha/${1}_species.krona.html
 
 #Create a best hit from gottcha1 file
 "${shareScript}/best_hit_from_gottcha1.sh" "${1}" "${2}"
