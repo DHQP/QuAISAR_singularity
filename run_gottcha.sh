@@ -93,7 +93,7 @@ fi
 ##### Non singularity way
 ### gottcha.pl --mode all --outdir "${OUTDATADIR}/gottcha/gottcha_S" --input "${OUTDATADIR}/trimmed/${1}.paired.fq" --database "${gottcha_db}"
 ##### Singularity way
-singularity -s exec docker://quay.io/biocontainers/gottcha:1.0--pl526_2 gottcha.pl --mode all --outdir ${OUTDATADIR}/gottcha/gottcha_S --input ${OUTDATADIR}/trimmed/${1}.paired.fq --database ${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species
+singularity exec docker://quay.io/biocontainers/gottcha:1.0--pl526_2 gottcha.pl --mode all --outdir ${OUTDATADIR}/gottcha/gottcha_S --input ${OUTDATADIR}/trimmed/${1}.paired.fq --database ${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species
 
 # Create the krona graphs from each of the analyses
 
