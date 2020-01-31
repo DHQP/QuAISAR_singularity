@@ -91,7 +91,8 @@ echo "--input_pe ${processed}/${2}/${1}/trimmed/${1}_S1_L001_R1_001.fastq.gz ${p
 ### srst2 --input_pe "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz" "${processed}/${2}/${1}/srst2/${1}_S1_L001_R2_001.fastq.gz" --output "${processed}/${2}/${1}/srst2/${1}_ResGANNCBI" --gene_db "${ResGANNCBI_srst2}"
 ##### Singularity way
 NAR_filename=$(echo ${ResGANNCBI_srst2} | rev | cut -d'/' -f1 | rev)
-singularity exec -B ${processed}/${2}/${1}/srst2:/WDIR docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /WDIR/${1}_S1_L001_R1_001.fastq.gz /WDIR/${1}_S1_L001_R2_001.fastq.gz --output /WDIR/${1}_${ResGANNCBI_srst2_filename} --gene_db ${local_DBs}/${NAR_filename}
+singularity exec -B ${processed}/${2}/${1}/srst2:/WDIR docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /WDIR/${1}_S1_L001_R1_001.fastq.gz /WDIR/${1}_S1_L001_R2_001.fastq.gz --output /WDIR/${1}_${ResGANNCBI_srst2_filename} --gene_db ${local_DBs}/star/${NAR_filename}
+#singularity exec -B /scicomp:/SCICOMP docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /SCICOMP/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/testreads/srst2/testreads_S1_L001_R1_001.fastq.gz /SCICOMP/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/testreads/srst2/testreads_S1_L001_R2_001.fastq.gz --output /SCICOMP/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/testreads/srst2/testreads_ResGANNCBI_20191227 --gene_db /SCICOMP/groups/OID/NCEZID/DHQP/CEMB/databases/star/ResGANNCBI_20191227_srst2.fasta
 
 # Cleans up leftover files
 rm -r "${processed}/${2}/${1}/srst2/${1}_S1_L001_R1_001.fastq.gz"

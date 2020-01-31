@@ -58,57 +58,57 @@ start_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
 # Set arguments to filename(sample name) project (miseq run id) and outdatadir(${processed}/project/filename)
 filename="${1}"
 project="${2}"
-OUTDATADIR="${processed}/${2}"
+OUTDATADIR="${processed}/${2}/${1}"
 
 # Remove old run stats as the presence of the file indicates run completion
-if [[ -f "${processed}/${proj}/${file}/${file}_pipeline_stats.txt" ]]; then
-	rm "${processed}/${proj}/${file}/${file}_pipeline_stats.txt"
+if [[ -f "${processed}/${proj}/${filename}/${filename}_pipeline_stats.txt" ]]; then
+	rm "${processed}/${proj}/${filename}/${filename}_pipeline_stats.txt"
 fi
 
 # Create an empty time_summary file that tracks clock time of tools used
-touch "${OUTDATADIR}/${filename}/${filename}_time_summary.txt"
-time_summary=${OUTDATADIR}/${filename}/${filename}_time_summary.txt
+touch "${OUTDATADIR}_time_summary.txt"
+time_summary=${OUTDATADIR}_time_summary.txt
 
 echo "Time summary for ${project}/${filename}: Started ${global_time}" >> "${time_summary}"
 echo "${project}/${filename} started at ${global_time}"
 
 echo "Starting processing of ${project}/${filename}"
 #Checks if FASTQ folder exists for current sample
-if [[ -d "$OUTDATADIR/$filename/FASTQs" ]]; then
+if [[ -d "${OUTDATADIR}/FASTQs" ]]; then
 	# Checks if FASTQ folder contains any files then continue
-	if [[ "$(ls -A "${OUTDATADIR}/${filename}/FASTQs")" ]]; then
+	if [[ "$(ls -A "${OUTDATADIR}/FASTQs")" ]]; then
 		# Checks to see if those files in the folder are unzipped fastqs
-		count_unzip=`ls -1 ${OUTDATADIR}/${filename}/FASTQs/*.fastq 2>/dev/null | wc -l`
-		count_zip=`ls -1 ${OUTDATADIR}/${filename}/FASTQs/*.fastq.gz 2>/dev/null | wc -l`
+		count_unzip=`ls -1 ${OUTDATADIR}/FASTQs/*.fastq 2>/dev/null | wc -l`
+		count_zip=`ls -1 ${OUTDATADIR}/FASTQs/*.fastq.gz 2>/dev/null | wc -l`
 		if [[ ${count_unzip} != 0 ]]; then
-		#if [[ -f "${OUTDATADIR}/${filename}/FASTQs/${filename}"*".fastq" ]]; then
+		#if [[ -f "${OUTDATADIR}/FASTQs/${filename}"*".fastq" ]]; then
 			echo "----- FASTQ(s) exist, continuing analysis -----"
-			if [[ -f "${OUTDATADIR}/${filename}/FASTQs/${filename}_R1_001.fastq" ]] && [[ ! -f "${OUTDATADIR}/${filename}/FASTQs/${filename}_R1_001.fastq.gz" ]]; then
-				gzip < "${OUTDATADIR}/${filename}/FASTQs/${filename}_R1_001.fastq" > "${OUTDATADIR}/${filename}/FASTQs/${filename}_R1_001.fastq.gz"
+			if [[ -f "${OUTDATADIR}/FASTQs/${filename}_R1_001.fastq" ]] && [[ ! -f "${OUTDATADIR}/FASTQs/${filename}_R1_001.fastq.gz" ]]; then
+				gzip < "${OUTDATADIR}/FASTQs/${filename}_R1_001.fastq" > "${OUTDATADIR}/FASTQs/${filename}_R1_001.fastq.gz"
 			fi
-			if [[ -f "${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq" ]] && [[ ! -f "${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq.gz" ]]; then
-				gzip < "${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq" > "${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq.gz"
+			if [[ -f "${OUTDATADIR}/FASTQs/${filename}_R2_001.fastq" ]] && [[ ! -f "${OUTDATADIR}/FASTQs/${filename}_R2_001.fastq.gz" ]]; then
+				gzip < "${OUTDATADIR}/FASTQs/${filename}_R2_001.fastq" > "${OUTDATADIR}/FASTQs/${filename}_R2_001.fastq.gz"
 			fi
 		# Checks if they are zipped fastqs (checks for R1 first)
-		elif [[ -f "${OUTDATADIR}/${filename}/FASTQs/${filename}_R1_001.fastq.gz" ]]; then
+		elif [[ -f "${OUTDATADIR}/FASTQs/${filename}_R1_001.fastq.gz" ]]; then
 			#echo "R1 zipped exists - unzipping"
-			gunzip -c "${OUTDATADIR}/${filename}/FASTQs/${filename}_R1_001.fastq.gz" > "${OUTDATADIR}/${filename}/FASTQs/${filename}_R1_001.fastq"
+			gunzip -c "${OUTDATADIR}/FASTQs/${filename}_R1_001.fastq.gz" > "${OUTDATADIR}/FASTQs/${filename}_R1_001.fastq"
 			# Checks for paired R2 file
-			if [[ -f "${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq.gz" ]]; then
+			if [[ -f "${OUTDATADIR}/FASTQs/${filename}_R2_001.fastq.gz" ]]; then
 				#echo "R2 zipped exists - unzipping"
-				gunzip -c "${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq.gz" > "${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq"
+				gunzip -c "${OUTDATADIR}/FASTQs/${filename}_R2_001.fastq.gz" > "${OUTDATADIR}/FASTQs/${filename}_R2_001.fastq"
 			else
 				echo "No matching R2 to unzip :("
 			fi
 		# Checks to see if there is an abandoned R2 zipped fastq
-		elif [[ -f "${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq.gz" ]]; then
+		elif [[ -f "${OUTDATADIR}/FASTQs/${filename}_R2_001.fastq.gz" ]]; then
 			#echo "R2 zipped  exists - unzipping"
-			gunzip -c "${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq.gz" > "${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq"
+			gunzip -c "${OUTDATADIR}/FASTQs/${filename}_R2_001.fastq.gz" > "${OUTDATADIR}/FASTQs/${filename}_R2_001.fastq"
 			echo "No matching R1 to unzip :("
 		fi
 	# If the folder is empty then return from function
 	else
-		echo "FASTQs folder empty - No fastqs available for ${filename} (and download was not requested). Either unzip fastqs to $OUTDATADIR/FASTQs or run the -d flag to trigger unzipping of gzs"
+		echo "FASTQs folder empty - No fastqs available for ${filename} (and download was not requested). Either unzip fastqs to ${OUTDATADIR}/FASTQs or run the -d flag to trigger unzipping of gzs"
 	fi
 # If the fastq folder does not exist then return out of function
 else
@@ -120,12 +120,12 @@ start=$SECONDS
 ### Count the number of Q20, Q30, bases and reads within a pair of FASTQ files
 echo "----- Counting read quality -----"
 # Checks for and creates the specified output folder for the QC counts
-if [ ! -d "$OUTDATADIR/$filename/preQCcounts" ]; then
-	echo "Creating $OUTDATADIR/$filename/preQCcounts"
-	mkdir -p "$OUTDATADIR/$filename/preQCcounts"
+if [ ! -d "${OUTDATADIR}/preQCcounts" ]; then
+	echo "Creating ${OUTDATADIR}/preQCcounts"
+	mkdir -p "${OUTDATADIR}/preQCcounts"
 fi
 # Run qc count check on raw reads
-python2 "${shareScript}/Fastq_Quality_Printer.py" -1 "${OUTDATADIR}/${filename}/FASTQs/${filename}_R1_001.fastq" -2 "${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq" > "${OUTDATADIR}/$filename/preQCcounts/${filename}_counts.txt"
+python2 "${shareScript}/Fastq_Quality_Printer.py" -1 "${OUTDATADIR}/FASTQs/${filename}_R1_001.fastq" -2 "${OUTDATADIR}/FASTQs/${filename}_R2_001.fastq" > "${OUTDATADIR}/preQCcounts/${filename}_counts.txt"
 
 	# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
 end=$SECONDS
@@ -138,27 +138,27 @@ echo "----- Running BBDUK on reads -----"
 # Gets start time for bbduk
 start=$SECONDS
 # Creates folder for BBDUK output
-if [ ! -d "$OUTDATADIR/$filename/removedAdapters" ]; then
-	echo "Creating $OUTDATADIR/$filename/removedAdapters"
-	mkdir -p "$OUTDATADIR/$filename/removedAdapters"
+if [ ! -d "${OUTDATADIR}/removedAdapters" ]; then
+	echo "Creating ${OUTDATADIR}/removedAdapters"
+	mkdir -p "${OUTDATADIR}/removedAdapters"
 # It complains if a folder already exists, so the current one is removed (shouldnt happen anymore as each analysis will move old runs to new folder)
 else
-	echo "Removing old $OUTDATADIR/$filename/removedAdapters"
-	rm -r "$OUTDATADIR/$filename/removedAdapters"
-	echo "Recreating $OUTDATADIR/$filename/removedAdapters"
-	mkdir -p "$OUTDATADIR/$filename/removedAdapters"
+	echo "Removing old ${OUTDATADIR}/removedAdapters"
+	rm -r "${OUTDATADIR}/removedAdapters"
+	echo "Recreating ${OUTDATADIR}/removedAdapters"
+	mkdir -p "${OUTDATADIR}/removedAdapters"
 fi
 
 ##### Non Singularity way
 ### ml BBMap/38.26
 ### Run bbduk
-### bbduk.sh -"${bbduk_mem}" threads="${procs}" in="${OUTDATADIR}/${filename}/FASTQs/${filename}_R1_001.fastq" in2="${OUTDATADIR}/${filename}/FASTQs/${filename}_R2_001.fastq" out="${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R1.fsq" out2="${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R2.fsq" ref="${phiX_location}" k="${bbduk_k}" hdist="${bbduk_hdist}"
+### bbduk.sh -"${bbduk_mem}" threads="${procs}" in="${OUTDATADIR}/FASTQs/${filename}_R1_001.fastq" in2="${OUTDATADIR}/FASTQs/${filename}_R2_001.fastq" out="${OUTDATADIR}/removedAdapters/${filename}-noPhiX-R1.fsq" out2="${OUTDATADIR}/removedAdapters/${filename}-noPhiX-R2.fsq" ref="${phiX_location}" k="${bbduk_k}" hdist="${bbduk_hdist}"
 
 ##### Singularity way
 ### Pure no variable singularity call. Single instance worked
 ### singularity -s exec -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806/FASTQs:/FASTQs -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806:/OUTDATADIR -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/databases:/DATABASES docker://quay.io/thanhleviet/bbtools bbduk.sh -Xmx20g threads=4 in=/FASTQs/N19E181565-01-TN-M05283-190806_R1_001.fastq in2=/FASTQs/N19E181565-01-TN-M05283-190806_R2_001.fastq out=/OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R1.fsq out2=/OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=31 hdist=1
 ### Singularity call with variables
-singularity -s exec -B ${OUTDATADIR}/${filename}/FASTQs:/INPUT -B ${OUTDATADIR}/${filename}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/thanhleviet/bbtools bbduk.sh -${bbduk_mem} threads=${procs} in=/INPUT/${filename}_R1_001.fastq in2=/INPUT/${filename}_R2_001.fastq out=/OUTDIR/removedAdapters/${filename}-noPhiX-R1.fsq out2=/OUTDIR/removedAdapters/${filename}-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=${bbduk_k} hdist=${bbduk_hdist}
+singularity -s exec -B ${OUTDATADIR}/FASTQs:/INPUT -B ${OUTDATADIR}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/thanhleviet/bbtools bbduk.sh -${bbduk_mem} threads=${procs} in=/INPUT/${filename}_R1_001.fastq in2=/INPUT/${filename}_R2_001.fastq out=/OUTDIR/removedAdapters/${filename}-noPhiX-R1.fsq out2=/OUTDIR/removedAdapters/${filename}-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=${bbduk_k} hdist=${bbduk_hdist}
 
 # Get end time of bbduk and calculate run time and append to time summary (and sum to total time used)
 end=$SECONDS
@@ -172,20 +172,20 @@ echo "----- Running Trimmomatic on reads -----"
 # Get start time of trimmomatic
 start=$SECONDS
 # Creates folder for trimmomatic output if it does not exist
-if [ ! -d "$OUTDATADIR/$filename/trimmed" ]; then
-	mkdir -p "$OUTDATADIR/$filename/trimmed"
+if [ ! -d "${OUTDATADIR}/trimmed" ]; then
+	mkdir -p "${OUTDATADIR}/trimmed"
 fi
 
 ##### Non Singularity way
 ###ml trimmomatic/0.35
 ### Run trimmomatic
-### trimmomatic "${trim_endtype}" -"${trim_phred}" -threads "${procs}" "${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R1.fsq" "${OUTDATADIR}/${filename}/removedAdapters/${filename}-noPhiX-R2.fsq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R1_001.paired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R1_001.unpaired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R2_001.paired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R2_001.unpaired.fq" ILLUMINACLIP:"${trim_adapter_location}:${trim_seed_mismatch}:${trim_palindrome_clip_threshold}:${trim_simple_clip_threshold}:${trim_min_adapt_length}:${trim_complete_palindrome}" SLIDINGWINDOW:"${trim_window_size}:${trim_window_qual}" LEADING:"${trim_leading}" TRAILING:"${trim_trailing}" MINLEN:"${trim_min_length}"
+### trimmomatic "${trim_endtype}" -"${trim_phred}" -threads "${procs}" "${OUTDATADIR}/removedAdapters/${filename}-noPhiX-R1.fsq" "${OUTDATADIR}/removedAdapters/${filename}-noPhiX-R2.fsq" "${OUTDATADIR}/trimmed/${filename}_R1_001.paired.fq" "${OUTDATADIR}/trimmed/${filename}_R1_001.unpaired.fq" "${OUTDATADIR}/trimmed/${filename}_R2_001.paired.fq" "${OUTDATADIR}/trimmed/${filename}_R2_001.unpaired.fq" ILLUMINACLIP:"${trim_adapter_location}:${trim_seed_mismatch}:${trim_palindrome_clip_threshold}:${trim_simple_clip_threshold}:${trim_min_adapt_length}:${trim_complete_palindrome}" SLIDINGWINDOW:"${trim_window_size}:${trim_window_qual}" LEADING:"${trim_leading}" TRAILING:"${trim_trailing}" MINLEN:"${trim_min_length}"
 
 ##### Singularity way
 ### Pure no variable singularity call. Single instance worked
 ### singularity -s exec -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806/removedAdapters:/INPUT -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles/singu_test/N19E181565-01-TN-M05283-190806:/OUTDATADIR -B /scicomp/groups/OID/NCEZID/DHQP/CEMB/databases:/DATABASES docker://quay.io/biocontainers/trimmomatic:0.36--5 trimmomatic PE -phred33 -threads 4 /OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R1.fsq /OUTDATADIR/removedAdapters/N19E181565-01-TN-M05283-190806-noPhiX-R2.fsq /OUTDATADIR/trimmed/N19E181565-01-TN-M05283-190806_R1_001.paired.fq /OUTDATADIR/trimmed/N19E181565-01-TN-M05283-190806_R1_001.unpaired.fq /OUTDATADIR/trimmed/N19E181565-01-TN-M05283-190806_R2_001.paired.fq /OUTDATADIR/trimmed/N19E181565-01-TN-M05283-190806_R2_001.unpaired.fq ILLUMINACLIP:/DATABASES/adapters.fasta:2:30:10:8:TRUE SLIDINGWINDOW:20:30 LEADING:20 TRAILING:20 MINLEN:50
 # Singularity with variables
-singularity -s exec -B ${OUTDATADIR}/${filename}/removedAdapters:/INPUT -B ${OUTDATADIR}/${filename}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/trimmomatic:0.36--5 trimmomatic ${trim_endtype} -${trim_phred} -threads ${procs} /INPUT/${filename}-noPhiX-R1.fsq /INPUT/${filename}-noPhiX-R2.fsq /OUTDIR/trimmed/${filename}_R1_001.paired.fq /OUTDIR/trimmed/${filename}_R1_001.unpaired.fq /OUTDIR/trimmed/${filename}_R2_001.paired.fq /OUTDIR/trimmed/${filename}_R2_001.unpaired.fq ILLUMINACLIP:/DATABASES/adapters.fasta:${trim_seed_mismatch}:${trim_palindrome_clip_threshold}:${trim_simple_clip_threshold}:${trim_min_adapt_length}:${trim_complete_palindrome} SLIDINGWINDOW:${trim_window_size}:${trim_window_qual} LEADING:${trim_leading} TRAILING:${trim_trailing} MINLEN:${trim_min_length}
+singularity -s exec -B ${OUTDATADIR}/removedAdapters:/INPUT -B ${OUTDATADIR}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/trimmomatic:0.36--5 trimmomatic ${trim_endtype} -${trim_phred} -threads ${procs} /INPUT/${filename}-noPhiX-R1.fsq /INPUT/${filename}-noPhiX-R2.fsq /OUTDIR/trimmed/${filename}_R1_001.paired.fq /OUTDIR/trimmed/${filename}_R1_001.unpaired.fq /OUTDIR/trimmed/${filename}_R2_001.paired.fq /OUTDIR/trimmed/${filename}_R2_001.unpaired.fq ILLUMINACLIP:/DATABASES/adapters.fasta:${trim_seed_mismatch}:${trim_palindrome_clip_threshold}:${trim_simple_clip_threshold}:${trim_min_adapt_length}:${trim_complete_palindrome} SLIDINGWINDOW:${trim_window_size}:${trim_window_qual} LEADING:${trim_leading} TRAILING:${trim_trailing} MINLEN:${trim_min_length}
 
 # Get end time of trimmomatic and calculate run time and append to time summary (and sum to total time used)
 end=$SECONDS
@@ -200,15 +200,15 @@ start=$SECONDS
 ### Count the number of Q20, Q30, bases and reads within the trimmed pair of FASTQ files
 echo "----- Counting read quality of trimmed files-----"
 # Checks for and creates the specified output folder for the QC counts
-if [ ! -d "$OUTDATADIR/$filename/preQCcounts" ]; then
-	echo "Creating $OUTDATADIR/$filename/preQCcounts"
-	mkdir -p "$OUTDATADIR/$filename/preQCcounts"
+if [ ! -d "${OUTDATADIR}/preQCcounts" ]; then
+	echo "Creating ${OUTDATADIR}/preQCcounts"
+	mkdir -p "${OUTDATADIR}/preQCcounts"
 fi
 # Run qc count check on filtered reads
-python3 "${shareScript}/Fastq_Quality_Printer.py" -1 "${OUTDATADIR}/${filename}/trimmed/${filename}_R1_001.paired.fq" -2 "${OUTDATADIR}/${filename}/trimmed/${filename}_R2_001.paired.fq" > "${OUTDATADIR}/${filename}/preQCcounts/${filename}_trimmed_counts.txt"
+python3 "${shareScript}/Fastq_Quality_Printer.py" -1 "${OUTDATADIR}/trimmed/${filename}_R1_001.paired.fq" -2 "${OUTDATADIR}/trimmed/${filename}_R2_001.paired.fq" > "${OUTDATADIR}/preQCcounts/${filename}_trimmed_counts.txt"
 
 # Merge both unpaired fq files into one for GOTTCHA
-cat "${OUTDATADIR}/${filename}/trimmed/${filename}_R1_001.unpaired.fq" "${OUTDATADIR}/${filename}/trimmed/${filename}_R2_001.unpaired.fq" > "${OUTDATADIR}/${filename}/trimmed/${filename}.single.fq"
+cat "${OUTDATADIR}/trimmed/${filename}_R1_001.unpaired.fq" "${OUTDATADIR}/trimmed/${filename}_R2_001.unpaired.fq" > "${OUTDATADIR}/trimmed/${filename}.single.fq"
 
 
 # Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
@@ -225,11 +225,15 @@ echo "----- Running Kraken on cleaned reads -----"
 start=$SECONDS
 # Run kraken
 
-
+singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --paired --db /DATABASES/minikrakenDB/  --preload --fastq-input --threads 4 --output ${OUTDATADIR}/kraken/preAssembly/${1}_paired.kraken --classified-out /OUTDIR/kraken/preAssembly/${1}_paired.classified /INPUT/${1}_R1_001.paired.fq /INPUT/${1}_R2_001.paired.fq
+singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.mpa"
+python3 "${shareScript}/Metaphlan2krona.py" -p "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.mpa" -k "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.krona"
+singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT docker://quay.io/biocontainers/krona:2.7--0 ktImportText /INPUT/${1}_${3}.krona -o /INPUT/${1}_${3}.html
+"${shareScript}/best_hit_from_kraken.sh" "${1}" "${2}" "${3}" "${4}" "kraken"
 
 #############  Pull code from wrapper
 ##### singularity changed in wrapper
- "${shareScript}/run_kraken.sh" "${filename}" pre paired "${project}"
+# "${shareScript}/run_kraken.sh" "${filename}" pre paired "${project}"
 
 # Get end time of kraken on reads and calculate run time and append to time summary (and sum to total time used)
 end=$SECONDS
@@ -267,11 +271,11 @@ start=$SECONDS
 for i in 1 2 3
 do
 	# If assembly exists already and this is the first attempt (then the previous run will be used) [should not happen anymore as old runs are now renamed]
-	if [ -s "${OUTDATADIR}/${filename}/Assembly/scaffolds.fasta" ]; then
+	if [ -s "${OUTDATADIR}/Assembly/scaffolds.fasta" ]; then
 		echo "Previous assembly already exists, using it (delete/rename the assembly folder at ${OUTDATADIR}/ if you'd like to try to reassemble"
 	# Run normal mode if no assembly file was found
 	else
-		"${shareScript}/run_SPAdes.sh" "${filename}" normal "${project}"
+		singularity -s exec -B ${OUTDATADIR}/trimmed:/INPUT -B ${OUTDATADIR}/Assembly:/OUTDIR docker://quay.io/biocontainers/spades:3.13.0--0 spades.py --careful --memory 16 --only-assembler --pe1-1 /INPUT/${filename}_R1_001.paired.fq --pe1-2 /INPUT/${filename}_R2_001.paired.fq --pe1-s /INPUT/${filename}.single.fq -o /OUTDIR --phred-offset "${phred}" -t 6
 	fi
 	# Removes any core dump files (Occured often during testing and tweaking of memory parameter
 	if [ -n "$(find "${shareScript}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then
@@ -280,7 +284,7 @@ do
 	fi
 done
 # Returns if all 3 assembly attempts fail
-if [[ -f "${OUTDATADIR}/${filename}/Assembly/scaffolds.fasta" ]] && [[ -s "${OUTDATADIR}/${filename}/Assembly/scaffolds.fasta" ]]; then
+if [[ -f "${OUTDATADIR}/Assembly/scaffolds.fasta" ]] && [[ -s "${OUTDATADIR}/Assembly/scaffolds.fasta" ]]; then
 	echo "Assembly completed and created a non-empty scaffolds file"
 else
 	echo "Assembly FAILED 3 times, continuing to next sample..." >&2
@@ -295,17 +299,17 @@ totaltime=$((totaltime + timeSPAdes))
 
 ### Removing Short Contigs  ###
 echo "----- Removing Short Contigs -----"
-python3 "${shareScript}/removeShortContigs.py" -i "${OUTDATADIR}/${filename}/Assembly/scaffolds.fasta" -t 500 -s "normal_SPAdes"
-mv "${OUTDATADIR}/${filename}/Assembly/scaffolds.fasta.TRIMMED.fasta" "${OUTDATADIR}/${filename}/Assembly/${filename}_scaffolds_trimmed.fasta"
+python3 "${shareScript}/removeShortContigs.py" -i "${OUTDATADIR}/Assembly/scaffolds.fasta" -t 500 -s "normal_SPAdes"
+mv "${OUTDATADIR}/Assembly/scaffolds.fasta.TRIMMED.fasta" "${OUTDATADIR}/Assembly/${filename}_scaffolds_trimmed.fasta"
 
 ### Removing Short Contigs  ###
 echo "----- Removing Short Contigs -----"
-python3 "${shareScript}/removeShortContigs.py" -i "${OUTDATADIR}/${filename}/Assembly/contigs.fasta" -t 500 -s "normal_SPAdes"
-mv "${OUTDATADIR}/${filename}/Assembly/contigs.fasta.TRIMMED.fasta" "${OUTDATADIR}/${filename}/Assembly/${filename}_contigs_trimmed.fasta"
+python3 "${shareScript}/removeShortContigs.py" -i "${OUTDATADIR}/Assembly/contigs.fasta" -t 500 -s "normal_SPAdes"
+mv "${OUTDATADIR}/Assembly/contigs.fasta.TRIMMED.fasta" "${OUTDATADIR}/Assembly/${filename}_contigs_trimmed.fasta"
 
 
 # Checks to see that the trimming and renaming worked properly, returns if unsuccessful
-if [ ! -s "${OUTDATADIR}/${filename}/Assembly/${filename}_scaffolds_trimmed.fasta" ]; then
+if [ ! -s "${OUTDATADIR}/Assembly/${filename}_scaffolds_trimmed.fasta" ]; then
 	echo "Trimmed contigs file does not exist continuing to next sample">&2
 	return 1
 fi
@@ -315,7 +319,16 @@ echo "----- Running Kraken on Assembly -----"
 # Get start time of kraken on assembly
 start=$SECONDS
 # Run kraken on assembly
-"${shareScript}/run_kraken.sh" "${filename}" post assembled "${project}"
+singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}:/OUTDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/minikrakenDB/  --preload --threads ${procs} --output /OUTDIR/kraken/${2}Assembly/${1}_${3}.kraken --classified-out /OUTDIR/kraken/${2}Assembly/${1}_${3}.classified /INPUT/${1}_scaffolds_trimmed.fasta
+python3 ${shareScript}/Kraken_Assembly_Converter_2_Exe.py -i "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.kraken"
+singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}_BP.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.mpa"
+python3 "${shareScript}/Metaphlan2krona.py" -p "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.mpa" -k "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_weighted.krona"
+singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}_BP.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}_BP.list"
+singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT docker://quay.io/biocontainers/krona:2.7--0 ktImportText /INPUT/${1}_${3}_weighted.krona -o /INPUT/${1}_${3}_weighted_BP_krona.html
+"${shareScript}/best_hit_from_kraken.sh" "${1}" "${2}" "${3}_BP" "${4}" "kraken"singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.list"
+singularity -s exec -B ${OUTDATADIR}/kraken/${2}Assembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /INPUT/${1}_${3}.kraken > "${OUTDATADIR}/kraken/${2}Assembly/${1}_${3}.mpa"
+"${shareScript}/best_hit_from_kraken.sh" "${1}" "${2}" "${3}" "${4}" "kraken"
+
 # Get end time of kraken on assembly and calculate run time and append to time summary (and sum to total time used)
 end=$SECONDS
 timeKrakAss=$((end - start))
@@ -336,7 +349,7 @@ totaltime=$((totaltime + time16s))
 # Capture the anticipated taxonomy of the sample using kraken on assembly output
 echo "----- Extracting Taxonomy from Taxon Summary -----"
 # Checks to see if the kraken on assembly completed successfully
-if [ -s "${OUTDATADIR}/${filename}/${filename}.tax" ]; then
+if [ -s "${OUTDATADIR}.tax" ]; then
 	# Read each line of the kraken summary file and pull out each level  taxonomic unit and store for use later in busco and ANI
 	while IFS= read -r line  || [ -n "$line" ]; do
 		# Grab first letter of line (indicating taxonomic level)
@@ -367,7 +380,7 @@ if [ -s "${OUTDATADIR}/${filename}/${filename}.tax" ]; then
 		then
 			domain=$(echo "${line}" | awk -F ' ' '{print $2}')
 		fi
-	done < "${OUTDATADIR}/${filename}/${filename}.tax"
+	done < "${OUTDATADIR}.tax"
 # Print out taxonomy for confirmation/fun
 echo "Taxonomy - ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species}"
 # If no kraken summary file was found
@@ -400,12 +413,12 @@ echo "Identifying Genes (Prokka) - ${timeProk} seconds" >> "${time_summary}"
 totaltime=$((totaltime + timeProk))
 
 # Rename contigs to something helpful (Had to wait until after prokka runs due to the strict naming requirements
-mv "${OUTDATADIR}/${filename}/Assembly/${filename}_scaffolds_trimmed.fasta" "${OUTDATADIR}/${filename}/Assembly/${filename}_scaffolds_trimmed_original.fasta"
-python3 "${shareScript}/fasta_headers.py" -i "${OUTDATADIR}/${filename}/Assembly/${filename}_scaffolds_trimmed_original.fasta" -o "${OUTDATADIR}/${filename}/Assembly/${filename}_scaffolds_trimmed.fasta"
+mv "${OUTDATADIR}/Assembly/${filename}_scaffolds_trimmed.fasta" "${OUTDATADIR}/Assembly/${filename}_scaffolds_trimmed_original.fasta"
+python3 "${shareScript}/fasta_headers.py" -i "${OUTDATADIR}/Assembly/${filename}_scaffolds_trimmed_original.fasta" -o "${OUTDATADIR}/Assembly/${filename}_scaffolds_trimmed.fasta"
 
 # Rename contigs to something helpful (Had to wait until after prokka runs due to the strict naming requirements
-mv "${OUTDATADIR}/${filename}/Assembly/${filename}_contigs_trimmed.fasta" "${OUTDATADIR}/${filename}/Assembly/${filename}_contigs_trimmed_original.fasta"
-python3 "${shareScript}/fasta_headers.py" -i "${OUTDATADIR}/${filename}/Assembly/${filename}_contigs_trimmed_original.fasta" -o "${OUTDATADIR}/${filename}/Assembly/${filename}_contigs_trimmed.fasta"
+mv "${OUTDATADIR}/Assembly/${filename}_contigs_trimmed.fasta" "${OUTDATADIR}/Assembly/${filename}_contigs_trimmed_original.fasta"
+python3 "${shareScript}/fasta_headers.py" -i "${OUTDATADIR}/Assembly/${filename}_contigs_trimmed_original.fasta" -o "${OUTDATADIR}/Assembly/${filename}_contigs_trimmed.fasta"
 
 ### Average Nucleotide Identity ###
 echo "----- Running ANI for Species confirmation -----"
@@ -428,12 +441,12 @@ totaltime=$((totaltime + timeANI))
 
 # Get taxonomy from currently available files (Only ANI, has not been run...yet, will change after discussions)
 "${shareScript}/determine_taxID.sh" "${filename}" "${project}"
-"${OUTDATADIR}/${filename}/${filename}.tax"
+"${OUTDATADIR}.tax"
 
 ### BUSCO on prokka output ###
 echo "----- Running BUSCO on Assembly -----"
 # Check to see if prokka finished successfully
-if [ -s "${OUTDATADIR}/${filename}/prokka/${filename}_PROKKA.gbf" ] || [ -s "${OUTDATADIR}/${filename}/prokka/${filename}_PROKKA.gff" ]; then
+if [ -s "${OUTDATADIR}/prokka/${filename}_PROKKA.gbf" ] || [ -s "${OUTDATADIR}/prokka/${filename}_PROKKA.gff" ]; then
 	# Get start time of busco
 	start=$SECONDS
 	# Set default busco database as bacteria in event that we dont have a database match for sample lineage
