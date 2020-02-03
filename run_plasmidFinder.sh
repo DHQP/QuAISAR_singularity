@@ -92,7 +92,7 @@ fi
 if [[ "${force}" == "true" ]]; then
 	echo "Checking against ALL plasmids, but unlikely to find anything"
 	plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
-	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/${3}:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0
+	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/${3}:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /INPUT -o /OUTDIR -k ${plasmidFinder_identity} -p enterobacteriaceae
 
 	# Rename all files to include ID
 	mv ${OUTDATADIR}/Hit_in_genome_seq.fsa ${OUTDATADIR}/${1}_Hit_in_genome_seq_entero.fsa
@@ -102,7 +102,7 @@ if [[ "${force}" == "true" ]]; then
 	mv ${OUTDATADIR}/results_table.txt ${OUTDATADIR}/${1}_results_table_entero.txt
 
 	plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p gram_positive
-	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/${3}:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0
+	singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/${3}:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /INPUT -o /OUTDIR -k ${plasmidFinder_identity} -p gram_positive
 
 	# Rename all files to include ID
 	mv ${OUTDATADIR}/Hit_in_genome_seq.fsa ${OUTDATADIR}/${1}_Hit_in_genome_seq_gramp.fsa
@@ -125,7 +125,8 @@ else
 		# If family is enterobacteriaceae, then run against that DB
 		if [[ "${family,}" == "enterobacteriaceae" ]]; then
 			echo "Checking against Enterobacteriaceae plasmids"
-			plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
+			#plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
+			singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/${3}:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /INPUT -o /OUTDIR -k ${plasmidFinder_identity} -p enterobacteriaceae
 			# Rename all files to include ID
 			mv ${OUTDATADIR}/Hit_in_genome_seq.fsa ${OUTDATADIR}/${1}_Hit_in_genome_seq_entero.fsa
 			mv ${OUTDATADIR}/Plasmid_seq.fsa ${OUTDATADIR}/${1}_Plasmid_seq_enetero.fsa
@@ -136,6 +137,7 @@ else
 		elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${3,}" == "streptococcus" ]] || [[ "${3,}" == "enterococcus" ]]; then
 			echo "Checking against Staph, Strep, and Enterococcus plasmids"
 			plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p gram_positive
+			singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/${3}:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /INPUT -o /OUTDIR -k ${plasmidFinder_identity} -p gram_positive
 			# Rename all files to include ID
 			mv ${OUTDATADIR}/Hit_in_genome_seq.fsa ${OUTDATADIR}/${1}_Hit_in_genome_seq_gramp.fsa
 			mv ${OUTDATADIR}/Plasmid_seq.fsa ${OUTDATADIR}/${1}_Plasmid_seq_gramp.fsa
@@ -145,14 +147,16 @@ else
 		# Family is not one that has been designated by the creators of plasmidFinder to work well, but still attempting to run against both databases
 		else
 			echo "Checking against ALL plasmids, but unlikely to find anything"
-			plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
+			#plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
+			singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/${3}:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /INPUT -o /OUTDIR -k ${plasmidFinder_identity} -p enterobacteriaceae
 			# Rename all files to include ID
 			mv ${OUTDATADIR}/Hit_in_genome_seq.fsa ${OUTDATADIR}/${1}_Hit_in_genome_seq_entero.fsa
 			mv ${OUTDATADIR}/Plasmid_seq.fsa ${OUTDATADIR}/${1}_Plasmid_seq_enetero.fsa
 			mv ${OUTDATADIR}/results.txt ${OUTDATADIR}/${1}_results_entero.txt
 			mv ${OUTDATADIR}/results_tab.txt ${OUTDATADIR}/${1}_results_tab_entero.txt
 			mv ${OUTDATADIR}/results_table.txt ${OUTDATADIR}/${1}_results_table_entero.txt
-			plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p gram_positive
+			#plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p gram_positive
+			singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/${3}:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /INPUT -o /OUTDIR -k ${plasmidFinder_identity} -p gram_positive
 			# Rename all files to include ID
 			mv ${OUTDATADIR}/Hit_in_genome_seq.fsa ${OUTDATADIR}/${1}_Hit_in_genome_seq_gramp.fsa
 			mv ${OUTDATADIR}/Plasmid_seq.fsa ${OUTDATADIR}/${1}_Plasmid_seq_gramp.fsa
