@@ -148,7 +148,7 @@ else
 		else
 			echo "Checking against ALL plasmids, but unlikely to find anything"
 			#plasmidfinder -i ${processed}/${2}/${1}/${inpath} -o ${OUTDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
-			singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/${3}:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /INPUT -o /OUTDIR -k ${plasmidFinder_identity} -p enterobacteriaceae
+			singularity -s exec -B ${OUTDATADIR}/Assembly:/INPUT -B ${OUTDATADIR}/${3}:/OUTDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -h   #i /INPUT -o /OUTDIR -k ${plasmidFinder_identity} -p enterobacteriaceae
 			# Rename all files to include ID
 			mv ${OUTDATADIR}/Hit_in_genome_seq.fsa ${OUTDATADIR}/${1}_Hit_in_genome_seq_entero.fsa
 			mv ${OUTDATADIR}/Plasmid_seq.fsa ${OUTDATADIR}/${1}_Plasmid_seq_enetero.fsa
