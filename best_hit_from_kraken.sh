@@ -35,7 +35,7 @@ elif [ -z "$1" ]; then
 	exit 1
 elif [[ "$1" = "-h" ]]; then
 	echo "Usage is ./best_hit_from_kraken.sh  sample_name  [pre/post] [paired/assembled] run_ID	source(kraken|kraken2)"
-	echo "Output is saved to ${processed}/miseq_run_ID_id/sample_name/kraken/(pre/post)assembly/sample_name_kraken_summary_(paired/assembled)"
+	echo "Output is saved to ${output_dir}/miseq_run_ID_id/sample_name/kraken/(pre/post)assembly/sample_name_kraken_summary_(paired/assembled)"
 	exit 0
 elif [ -z "$2" ]; then
 	echo "Empty assembly relativity supplied to $0, exiting"
@@ -60,7 +60,7 @@ else
 fi
 
 #Sets output folder to the correct path relative to assembly completion
-OUTDATADIR="${processed}/${4}/${1}/${5}/${2}Assembly"
+OUTDATADIR="${output_dir}/${4}/${1}/${5}/${2}Assembly"
 echo "-${OUTDATADIR}-"
 
 #Creates the default values for output in case any calculations are interrupted.
@@ -177,9 +177,9 @@ done < "${OUTDATADIR}/${1}_${3}.list"
 # Grabs total possible reads from preQC counts if kraken was used on reads (pre assembly)
 if [[ "${2}" = "pre" ]]; then
 	# Checks for the existence of the preQC counts file to get total possible reads
-	if [[ -s "${processed}/${4}/${1}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
+	if [[ -s "${output_dir}/${4}/${1}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
 		# Pulls the total number of possible reads from the preQC counts file
-		file_reads=$(head -n 1 "${processed}/${4}/${1}/preQCcounts/${1}_trimmed_counts.txt" | cut -d'	' -f13)
+		file_reads=$(head -n 1 "${output_dir}/${4}/${1}/preQCcounts/${1}_trimmed_counts.txt" | cut -d'	' -f13)
 		# Calculates the true count of unclassified reads rather than the reported value from kraken
 		unclass_reads=$(( file_reads - classified_reads ))
 		# Calculates the percent of unclassified reads using the total possible reads
@@ -193,7 +193,7 @@ if [[ "${2}" = "pre" ]]; then
 elif [[ "${2}" = "post" ]]; then
 	total_reads=$(( classified_reads + unclass_reads ))
 	# Checks for existence of trimmed contig file
-	if [[ -s "${processed}/${4}/${1}/Assembly/${1}_scaffolds_trimmed.fasta" ]]; then
+	if [[ -s "${output_dir}/${4}/${1}/Assembly/${1}_scaffolds_trimmed.fasta" ]]; then
 		# Sums unclassified and classified weighted base length from contigs
 		file_reads=$(( unclass_reads + classified_reads ))
 		# Calculates percent of classified reads as 100*classified reads/contigs

@@ -35,18 +35,18 @@ elif [[ -z "${1}" ]]; then
 	exit 1
 elif [[ "${1}" = "-h" ]]; then
 	echo "Usage is ./run_sum.sh miseq_run_ID -vo(optional)"
-	echo "Output is saved to ${processed}/miseq_run_ID"
+	echo "Output is saved to ${output_dir}/miseq_run_ID"
 	exit 0
 fi
 
-echo "Checking for ${processed}/${1}/${1}_list(_ordered).txt"
+echo "Checking for ${output_dir}/${1}/${1}_list(_ordered).txt"
 
 # Checks for existence of list files in specific order
 if [[ -z ${2} ]]; then
-	if [[ -f ${processed}/${1}/${1}_list_ordered.txt ]]; then
-		list="${processed}/${1}/${1}_list_ordered.txt"
-	elif [[ -f ${processed}/${1}/${1}_list.txt ]]; then
-		list="${processed}/${1}/${1}_list.txt"
+	if [[ -f ${output_dir}/${1}/${1}_list_ordered.txt ]]; then
+		list="${output_dir}/${1}/${1}_list_ordered.txt"
+	elif [[ -f ${output_dir}/${1}/${1}_list.txt ]]; then
+		list="${output_dir}/${1}/${1}_list.txt"
 	else
 		echo "No list file exists, cannot do a summary, unless I add in an automagic creator later"
 		exit
@@ -74,10 +74,10 @@ while IFS= read -r samples || [ -n "$samples" ]; do
 	echo ${file}
 	file=$(echo "${samples}" | awk -F/ '{ print $2}' | tr -d '[:space:]')
 	proj=$(echo "${samples}" | awk -F/ '{ print $1}' | tr -d '[:space:]')
-	"${shareScript}/validate_piperun.sh" "${file}" "${proj}" > "${processed}/${proj}/${file}/${file}_pipeline_stats.txt"
+	"${src}/validate_piperun.sh" "${file}" "${proj}" > "${output_dir}/${proj}/${file}/${file}_pipeline_stats.txt"
 	if [[ "${type}" = "project" ]]; then
-		cat "${processed}/${proj}/${file}/${file}_pipeline_stats.txt" >> "${processed}/${proj}/${sum_name}"
+		cat "${output_dir}/${proj}/${file}/${file}_pipeline_stats.txt" >> "${output_dir}/${proj}/${sum_name}"
 	else
-		cat "${processed}/${proj}/${file}/${file}_pipeline_stats.txt" >> "${3}/${sum_name}"
+		cat "${output_dir}/${proj}/${file}/${file}_pipeline_stats.txt" >> "${3}/${sum_name}"
 	fi
 done < ${list}

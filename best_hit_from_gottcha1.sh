@@ -39,12 +39,12 @@ elif [ -z "$2" ]; then
 # command line version of usage for script
 elif [[ "$1" = "-h" ]]; then
 	echo "Usage is ./best_hit_from_gottcha1.sh   sample_name   run_ID"
-	echo "Output is saved to ${processed}/miseq_run_ID/sample_name/gottcha/"
+	echo "Output is saved to ${output_dir}/miseq_run_ID/sample_name/gottcha/"
 	exit 0
 fi
 
 #Sets output directory to the gottcha folder of sample ID that was passed. Sample ID folder is found under processed samples in MMB_Data folder
-OUTDATADIR="${processed}/${2}/${1}/gottcha"
+OUTDATADIR="${output_dir}/${2}/${1}/gottcha"
 
 #Sets many of the values of percents/descriptions to default values to guard against null/unset values if a failure occurs during processing
 unclass_percent=0
@@ -156,9 +156,9 @@ done < "${OUTDATADIR}/gottcha_S/${1}.gottcha.tsv"
 
 # Calculate % of unclassified reads using sum of highest taxon level reads against total reads found in QC counts
 # Checks for the existence of the trimmed_counts file for the sample. If found true % classification is performed
-if [[ -s "${processed}/${2}/${1}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
+if [[ -s "${output_dir}/${2}/${1}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
 	# The total reads is determined by pulling from the trimmed_counts
-	qc_reads=$(head -n 1 "${processed}/${2}/${1}/preQCcounts/${1}_trimmed_counts.txt" | cut -d'	' -f13)
+	qc_reads=$(head -n 1 "${output_dir}/${2}/${1}/preQCcounts/${1}_trimmed_counts.txt" | cut -d'	' -f13)
 	qc_reads=$((qc_reads/2))
 	# Unclassified reads are calculated by subtracting the sum of all phylum reads from the total possible reads
 	unclass_reads=$(( qc_reads - sum_reads ))
@@ -174,7 +174,7 @@ if [[ -s "${processed}/${2}/${1}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
 	species_percent_total=$( echo "${species_reads} ${qc_reads}" | awk '{ printf "%2.2f", ($1*100)/$2 }' )
 # If the trimmed_counts file is not found all true % applied percentages are lableled as unknown
 else
-	echo "Cant find ${processed}/${2}/${1}/preQCcounts/${1}_trimmed_counts.txt. Continuing without true % reads used..."
+	echo "Cant find ${output_dir}/${2}/${1}/preQCcounts/${1}_trimmed_counts.txt. Continuing without true % reads used..."
 	unclass_percent="UNK"
 	u_percent="UNK"
 	unclass_reads="UNK"

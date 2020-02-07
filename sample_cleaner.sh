@@ -34,22 +34,22 @@ if [[ $# -eq 0 ]]; then
 # Shows a brief uasge/help section if -h option used as first argument
 elif [[ "$1" = "-h" ]]; then
 	echo "Usage is ./sample_cleaner.sh  sample_name MiSeq_Run_ID"
-	echo "Will clean ${processed}/${2}/${1} folder"
+	echo "Will clean ${output_dir}/${2}/${1} folder"
 	exit 0
-elif [[ ! -d "${processed}/${2}" ]] || [[ ! -d "${processed}/${2}/${1}" ]]; then
-	if [ ! -d "${processed}/${2}" ]; then
-		echo "Project ${processed}/${2} does not exist"
-	elif [ ! -d "${processed}/${2}/${1}" ]; then
-		echo "Isolate ${processed}/${2}/${1} does not exist"
+elif [[ ! -d "${output_dir}/${2}" ]] || [[ ! -d "${output_dir}/${2}/${1}" ]]; then
+	if [ ! -d "${output_dir}/${2}" ]; then
+		echo "Project ${output_dir}/${2} does not exist"
+	elif [ ! -d "${output_dir}/${2}/${1}" ]; then
+		echo "Isolate ${output_dir}/${2}/${1} does not exist"
 	fi
 	echo "EXITING..."
 	exit 1
 else
-	echo "Cleaning ${processed}/${2}/${1}"
+	echo "Cleaning ${output_dir}/${2}/${1}"
 fi
 
 # Set main sample folder to clean
-sample_folder="${processed}/${2}/${1}"
+sample_folder="${output_dir}/${2}/${1}"
 echo "Source - ${sample_folder}"
 sample_name=$(echo "${sample_folder}" | rev | cut -d'/' -f1 | rev)
 echo "Sample_ID - ${sample_name}"
@@ -77,13 +77,13 @@ fi
 echo "Cleaning Assembly Folder"
 if [ -d "${sample_folder}/Assembly" ]; then
 	echo "Using Gulviks SPAdes cleaner on Assembly"
-	${shareScript}/gulvic_SPAdes_cleaner.sh "${sample_folder}/Assembly"
+	${src}/gulvic_SPAdes_cleaner.sh "${sample_folder}/Assembly"
 fi
 # Use Gulviks cleaner script on regular SPAdes output
 echo "Cleaning plasmidAssembly Folder"
 if [ -d "${sample_folder}/plasmidAssembly" ]; then
 	echo "Using Gulviks SPAdes cleaner on plasmidAssembly"
-	${shareScript}/gulvic_SPAdes_cleaner.sh "${sample_folder}/plasmidAssembly"
+	${src}/gulvic_SPAdes_cleaner.sh "${sample_folder}/plasmidAssembly"
 fi
 	# Remove hmm_output folder from BUSCO analysis if found
 	echo "Cleaning BUSCO Folder"
@@ -243,4 +243,4 @@ fi
 	if [[ -f "${sample_folder}/trimmed/${sample_name}_R2_001.paired.fq.gz" ]] && [[ -f "${sample_folder}/trimmed/${sample_name}_R2_001.paired.fq.gz" ]]; then
 		clumpify in1="${sample_folder}/trimmed/${sample_name}_R1_001.paired.fq.gz" in2="${sample_folder}/trimmed/${sample_name}_R2_001.paired.fq.gz" out1="${sample_folder}/trimmed/${sample_name}_R1_001.paired.fq.clumped.gz" out2="${sample_folder}/trimmed/${sample_name}_R2_001.paired.fq.clumped.gz" reorder
 	fi
-echo "Sample ${2}/${1} should now be clean" >> "${processed}/cleaned_sample_list.txt"
+echo "Sample ${2}/${1} should now be clean" >> "${output_dir}/cleaned_sample_list.txt"
