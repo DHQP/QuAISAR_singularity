@@ -56,7 +56,7 @@ for ((i=1 ; i <= nopts ; i++)); do
 			config_file="$2"
 			if [ -f "${config_file}" ]; then
 				. "${config_file}"
-				BASEDIR="${processed}"
+				BASEDIR="${output_dir}"
 			else
 				echo "Can not find config file, $2"
 				exit 22
@@ -89,9 +89,9 @@ for ((i=1 ; i <= nopts ; i++)); do
 			PROJECT="$3"
 			shift 3
 
-			echo "processed=${BASEDIR}" >> "${shareScript}/config.sh"
-			. ${shareScript}/config.sh
-			echo "${processed}"
+			echo "output_dir=${BASEDIR}" >> "${src}/config.sh"
+			. ${src}/config.sh
+			echo "${output_dir}"
 			list_path="${BASEDIR}/${PROJECT}/${PROJECT}_list.txt"
 			if [[ ! -d ${BASEDIR} ]]; then
 				mkdir -p ${BASEDIR}
@@ -114,7 +114,7 @@ done
 echo -e "Source folder: ${INDATADIR}\\nOutput folder: ${BASEDIR}\\nList based analysis:  ${list_path}"
 
 # Sets folder to where files will be downloaded to
-PROJDATADIR="${processed}/${PROJECT}"
+PROJDATADIR="${output_dir}/${PROJECT}"
 if [ ! -d "${PROJDATADIR}" ]; then
 	echo "Creating $PROJDATADIR"
 	mkdir -p "${PROJDATADIR}"
@@ -317,7 +317,7 @@ for isolate in "${isolate_list[@]}";
 	totaltime=0
 	start_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
 
-	# Set arguments to isolate_name PROJECT (miseq run id) and SAMPDATADIR(${processed}/PROJECT/isolate_name)
+	# Set arguments to isolate_name PROJECT (miseq run id) and SAMPDATADIR(${output_dir}/PROJECT/isolate_name)
 	isolate_name=$(echo "${isolate}" | awk -F/ '{print $2}' | tr -d '[:space:]')
 	SAMPDATADIR="${PROJDATADIR}/${isolate_name}"
 
@@ -386,7 +386,7 @@ for isolate in "${isolate_list[@]}";
 			mkdir -p "${SAMPDATADIR}/preQCcounts"
 		fi
 		# Run qc count check on raw reads
-		python3 "${shareScript}/Fastq_Quality_Printer.py" -1 "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq" -2 "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_counts.txt"
+		python3 "${src}/Fastq_Quality_Printer.py" -1 "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq" -2 "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_counts.txt"
 		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
 		end=$SECONDS
 		timeQCcount=$((end - start))
@@ -440,7 +440,7 @@ for isolate in "${isolate_list[@]}";
 		### Count the number of Q20, Q30, bases and reads within the trimmed pair of FASTQ files
 		echo "----- Counting read quality of trimmed files-----"
 		# Run qc count check on filtered reads
-		python3 "${shareScript}/Fastq_Quality_Printer.py" -1 "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq" -2 "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_trimmed_counts.txt"
+		python3 "${src}/Fastq_Quality_Printer.py" -1 "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq" -2 "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_trimmed_counts.txt"
 		# Merge both unpaired fq files into one for GOTTCHA
 		cat "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.unpaired.fq" "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.unpaired.fq" > "${SAMPDATADIR}/trimmed/${isolate_name}.single.fq"
 		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
@@ -456,9 +456,9 @@ for isolate in "${isolate_list[@]}";
 		# Run kraken
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --paired --db /DATABASES/minikrakenDB/  --preload --fastq-input --threads 4 --output /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken --classified-out /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.classified /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa"
-		python3 "${shareScript}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa" -k "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.krona"
+		python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa" -k "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.krona"
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.krona -o /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.html
-		"${shareScript}/best_hit_from_kraken.sh" "${isolate_name}" "pre" "paired" "${PROJECT}" "kraken"
+		"${src}/best_hit_from_kraken.sh" "${isolate_name}" "pre" "paired" "${PROJECT}" "kraken"
 		# Get end time of kraken on reads and calculate run time and append to time summary (and sum to total time used)
 		end=$SECONDS
 		timeKrak=$((end - start))
@@ -470,10 +470,10 @@ for isolate in "${isolate_list[@]}";
 		# Get start time of gottcha
 		start=$SECONDS
 		# run gottcha
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DBs ${local_DBs}/singularity_images/gottcha.simg gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DBs/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DBs ${src}/singularity_images/gottcha.simg gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DBs/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/gottcha/gottcha_S/${isolate_name}_temp/${isolate_name}.lineage.tsv -o /SAMPDIR/gottcha/${isolate_name}_species.krona.html
 		#Create a best hit from gottcha1 file
-		"${shareScript}/best_hit_from_gottcha1.sh" "${isolate_name}" "${PROJECT}"
+		"${src}/best_hit_from_gottcha1.sh" "${isolate_name}" "${PROJECT}"
 		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
 		end=$SECONDS
 		timeGott=$((end - start))
@@ -491,7 +491,7 @@ for isolate in "${isolate_list[@]}";
 		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.fastq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz
 		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.fastq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz
 
-		singularity exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DBs ${local_DBs}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/testreads_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/testreads_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/testreads_ResGANNCBI_20191227 --gene_db /DBs/star/ResGANNCBI_20191227_srst2.fasta
+		singularity exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DBs ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/testreads_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/testreads_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/testreads_ResGANNCBI_20191227 --gene_db /DBs/star/ResGANNCBI_20191227_srst2.fasta
 
 		# Cleans up leftover files
 		rm -r "${SAMPDATADIR}/srst2/"*".bam"
@@ -526,9 +526,9 @@ for isolate in "${isolate_list[@]}";
 				singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/spades:3.13.0--0 spades.py --careful --memory 16 --only-assembler --pe1-1 /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq --pe1-2 /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq --pe1-s /SAMPDIR/trimmed/${isolate_name}.single.fq -o /SAMPDIR/Assembly --phred-offset "${phred}" -t "${procs}"
 			fi
 			# Removes any core dump files (Occured often during testing and tweaking of memory parameter
-			if [ -n "$(find "${shareScript}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then
+			if [ -n "$(find "${src}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then
 				echo "Found core dump files in assembly (assumed to be from SPAdes, but could be anything before that as well) and attempting to delete"
-				find "${shareScript}" -maxdepth 1 -name 'core.*' -exec rm -f {} \;
+				find "${src}" -maxdepth 1 -name 'core.*' -exec rm -f {} \;
 			fi
 		done
 		# Returns if all 3 assembly attempts fail
@@ -547,7 +547,7 @@ for isolate in "${isolate_list[@]}";
 
 	### Removing Short Contigs  ###
 	echo "----- Removing Short Contigs -----"
-	python3 "${shareScript}/removeShortContigs.py" -i "${SAMPDATADIR}/Assembly/scaffolds.fasta" -t 500 -s "normal_SPAdes"
+	python3 "${src}/removeShortContigs.py" -i "${SAMPDATADIR}/Assembly/scaffolds.fasta" -t 500 -s "normal_SPAdes"
 	mv "${SAMPDATADIR}/Assembly/scaffolds.fasta.TRIMMED.fasta" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
 
 	# Checks to see that the trimming and renaming worked properly, returns if unsuccessful
@@ -562,14 +562,14 @@ for isolate in "${isolate_list[@]}";
 	start=$SECONDS
 	# Run kraken on assembly
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/minikrakenDB/  --preload --threads ${procs} --output /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken --classified-out /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.classified /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
-	python3 ${shareScript}/Kraken_Assembly_Converter_2_Exe.py -i "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken"
+	python3 ${src}/Kraken_Assembly_Converter_2_Exe.py -i "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa"
-	python3 "${shareScript}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa" -k "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.krona"
+	python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa" -k "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.krona"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted.krona -o /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted_BP_krona.html
-	"${shareScript}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled_BP" "${PROJECT}" "kraken"singularity -s exec -B ${SAMPDATADIR}/kraken/postAssembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /INPUT/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
+	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled_BP" "${PROJECT}" "kraken"singularity -s exec -B ${SAMPDATADIR}/kraken/postAssembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /INPUT/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa"
-	"${shareScript}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled" "${PROJECT}" "kraken"
+	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled" "${PROJECT}" "kraken"
 	# Get end time of kraken on assembly and calculate run time and append to time summary (and sum to total time used)
 	end=$SECONDS
 	timeKrakAss=$((end - start))
@@ -612,7 +612,7 @@ for isolate in "${isolate_list[@]}";
 			if [ "${ribosome}" = "16S" ]; then
 				# Replace with subsequence once it can handle multi-fastas
 				#make_fasta $1 $2 $contig $cstart $cstop
-				python3 ${shareScript}/get_subsequence.py -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" -s ${cstart} -e ${cstop} -t ${contig} >> ${SAMPDATADIR}/16s/${isolate_name}_16s_rna_seqs.txt
+				python3 ${src}/get_subsequence.py -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" -s ${cstart} -e ${cstop} -t ${contig} >> ${SAMPDATADIR}/16s/${isolate_name}_16s_rna_seqs.txt
 				found_16s="true"
 			fi
 		fi
@@ -643,7 +643,7 @@ for isolate in "${isolate_list[@]}";
 		attempts=0
 		# Will try getting info from entrez up to 5 times, as it has a higher chance of not finishing correctly on the first try
 		while [[ ${attempts} -lt 5 ]]; do
-			blast_id=$(singularity exec ${local_DBs}/singularity_images/entrez_taxon.simg python3 /entrez/entrez_get_taxon_from_accession.py -a "${gb_acc}" -e "${runner}")
+			blast_id=$(singularity exec ${src}/singularity_images/entrez_taxon.simg python3 /entrez/entrez_get_taxon_from_accession.py -a "${gb_acc}" -e "${runner}")
 			if [[ ! -z ${blast_id} ]]; then
 				break
 			else
@@ -677,7 +677,7 @@ for isolate in "${isolate_list[@]}";
 			attempts=0
 			# Will try getting info from entrez up to 5 times, as it has a higher chance of not finishing correctly on the first try
 			while [[ ${attempts} -lt 5 ]]; do
-				blast_id=$(singularity exec ${local_DBs}/singularity_images/entrez_taxon.simg python3 /entrez/entrez_get_taxon_from_accession.py -a "${gb_acc}" -e "${runner}")
+				blast_id=$(singularity exec ${src}/singularity_images/entrez_taxon.simg python3 /entrez/entrez_get_taxon_from_accession.py -a "${gb_acc}" -e "${runner}")
 				if [[ ! -z ${blast_id} ]]; then
 					break
 				else
@@ -706,7 +706,7 @@ for isolate in "${isolate_list[@]}";
 	totaltime=$((totaltime + time16s))
 
 	# Get taxonomy from currently available files (Only ANI, has not been run...yet, will change after discussions)
-	"${shareScript}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
+	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
 	# Capture the anticipated taxonomy of the sample using kraken on assembly output
 	echo "----- Extracting Taxonomy from Taxon Summary -----"
 	# Checks to see if the kraken on assembly completed successfully
@@ -764,7 +764,7 @@ start=$SECONDS
 	cd "${SAMPDATADIR}/Assembly_Stats"
 	# Call QUAST
 	#python2 "/apps/x86_64/quast/quast-4.3/quast.py" -o "${SAMPDATADIR}/Assembly_Stats" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${sharescript}/QUAST5.simg python3 /quast/quast.py -o /SAMPDIR/Assembly_Stats /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/QUAST5.simg python3 /quast/quast.py -o /SAMPDIR/Assembly_Stats /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
 	mv "${SAMPDATADIR}/Assembly_Stats/report.txt" "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.txt"
 	mv "${SAMPDATADIR}/Assembly_Stats/report.tsv" "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv"
 	# Get end time of qc quality check and calculate run time and append to time summary (and sum to total time used)
@@ -794,7 +794,7 @@ start=$SECONDS
 
 	# Rename contigs to something helpful (Had to wait until after prokka runs due to the strict naming requirements
 	mv "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed_original.fasta"
-	python3 "${shareScript}/fasta_headers.py" -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed_original.fasta" -o "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
+	python3 "${src}/fasta_headers.py" -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed_original.fasta" -o "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
 
 	### Average Nucleotide Identity ###
 	echo "----- Running ANI for Species confirmation -----"
@@ -808,7 +808,6 @@ start=$SECONDS
 	elif [[ "${genus}" = "Shigella" ]]; then
 		genus="Escherichia"
 	fi
-	#"${shareScript}/run_ANI.sh" "${isolate_name}" "${genus}" "${species}" "${PROJECT}"
 
 	if [ ! -d "${SAMPDATADIR}/ANI" ]; then  #create outdir if absent
 		echo "${SAMPDATADIR}/ANI"
@@ -820,7 +819,7 @@ start=$SECONDS
 		# Write non-results to a file in ANI folder
 		echo "No matching ANI database found for ${genus}" >> "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_${genus}).txt"
 		global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
-		echo "ANI: ${genus} - Found as ${isolate_name} on ${global_time}" >> "${shareScript}/maintenance_To_Do.txt"
+		echo "ANI: ${genus} - Found as ${isolate_name} on ${global_time}" >> "${src}/maintenance_To_Do.txt"
 		exit 1
 	fi
 
@@ -993,7 +992,7 @@ start=$SECONDS
 	else
 		attempts=0
 		while [[ ${attempts} -lt 25 ]]; do
-			best_organism_guess=$(singularity exec ${local_DBs}/singularity_images/entrez_taxon.simg python3 /entrez/entrez_get_taxon_from_accession.py -a "${accession}" -e "${runner}")
+			best_organism_guess=$(singularity exec ${src}/singularity_images/entrez_taxon.simg python3 /entrez/entrez_get_taxon_from_accession.py -a "${accession}" -e "${runner}")
 			if [[ ! -z ${best_organism_guess} ]]; then
 				break
 			else
@@ -1012,7 +1011,7 @@ start=$SECONDS
 	totaltime=$((totaltime + timeANI))
 
 	# Get taxonomy from currently available files
-	"${shareScript}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
+	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
 
 	### BUSCO on prokka output ###
 	echo "----- Running BUSCO on Assembly -----"
@@ -1036,7 +1035,7 @@ start=$SECONDS
 		# Report an unknown sample to the maintenance file to look into
 		if [[ "${busco_found}" -eq 0 ]]; then
 			global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
-			echo "BUSCO: ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species} - Found as ${PROJECT}/${isolate_name} on ${global_time}" >> "${shareScript}/maintenance_To_Do.txt"
+			echo "BUSCO: ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species} - Found as ${PROJECT}/${isolate_name} on ${global_time}" >> "${src}/maintenance_To_Do.txt"
 		fi
 		# Show which database entry will be used for comparison
 		echo "buscoDB:${buscoDB}"
@@ -1064,7 +1063,7 @@ start=$SECONDS
 		echo "Creating ${SAMPDATADIR}/c-sstar${ResGANNCBI_srst2_filename}_${csstar_gapping}"
 		mkdir -p "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
 	fi
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularity_images/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -s "${csim}" -d "${ResGANNCBI_srst2}" > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -s "${csim}" -d "${ResGANNCBI_srst2}" > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar"
 
 	###################################### FIND WAY TO CATCH FAILURE? !!!!!!!!!! ###############################
 
@@ -1144,7 +1143,7 @@ start=$SECONDS
 		echo "Creating ${SAMPDATADIR}/GAMA"
 		mkdir -p "${SAMPDATADIR}/GAMA"
 	fi
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularity_images/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py "-i" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -d "${ResGANNCBI_srst2}" -o /SAMPDIR/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py "-i" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -d "${ResGANNCBI_srst2}" -o /SAMPDIR/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
 
 	end=$SECONDS
 	timeGAMA=$((end - start))
@@ -1155,18 +1154,17 @@ start=$SECONDS
 	echo "----- Running MLST -----"
 	start=$SECONDS
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}.mlst"
-	python3 "${shareScript}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}.mlst" -t standard
+	python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}.mlst" -t standard
 	type=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
 	if [[ "${genus}_${species}" = "Acinetobacter_baumannii" ]]; then
 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst --scheme "abaumannii" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst"
-		python3 "${shareScript}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst" -t standard
+		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst" -t standard
 		mv "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Oxford.mlst"
 		mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
 		#Check for "-", unidentified type
 		type1=$(tail -n1 ${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst | cut -d' ' -f3)
 		type2=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
 		if [[ "${type1}" = "-" ]]; then
-			#"${shareScript}/run_srst2_mlst.sh" "${isolate_name}" "${PROJECT}" "Acinetobacter" "baumannii#1"
 			singularity -s exec docker://quay.io/biocontainers/srst2:0.2.0--py27_2 getmlst.py --species "Acinetobacter baumannii#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
 			sed -i -e 's/Oxf_//g' "${SAMPDATADIR}/MLST/srst2/Acinetobacter_baumannii#1.fasta"
 			sed -i -e 's/Oxf_//g' "${SAMPDATADIR}/MLST/srst2/abaumannii.txt"
@@ -1196,10 +1194,9 @@ start=$SECONDS
 			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.sorted.bam" ]]; then
 				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.sorted.bam"
 			fi
-			python3 "${shareScript}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#1-${db_name}.mlst" -t srst2
+			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#1-${db_name}.mlst" -t srst2
 		fi
 		if [[ "${type2}" = "-" ]]; then
-			#"${shareScript}/run_srst2_mlst.sh" "${isolate_name}" "${PROJECT}" "Acinetobacter" "baumannii#2"
 			singularity -s exec docker://quay.io/biocontainers/srst2:0.2.0--py27_2 getmlst.py --species "Acinetobacter baumannii#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
 			sed -i -e 's/Pas_//g' "${SAMPDATADIR}/MLST/srst2/Acinetobacter_baumannii#2.fasta"
 			sed -i -e 's/Pas_//g' "${SAMPDATADIR}/MLST/srst2/abaumannii_2.txt"
@@ -1229,18 +1226,17 @@ start=$SECONDS
 			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.sorted.bam" ]]; then
 				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.sorted.bam"
 			fi
-			python3 "${shareScript}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#2-${db_name}.mlst" -t srst2
+			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#2-${db_name}.mlst" -t srst2
 		fi
 	elif [[ "${genus}_${species}" = "Escherichia_coli" ]]; then
 		# Verify that ecoli_2 is default and change accordingly
 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst --scheme "ecoli_2" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst"
-		python3 "${shareScript}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst" -t standard
+		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst" -t standard
 		mv "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
 		mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Achtman.mlst"
 		type2=$(tail -n1 ${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst | cut -d' ' -f3)
 		type1=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
 		if [[ "${type1}" = "-" ]]; then
-			#"${shareScript}/run_srst2_mlst.sh" "${isolate_name}" "${PROJECT}" "Escherichia" "coli#1"
 			singularity -s exec docker://quay.io/biocontainers/srst2:0.2.0--py27_2 getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
 			db_name="Achtman"
 			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
@@ -1268,10 +1264,9 @@ start=$SECONDS
 				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#1.sorted.bam"
 			fi
 
-			python3 "${shareScript}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#1-${db_name}.mlst" -t srst2
+			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#1-${db_name}.mlst" -t srst2
 		fi
 		if [[ "${type2}" = "-" ]]; then
-			#"${shareScript}/run_srst2_mlst.sh" "${isolate_name}" "${PROJECT}" "Escherichia" "coli#2"
 			singularity -s exec docker://quay.io/biocontainers/srst2:0.2.0--py27_2 getmlst.py --species "Escherichia coli#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
 			db_name="Pasteur"
 			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
@@ -1299,11 +1294,10 @@ start=$SECONDS
 				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#2.sorted.bam"
 			fi
 
-			python3 "${shareScript}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#2-${db_name}.mlst" -t srst2
+			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#2-${db_name}.mlst" -t srst2
 		fi
 	else
 		if [[ "${type}" == "-" ]]; then
-			#"${shareScript}/run_srst2_mlst.sh" "${isolate_name}" "${PROJECT}" "Escherichia" "coli#1"
 			singularity -s exec docker://quay.io/biocontainers/srst2:0.2.0--py27_2 getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
 			db_name="Pasteur"
 			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
@@ -1330,7 +1324,7 @@ start=$SECONDS
 			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.${genus}_${species}.sorted.bam" ]]; then
 				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.${genus}_${species}.sorted.bam"
 			fi
-			python3 "${shareScript}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_${genus}_${species}-${db_name}.mlst" -t srst2
+			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_${genus}_${species}-${db_name}.mlst" -t srst2
 		fi
 		mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
 	fi
@@ -1393,7 +1387,7 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 	# Run plasFlow if isolate is from the Enterobacteriaceae family  ##### When should we check if this will be expanded?
 	if [[ "${family}" == "Enterobacteriaceae" ]]; then
 		start=$SECONDS
-		${shareScript}/run_plasFlow.sh "${isolate_name}" "${PROJECT}"
+		${src}/run_plasFlow.sh "${isolate_name}" "${PROJECT}"
 		# Create output directory
 
 
@@ -1402,9 +1396,9 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 		fi
 		if [[ -s "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" ]]; then
 			# Trim contigs a little to 2000 and larger and put through plasflow.
-			python3 "${shareScript}/removeShortContigs.py" -i "${SAMPDATADIR}/Assembly/scaffolds.fasta" -t 2000 -s "normal_SPAdes"
+			python3 "${src}/removeShortContigs.py" -i "${SAMPDATADIR}/Assembly/scaffolds.fasta" -t 2000 -s "normal_SPAdes"
 			# Renames headers of fasta files accordingly
-			python3 "${shareScript}/fasta_headers.py" -i "${SAMPDATADIR}/Assembly/scaffolds.fasta.TRIMMED.fasta" -o "${SAMPDATADIR}/plasFlow/${isolate_name}_scaffolds_trimmed_2000.fasta"
+			python3 "${src}/fasta_headers.py" -i "${SAMPDATADIR}/Assembly/scaffolds.fasta.TRIMMED.fasta" -o "${SAMPDATADIR}/plasFlow/${isolate_name}_scaffolds_trimmed_2000.fasta"
 			# Removes intermeidate fasta file
 			rm -r "${SAMPDATADIR}/Assembly/scaffolds.fasta.TRIMMED.fasta"
 			# Run plasflow on newly trimmed assembly file
@@ -1413,14 +1407,13 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/bowtie2:2.2.4--py27hc9558a2_5 bowtie2-build -f /SAMPDIR/plasFlow/${isolate_name}_plasFlow_results.tsv_chromosomes.fasta /SAMPDIR/plasFlow/bowtie2-index/bowtie2_${isolate_name}_chr
 			mkdir ${SAMPDATADIR}/plasFlow/filtered_reads_70/
 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/bowtie2:2.2.4--py27hc9558a2_5 bowtie2 -x /SAMPDIR/plasFlow/bowtie2-index/bowtie2_${isolate_name}_chr -1 /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq -2 /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq -S /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.sam -p ${procs} --local
-
-			samtools view -bS "${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}.sam" > "${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}.bam"
-			bam2fastq --no-aligned -o "${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}_R#_bacterial.fastq" "${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}.bam"
-			unicycler -1 "${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}_R_1_bacterial.fastq" -2 "${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}_R_2_bacterial.fastq" -o "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly"
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/samtools:1.10--h9402c20_2 samtools view -bS /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.sam > "${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}.bam"
+  		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0 bam2fastq --no-aligned -o /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R#_bacterial.fastq /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.bam
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/unicycler:0.4.4--py37h8b12597_2 unicycler -1 /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R_1_bacterial.fastq -2 /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R_2_bacterial.fastq -o /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly
 			mv "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/assembly.fasta" "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_original.fasta"
 			mv "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/assembly.gfa" "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_assembly.gfa"
-			python3 ${shareScript}/fasta_headers_plasFlow.py -i "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_original.fasta" -o "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta"
-			python3 "${shareScript}/removeShortContigs.py" -i "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta" -t 500 -s "plasFlow"
+			python3 ${src}/fasta_headers_plasFlow.py -i "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_original.fasta" -o "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta"
+			python3 "${src}/removeShortContigs.py" -i "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta" -t 500 -s "plasFlow"
 			mv "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta.TRIMMED.fasta" "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta"
 			rm "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta"
 		else
@@ -1428,17 +1421,12 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 		fi
 
 
-
-
-
-
-
 		if [[ -s "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta" ]]; then
 			if [ ! -d "${SAMPDATADIR}/Assembly_Stats_plasFlow" ]; then
 				echo "Creating ${SAMPDATADIR}/Assembly_Stats_plasFlow"
 		 		mkdir -p "${SAMPDATADIR}/Assembly_Stats_plasFlow"
 		 	fi
-		 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${sharescript}/QUAST5.simg python3 /quast/quast.py -o /SAMPDIR/Assembly_Stats_plasFlow /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
+		 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/QUAST5.simg python3 /quast/quast.py -o /SAMPDIR/Assembly_Stats_plasFlow /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
 
 		 	mv "${SAMPDATADIR}/Assembly_Stats_plasFlow/report.txt" "${SAMPDATADIR}/Assembly_Stats_plasFlow/${isolate_name}_report.txt"
 		 	mv "${SAMPDATADIR}/Assembly_Stats_plasFlow/report.tsv" "${SAMPDATADIR}/Assembly_Stats_plasFlow/${isolate_name}_report.tsv"
@@ -1451,7 +1439,7 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 			echo "Creating ${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
 			mkdir -p "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
 		fi
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularity_images/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -s "${cpsim}" -d "${ResGANNCBI_srst2}" > "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}.sstar"
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -s "${cpsim}" -d "${ResGANNCBI_srst2}" > "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}.sstar"
 
 		###################################### FIND WAY TO CATCH FAILURE !!!!!!!!!! ###############################
 
@@ -1574,7 +1562,7 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 			echo "Creating ${SAMPDATADIR}/GAMA_plasFlow"
 			mkdir -p "${SAMPDATADIR}/GAMA_plasFlow"
 		fi
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularity_images/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py -i /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -d "${ResGANNCBI_srst2}" -o /SAMPDIR/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py -i /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -d "${ResGANNCBI_srst2}" -o /SAMPDIR/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
 
 
 		end=$SECONDS
@@ -1583,14 +1571,14 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 		totaltime=$((totaltime + timeplasflow))
 	fi
 
-	"${shareScript}/validate_piperun.sh" "${isolate_name}" "${PROJECT}" > "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt"
-	"${shareScript}/sample_cleaner.sh" "${isolate_name}" "${PROJECT}"
+	"${src}/validate_piperun.sh" "${isolate_name}" "${PROJECT}" > "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt"
+	"${src}/sample_cleaner.sh" "${isolate_name}" "${PROJECT}"
 
 
 	# Extra dump cleanse in case anything else failed
-	if [ -n "$(find "${shareScript}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then
+	if [ -n "$(find "${src}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then
 		echo "Found core dump files at end of processing ${isolate_name} and attempting to delete"
-		find "${shareScript}" -maxdepth 1 -name 'core.*' -exec rm -f {} \;
+		find "${src}" -maxdepth 1 -name 'core.*' -exec rm -f {} \;
 	fi
 
 	global_end_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
@@ -1817,12 +1805,12 @@ done < ${list_path}
 
 # Get run summary info to send in an email
 runsumdate=$(date "+%m_%d_%Y_at_%Hh_%Mm")
-${shareScript}/run_sum.sh ${PROJECT}
+${src}/run_sum.sh ${PROJECT}
 
 # Copy the config file to the log directory so as not to hold up any future quaisar runs that count the number of config files present, but for some reason does not remove from script folder
-if [[ -f "${shareScript}/config_${config_counter}.sh" ]]; then
+if [[ -f "${src}/config_${config_counter}.sh" ]]; then
 	echo "Moving config file(config_${config_counter}.sh) to log directory ($log_dir)"
-	mv "${shareScript}/config_${config_counter}.sh" "${log_dir}/config_${PROJECT}.sh"
+	mv "${src}/config_${config_counter}.sh" "${log_dir}/config_${PROJECT}.sh"
 fi
 
 end_date=$(date "+%m_%d_%Y_at_%Hh_%Mm")

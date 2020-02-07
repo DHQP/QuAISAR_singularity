@@ -20,57 +20,16 @@
 # Get hostname to help determine if certain tools can be run and how to specifically get others to run with the right options
 hostname=$(hostname -f)
 host=$(echo ${hostname} | cut -d'.' -f1)
-#echo ${hostname}
-if [[ "${host}" = "scicomp-mue-01" ]];
-then
-	host="Biolinux"
-elif [[ "${host}" =~ ^("login01"|"aspen"|"login.aspen"|"login02"|"login2.aspen") ]];
-then
-	host="aspen_login"
-elif [[ "${host:0:4}" = "node" ]];
-then
-	host="cluster:${host}"
-elif [[ "${host}" = "scbs-mue-prod-01" ]];
-then
-	host="Biolinux2020"
-else
-	echo "Hostname (${host}) not recognized, exiting"
-	exit 1
-fi
 
 ############# General Options #############
 
-#Location to store all Quaisar-H pipeline run logs
-Quaisar_H_log_directory="/scicomp/groups/OID/NCEZID/DHQP/CEMB/QuAISAR_logs"
 #shortcut to processed samples folder
-processed="/scicomp/groups/OID/NCEZID/DHQP/CEMB/MiSeqAnalysisFiles"
+output_dir="/raid5/MiSeqAnalysisFiles"
 # Locations of all scripts and necessary accessory files
-shareScript="$(pwd)"
-# Location to keep all temp files when doing mass qsubmissions
-mass_qsub_folder="/scicomp/groups/OID/NCEZID/DHQP/CEMB/Nick_DIR/mass_subs"
-if [[ ! -d "/scicomp/groups/OID/NCEZID/DHQP/CEMB/Nick_DIR/mass_subs" ]]; then
-	mkdir -p "/scicomp/groups/OID/NCEZID/DHQP/CEMB/Nick_DIR/mass_subs"
-fi
-# Location of default Outbreak Analyses files
-Phyl_OA="/scicomp/groups/OID/NCEZID/DHQP/CEMB/PhylogenyAnalysis"
+src="$(pwd)"
 # Local databases that are necessary for pipeline...ANI, BUSCO, star, adapters, phiX
-local_DBs="/scicomp/groups/OID/NCEZID/DHQP/CEMB/databases"
+local_DBs="/raid5/Quaisar_databases"
 # Scicomp databases that are necessary for pipeline...eventually refseq, kraken, gottcha,
-#--------------------Check on how to use ---------------------------------#
-scicomp_DBs="/scicomp/reference"
-# Maximum number of quaisar pipelines to be running concurrently
-max_quaisars=9999
-
-#Instruments and locations of files stored by those instruments
-#--------------------Check on how to use ---------------------------------#
-miseq1="/scicomp/instruments/17-4-4248_Illumina-MiSeq-M04765"
-miseq2="/scicomp/instruments/17-4-4248_Illumina-MiSeq-M01025"
-miseq3="/scicomp/instruments/17-5-5248_Illumina-MiSeq-M02103"
-miseq4="/scicomp/instruments/17-4-4123_Illumina-MiSeq-M03961"
-pacbio="/scicomp/instruments/23-12-651_PacBio-RSII-RS42135"
-
-# Create a list of instruments to check output of
-all_instruments=($miseq1 $miseq2 $miseq3 $miseq4) # $pacbio)
 
 # Number of processors requested by numerous applications within the pipeline
 #--------------------Check on how BEST to use ---------------------------------#
