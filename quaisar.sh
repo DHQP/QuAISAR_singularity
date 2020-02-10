@@ -454,6 +454,10 @@ for isolate in "${isolate_list[@]}"; do
 		echo "----- Running Kraken on cleaned reads -----"
 		# Get start time of kraken on reads
 		start=$SECONDS
+		# Create directory for kraken dataset
+		if [[ ! -d "${SAMPDATADIR}/kraken/preAssembly" ]]; then
+			mkdir -p "${SAMPDATADIR}/kraken/preAssembly"
+		fi
 		# Run kraken
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --paired --db /DATABASES/minikrakenDB/  --preload --fastq-input --threads 4 --output /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken --classified-out /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.classified /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa"
@@ -480,6 +484,8 @@ for isolate in "${isolate_list[@]}"; do
 		timeGott=$((end - start))
 		echo "Gottcha - ${timeGott} seconds" >> "${time_summary}"
 		totaltime=$((totaltime + timeGott))
+
+		exit
 
 		# Check reads using SRST2
 		echo "----- Running SRST2 -----"
@@ -563,6 +569,10 @@ for isolate in "${isolate_list[@]}"; do
 	echo "----- Running Kraken on Assembly -----"
 	# Get start time of kraken on assembly
 	start=$SECONDS
+	# Create directory for kraken dataset on assembly
+	if [[ ! -d "${SAMPDATADIR}/kraken/postAssembly" ]]; then
+		mkdir -p "${SAMPDATADIR}/kraken/postAssembly"
+	fi
 	# Run kraken on assembly
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/minikrakenDB/  --preload --threads ${procs} --output /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken --classified-out /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.classified /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
 	python3 ${src}/Kraken_Assembly_Converter_2_Exe.py -i "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken"
