@@ -433,7 +433,8 @@ for isolate in "${isolate_list[@]}"; do
 		timeTrim=$((end - start))
 		echo "Trimming - ${timeTrim} seconds" >> "${time_summary}"
 		totaltime=$((totaltime + timeTrim))
-
+		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.fastq"
+		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.fastq"
 
 		# Check differences after QC and trimming (also for gottcha proper read count for assessing unclassified reads)
 		# Get start time for qc check on trimmed reads
@@ -591,8 +592,6 @@ for isolate in "${isolate_list[@]}"; do
 	echo "Kraken on Assembly - ${timeKrakAss} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + timeKrakAss))
 
-	exit
-
 	# Get ID fom 16s
 	echo "----- Identifying via 16s blast -----"
 	start=$SECONDS
@@ -614,7 +613,6 @@ for isolate in "${isolate_list[@]}"; do
 	# Checks for successful output from barrnap, *rRNA_seqs.fasta
 	if [[ ! -s ${SAMPDATADIR}/16s/${isolate_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta ]]; then
 		echo "rNA_seqs.fasta does NOT exist"
-		exit 1
 	fi
 
 	# Checks barrnap output and finds all 16s hits and creates a multi-fasta file to list all possible matches
@@ -640,7 +638,6 @@ for isolate in "${isolate_list[@]}"; do
 	if [[ "${found_16s}" == "false" ]]; then
 		echo -e "best_hit	${isolate_name}	No_16s_sequences_found" > "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
 		echo -e "largest_hit	${isolate_name}	No_16s_sequences_found" >> "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
-		exit
 	fi
 
 	# Blasts the NCBI database to find the closest hit to every entry in the 16s fasta list
@@ -766,11 +763,11 @@ for isolate in "${isolate_list[@]}"; do
 		echo "No Taxonomy output available to make best call from, skipped"
 	fi
 
-### Check quality of Assembly ###
-echo "----- Running quality checks on Assembly -----"
-# Get start time of QC assembly check
-start=$SECONDS
-# Run qc assembly check
+	### Check quality of Assembly ###
+	echo "----- Running quality checks on Assembly -----"
+	# Get start time of QC assembly check
+	start=$SECONDS
+	# Run qc assembly check
 
 	owd="$(pwd)"
  # Checks for output folder existence and creates creates if not
@@ -809,6 +806,8 @@ start=$SECONDS
 	echo "Identifying Genes (Prokka) - ${timeProk} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + timeProk))
 
+	exit
+
 	# Rename contigs to something helpful (Had to wait until after prokka runs due to the strict naming requirements
 	mv "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed_original.fasta"
 	python3 "${src}/fasta_headers.py" -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed_original.fasta" -o "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
@@ -837,7 +836,6 @@ start=$SECONDS
 		echo "No matching ANI database found for ${genus}" >> "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_${genus}).txt"
 		global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
 		echo "ANI: ${genus} - Found as ${isolate_name} on ${global_time}" >> "${src}/maintenance_To_Do.txt"
-		exit 1
 	fi
 
 	# Checks to see if the local DB ANI folder already exists and creates it if not. This is used to store a local copy of all samples in DB to be compared to (as to not disturb the source DB)
@@ -966,7 +964,6 @@ start=$SECONDS
 		firstline=$(head -n 1 "${SAMPDATADIR}/ANI/aniM/ANIm_percentage_identity.tab")
 	else
 		echo "No ${SAMPDATADIR}/ANI/aniM/ANIm_percentage_identity.tab file, exiting"
-		exit 1
 	fi
 
 	#Arrays to read sample names and the %ids for the query sample against those other samples
@@ -1192,7 +1189,6 @@ start=$SECONDS
 			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
 			if [[ "${mlst_delimiter}" != "'_'" ]]; then
 				echo "Unknown delimiter - \"${mlst_delimiter}\""
-				exit
 			else
 				mlst_delimiter="_"
 			fi
@@ -1224,7 +1220,6 @@ start=$SECONDS
 			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
 			if [[ "${mlst_delimiter}" != "'_'" ]]; then
 				echo "Unknown delimiter - \"${mlst_delimiter}\""
-				exit
 			else
 				mlst_delimiter="_"
 			fi
@@ -1262,7 +1257,6 @@ start=$SECONDS
 			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
 			if [[ "${mlst_delimiter}" != "'_'" ]]; then
 				echo "Unknown delimiter - \"${mlst_delimiter}\""
-				exit
 			else
 				mlst_delimiter="_"
 				#echo "Delimiter is OK (${mlst_delimiter})"
@@ -1292,7 +1286,6 @@ start=$SECONDS
 			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
 			if [[ "${mlst_delimiter}" != "'_'" ]]; then
 				echo "Unknown delimiter - \"${mlst_delimiter}\""
-				exit
 			else
 				mlst_delimiter="_"
 				#echo "Delimiter is OK (${mlst_delimiter})"
@@ -1323,7 +1316,6 @@ start=$SECONDS
 			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
 			if [[ "${mlst_delimiter}" != "'_'" ]]; then
 				echo "Unknown delimiter - \"${mlst_delimiter}\""
-				exit
 			else
 				mlst_delimiter="_"
 				#echo "Delimiter is OK (${mlst_delimiter})"
