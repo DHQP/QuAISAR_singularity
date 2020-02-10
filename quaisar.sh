@@ -311,7 +311,7 @@ echo "Run started at ${run_start_time}; Log saved to ${log_dir}/${PROJECT}_on_${
 echo "Run started at ${run_start_time}" > "${log_dir}/${PROJECT}_on_${run_start_time}.log"
 outarray+=("${PROJECT} started at ${run_start_time} and saved to ${log_dir}/${PROJECT}_on_${run_start_time}.log")
 
-for isolate in "${isolate_list[@]}";
+for isolate in "${isolate_list[@]}"; do
 
 	#Time tracker to gauge time used by each step
 	totaltime=0
