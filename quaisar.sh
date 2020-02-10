@@ -444,6 +444,8 @@ for isolate in "${isolate_list[@]}"; do
 		python3 "${src}/Fastq_Quality_Printer.py" -1 "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq" -2 "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_trimmed_counts.txt"
 		# Merge both unpaired fq files into one for GOTTCHA
 		cat "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.unpaired.fq" "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.unpaired.fq" > "${SAMPDATADIR}/trimmed/${isolate_name}.single.fq"
+		cat "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq" "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" > "${SAMPDATADIR}/trimmed/${isolate_name}.paired.fq"
+
 		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
 		end=$SECONDS
 		timeQCcount_trimmed=$((end - start))
