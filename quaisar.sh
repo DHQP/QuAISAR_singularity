@@ -433,8 +433,8 @@ for isolate in "${isolate_list[@]}"; do
 		timeTrim=$((end - start))
 		echo "Trimming - ${timeTrim} seconds" >> "${time_summary}"
 		totaltime=$((totaltime + timeTrim))
-		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.fastq"
-		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.fastq"
+		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq"
+		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq"
 
 		# Check differences after QC and trimming (also for gottcha proper read count for assessing unclassified reads)
 		# Get start time for qc check on trimmed reads
@@ -497,8 +497,8 @@ for isolate in "${isolate_list[@]}"; do
 				mkdir "${SAMPDATADIR}/srst2"
 		fi
 
-		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.fastq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz
-		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.fastq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz
+		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz
+		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz
 
 		singularity exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DBs ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/testreads_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/testreads_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/testreads_ResGANNCBI_20191227 --gene_db /DBs/star/ResGANNCBI_20191227_srst2.fasta
 
@@ -792,7 +792,7 @@ for isolate in "${isolate_list[@]}"; do
 	# Get start time for prokka
 	start=$SECONDS
 	# Run prokka
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/prokka:1.14.0--pl526_0 prokka --outdir /SAMPDIR/prokka /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/prokka:1.14.5--pl526_0 prokka --outdir /SAMPDIR/prokka /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
 	#echo "About to rename files"
 	for pfile in ${SAMPDATADIR}/prokka/*.*; do
 		fullname=$(basename "${pfile}")
@@ -805,8 +805,6 @@ for isolate in "${isolate_list[@]}"; do
 	timeProk=$((end - start))
 	echo "Identifying Genes (Prokka) - ${timeProk} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + timeProk))
-
-	exit
 
 	# Rename contigs to something helpful (Had to wait until after prokka runs due to the strict naming requirements
 	mv "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed_original.fasta"
@@ -1065,6 +1063,8 @@ for isolate in "${isolate_list[@]}"; do
 	else
 		echo "Prokka output not found, not able to process BUSCO"
 	fi
+
+	exit
 
 	### c-SSTAR for finding AR Genes ###
 	echo "----- Running c-SSTAR for AR Gene identification -----"
