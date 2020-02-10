@@ -36,6 +36,7 @@ do_download="false"
 global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
 requestor=$(whoami)
 PROJECT="${requestor}_${global_time}"
+assemblies="false"
 
 for ((i=1 ; i <= nopts ; i++)); do
 	#echo "${1} ${2}"
