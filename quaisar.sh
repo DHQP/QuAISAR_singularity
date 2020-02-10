@@ -488,8 +488,6 @@ for isolate in "${isolate_list[@]}"; do
 		echo "Gottcha - ${timeGott} seconds" >> "${time_summary}"
 		totaltime=$((totaltime + timeGott))
 
-		exit
-
 		# Check reads using SRST2
 		echo "----- Running SRST2 -----"
 		start=$SECONDS
@@ -520,8 +518,6 @@ for isolate in "${isolate_list[@]}"; do
 		timesrst2=$((end - start))
 		echo "SRST2 - ${timesrst2} seconds" >> "${time_summary}"
 		totaltime=$((totaltime + timesrst2))
-
-		exit
 
 		######  Assembling Using SPAdes  ######
 		echo "----- Assembling Using SPAdes -----"
@@ -594,6 +590,8 @@ for isolate in "${isolate_list[@]}"; do
 	timeKrakAss=$((end - start))
 	echo "Kraken on Assembly - ${timeKrakAss} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + timeKrakAss))
+
+	exit
 
 	# Get ID fom 16s
 	echo "----- Identifying via 16s blast -----"
