@@ -512,6 +512,8 @@ for isolate in "${isolate_list[@]}"; do
 		echo "SRST2 - ${timesrst2} seconds" >> "${time_summary}"
 		totaltime=$((totaltime + timesrst2))
 
+		exit
+
 		######  Assembling Using SPAdes  ######
 		echo "----- Assembling Using SPAdes -----"
 		# Get start time of SPAdes
