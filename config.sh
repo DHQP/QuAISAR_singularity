@@ -28,7 +28,7 @@ output_dir="/raid5/MiSeqAnalysisFiles"
 # Locations of all scripts and necessary accessory files
 src="$(pwd)"
 # Local databases that are necessary for pipeline...ANI, BUSCO, star, adapters, phiX
-local_DBs="/raid5/Quaisar_databases"
+local_DBs="/raid5/QuAISAR_databases"
 # Scicomp databases that are necessary for pipeline...eventually refseq, kraken, gottcha,
 
 # Number of processors requested by numerous applications within the pipeline
