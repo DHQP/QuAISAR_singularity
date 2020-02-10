@@ -503,8 +503,10 @@ for isolate in "${isolate_list[@]}"; do
 		singularity exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DBs ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/testreads_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/testreads_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/testreads_ResGANNCBI_20191227 --gene_db /DBs/star/ResGANNCBI_20191227_srst2.fasta
 
 		# Cleans up leftover files
-		rm -r "${SAMPDATADIR}/srst2/"*".bam"
-		rm -r "${SAMPDATADIR}/srst2/"*".pileup"
+		rm "${SAMPDATADIR}/srst2/"*".bam"
+		rm "${SAMPDATADIR}/srst2/"*".pileup"
+		rm "${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz"
+		rm "${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz"
 
 		# Removes the extra ResGANNCBI__ from all files created
 		find ${SAMPDATADIR}/srst2 -type f -name "*ResGANNCBI__*" | while read FILE ; do
@@ -874,7 +876,7 @@ for isolate in "${isolate_list[@]}"; do
 	cd ${SAMPDATADIR}/ANI/localANIDB/
 
 	echo "----- Running MASHTREE for inside ANI -----"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mashtree:0.20--pl5.22.0_0 mashtree --numcpus ${procs} /SAMPDIR/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/"${genus_in}_and_${isolate_name}_mashtree.dnd"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mashtree:1.0.4--pl526h516909a_0 mashtree --numcpus ${procs} /SAMPDIR/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/"${genus_in}_and_${isolate_name}_mashtree.dnd"
 
 	# Get total number of isolates compared in tree
 	sample_count=$(find ${SAMPDATADIR}/ANI/localANIDB/ -type f | wc -l)
@@ -1063,8 +1065,6 @@ for isolate in "${isolate_list[@]}"; do
 	else
 		echo "Prokka output not found, not able to process BUSCO"
 	fi
-
-	exit
 
 	### c-SSTAR for finding AR Genes ###
 	echo "----- Running c-SSTAR for AR Gene identification -----"
@@ -1341,6 +1341,8 @@ for isolate in "${isolate_list[@]}"; do
 	timeMLST=$((end - start))
 	echo "MLST - ${timeMLST} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + timeMLST))
+
+	exit
 
 	# Try to find any plasmids
 	echo "----- Identifying plasmids using plasmidFinder -----"
@@ -1817,10 +1819,8 @@ runsumdate=$(date "+%m_%d_%Y_at_%Hh_%Mm")
 ${src}/run_sum.sh ${PROJECT}
 
 # Copy the config file to the log directory so as not to hold up any future quaisar runs that count the number of config files present, but for some reason does not remove from script folder
-if [[ -f "${src}/config_${config_counter}.sh" ]]; then
-	echo "Moving config file(config_${config_counter}.sh) to log directory ($log_dir)"
-	mv "${src}/config_${config_counter}.sh" "${log_dir}/config_${PROJECT}.sh"
-fi
+echo "Moving config file(${config_file}) to log directory ($log_dir)"
+	mv "${config_file}" "${log_dir}/config_${PROJECT}.sh"
 
 end_date=$(date "+%m_%d_%Y_at_%Hh_%Mm")
 echo "Run ended at ${end_date}" >> ${log_dir}/${PROJECT}_on_${run_start_time}.log"
