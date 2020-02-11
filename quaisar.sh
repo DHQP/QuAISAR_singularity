@@ -1179,7 +1179,7 @@ for isolate in "${isolate_list[@]}"; do
 		type1=$(tail -n1 ${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst | cut -d' ' -f3)
 		type2=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
 		if [[ "${type1}" = "-" ]]; then
-			singularity -s exec docker://quay.io/biocontainers/srst2:0.2.0--py27_2 getmlst.py --species "Acinetobacter baumannii#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Acinetobacter baumannii#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
 			sed -i -e 's/Oxf_//g' "${SAMPDATADIR}/MLST/srst2/Acinetobacter_baumannii#1.fasta"
 			sed -i -e 's/Oxf_//g' "${SAMPDATADIR}/MLST/srst2/abaumannii.txt"
 			db_name="Oxford"
@@ -1192,7 +1192,7 @@ for isolate in "${isolate_list[@]}"; do
 			else
 				mlst_delimiter="_"
 			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
 
 			today=$(date "+%Y-%m-%d")
 
@@ -1210,7 +1210,7 @@ for isolate in "${isolate_list[@]}"; do
 			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#1-${db_name}.mlst" -t srst2
 		fi
 		if [[ "${type2}" = "-" ]]; then
-			singularity -s exec docker://quay.io/biocontainers/srst2:0.2.0--py27_2 getmlst.py --species "Acinetobacter baumannii#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Acinetobacter baumannii#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
 			sed -i -e 's/Pas_//g' "${SAMPDATADIR}/MLST/srst2/Acinetobacter_baumannii#2.fasta"
 			sed -i -e 's/Pas_//g' "${SAMPDATADIR}/MLST/srst2/abaumannii_2.txt"
 			db_name="Pasteur"
@@ -1223,7 +1223,7 @@ for isolate in "${isolate_list[@]}"; do
 			else
 				mlst_delimiter="_"
 			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
 
 			today=$(date "+%Y-%m-%d")
 
@@ -1249,7 +1249,7 @@ for isolate in "${isolate_list[@]}"; do
 		type2=$(tail -n1 ${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst | cut -d' ' -f3)
 		type1=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
 		if [[ "${type1}" = "-" ]]; then
-			singularity -s exec docker://quay.io/biocontainers/srst2:0.2.0--py27_2 getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
 			db_name="Achtman"
 			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
 			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
@@ -1261,7 +1261,7 @@ for isolate in "${isolate_list[@]}"; do
 				mlst_delimiter="_"
 				#echo "Delimiter is OK (${mlst_delimiter})"
 			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDir/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDir/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
 			today=$(date "+%Y-%m-%d")
 					# Cleans up extra files and renames output file
 			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Escherichia_coli#1__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#1-${db_name}.mlst"
@@ -1278,7 +1278,7 @@ for isolate in "${isolate_list[@]}"; do
 			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#1-${db_name}.mlst" -t srst2
 		fi
 		if [[ "${type2}" = "-" ]]; then
-			singularity -s exec docker://quay.io/biocontainers/srst2:0.2.0--py27_2 getmlst.py --species "Escherichia coli#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
 			db_name="Pasteur"
 			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
 			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
@@ -1290,7 +1290,7 @@ for isolate in "${isolate_list[@]}"; do
 				mlst_delimiter="_"
 				#echo "Delimiter is OK (${mlst_delimiter})"
 			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
 			today=$(date "+%Y-%m-%d")
 					# Cleans up extra files and renames output file
 			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Escherichia_coli#2__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#2-${db_name}.mlst"
@@ -1308,7 +1308,7 @@ for isolate in "${isolate_list[@]}"; do
 		fi
 	else
 		if [[ "${type}" == "-" ]]; then
-			singularity -s exec docker://quay.io/biocontainers/srst2:0.2.0--py27_2 getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
 			db_name="Pasteur"
 			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
 			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
@@ -1320,7 +1320,7 @@ for isolate in "${isolate_list[@]}"; do
 				mlst_delimiter="_"
 				#echo "Delimiter is OK (${mlst_delimiter})"
 			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/srst2:0.2.0--py27_2 srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
 			today=$(date "+%Y-%m-%d")
 					# Cleans up extra files and renames output file
 			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__${genus}_${species}__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_${genus}_${species}-${db_name}.mlst"
@@ -1415,9 +1415,9 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 			# Run plasflow on newly trimmed assembly file
 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasflow:1.1.0--py35_0 --input /SAMPDIR/plasFlow/${isolate_name}_scaffolds_trimmed_2000.fasta --output /SAMPDIR/plasFlow/${isolate_name}_plasFlow_results.tsv --threshold 0.7
 			mkdir ${SAMPDATADIR}/plasFlow/bowtie2-index/
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/bowtie2:2.2.4--py27hc9558a2_5 bowtie2-build -f /SAMPDIR/plasFlow/${isolate_name}_plasFlow_results.tsv_chromosomes.fasta /SAMPDIR/plasFlow/bowtie2-index/bowtie2_${isolate_name}_chr
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/bowtie2-2.2.9-biocontainers.simg bowtie2-build -f /SAMPDIR/plasFlow/${isolate_name}_plasFlow_results.tsv_chromosomes.fasta /SAMPDIR/plasFlow/bowtie2-index/bowtie2_${isolate_name}_chr
 			mkdir ${SAMPDATADIR}/plasFlow/filtered_reads_70/
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/bowtie2:2.2.4--py27hc9558a2_5 bowtie2 -x /SAMPDIR/plasFlow/bowtie2-index/bowtie2_${isolate_name}_chr -1 /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq -2 /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq -S /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.sam -p ${procs} --local
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/bowtie2-2.2.9-biocontainers.simg bowtie2 -x /SAMPDIR/plasFlow/bowtie2-index/bowtie2_${isolate_name}_chr -1 /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq -2 /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq -S /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.sam -p ${procs} --local
 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/samtools:1.10--h9402c20_2 samtools view -bS /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.sam > "${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}.bam"
   		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0 bam2fastq --no-aligned -o /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R#_bacterial.fastq /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.bam
 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/unicycler:0.4.4--py37h8b12597_2 unicycler -1 /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R_1_bacterial.fastq -2 /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R_2_bacterial.fastq -o /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly
