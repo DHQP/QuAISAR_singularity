@@ -947,7 +947,7 @@ for isolate in "${isolate_list[@]}"; do
 	fi
 
 	#Calls pyani on local db folder
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/pyani:0.2.7--py35h24bf2e0_1 average_nucleotide_identity.py -i /SAMPDIR/ANI/localANIDB -o /SAMPDIR/aniM --write_excel
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/pyani:0.2.7--py35h24bf2e0_1 average_nucleotide_identity.py -i /SAMPDIR/ANI/localANIDB -o /SAMPDIR/ANI/aniM --write_excel
 
 	#Extracts the query sample info line for percentage identity from the percent identity file
 	while IFS='' read -r line; do
@@ -1077,7 +1077,7 @@ for isolate in "${isolate_list[@]}"; do
 		echo "Creating ${SAMPDATADIR}/c-sstar${ResGANNCBI_srst2_filename}_${csstar_gapping}"
 		mkdir -p "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
 	fi
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -s "${csim}" -d "${ResGANNCBI_srst2}" > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -s "${csim}" -d /DATABASES/star/${ResGANNCBI_srst2_filename} > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar"
 
 	###################################### FIND WAY TO CATCH FAILURE? !!!!!!!!!! ###############################
 
@@ -1153,19 +1153,24 @@ for isolate in "${isolate_list[@]}"; do
 
 	start=$SECONDS
 	# Run GAMA on assembly
+	echo "----- Running GAMA -----"
 	if [ ! -d "${SAMPDATADIR}/GAMA" ]; then  #create outdir if absent
 		echo "Creating ${SAMPDATADIR}/GAMA"
 		mkdir -p "${SAMPDATADIR}/GAMA"
 	fi
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py "-i" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -d "${ResGANNCBI_srst2}" -o /SAMPDIR/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py "-i" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -d /DATABASES/star/${ResGANNCBI_srst2_filename} -o /SAMPDIR/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
 
 	end=$SECONDS
 	timeGAMA=$((end - start))
-	echo "MLST - ${timeMLST} seconds" >> "${time_summary}"
+	echo "GAMA - ${timeGAMA} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + timeGAMA))
 
 	# Get MLST profile
 	echo "----- Running MLST -----"
+	if [ ! -d "${SAMPDATADIR}/MLST" ]; then  #create outdir if absent
+		echo "Creating ${SAMPDATADIR}/MLST"
+		mkdir -p "${SAMPDATADIR}/MLST"
+	fi
 	start=$SECONDS
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}.mlst"
 	python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}.mlst" -t standard
@@ -1415,9 +1420,9 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 			# Run plasflow on newly trimmed assembly file
 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasflow:1.1.0--py35_0 --input /SAMPDIR/plasFlow/${isolate_name}_scaffolds_trimmed_2000.fasta --output /SAMPDIR/plasFlow/${isolate_name}_plasFlow_results.tsv --threshold 0.7
 			mkdir ${SAMPDATADIR}/plasFlow/bowtie2-index/
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/bowtie2-2.2.9-biocontainers.simg bowtie2-build -f /SAMPDIR/plasFlow/${isolate_name}_plasFlow_results.tsv_chromosomes.fasta /SAMPDIR/plasFlow/bowtie2-index/bowtie2_${isolate_name}_chr
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/bowtie2-2.2.9-biocontainers.simg bowtie2-build -f /SAMPDIR/plasFlow/${isolate_name}_plasFlow_results.tsv_chromosomes.fasta /SAMPDIR/plasFlow/bowtie2-index/bowtie2_${isolate_name}_chr
 			mkdir ${SAMPDATADIR}/plasFlow/filtered_reads_70/
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/bowtie2-2.2.9-biocontainers.simg bowtie2 -x /SAMPDIR/plasFlow/bowtie2-index/bowtie2_${isolate_name}_chr -1 /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq -2 /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq -S /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.sam -p ${procs} --local
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/bowtie2-2.2.9-biocontainers.simg bowtie2 -x /SAMPDIR/plasFlow/bowtie2-index/bowtie2_${isolate_name}_chr -1 /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq -2 /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq -S /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.sam -p ${procs} --local
 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/samtools:1.10--h9402c20_2 samtools view -bS /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.sam > "${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}.bam"
   		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0 bam2fastq --no-aligned -o /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R#_bacterial.fastq /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.bam
 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/unicycler:0.4.4--py37h8b12597_2 unicycler -1 /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R_1_bacterial.fastq -2 /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R_2_bacterial.fastq -o /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly
