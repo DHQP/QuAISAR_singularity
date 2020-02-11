@@ -304,7 +304,7 @@ fi
 run_start_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
 
 #Each file in the list is checked individually for successful completion and added then added to the log for the run
-log_dir="${PROJDATADIR}/${PROJECT}"
+log_dir="${PROJDATADIR}"
 
 #Get the time the run started to use as the identifier
 outarray=()
@@ -1823,4 +1823,4 @@ echo "Moving config file(${config_file}) to log directory ($log_dir)"
 	mv "${config_file}" "${log_dir}/config_${PROJECT}.sh"
 
 end_date=$(date "+%m_%d_%Y_at_%Hh_%Mm")
-echo "Run ended at ${end_date}" >> ${log_dir}/${PROJECT}_on_${run_start_time}.log"
+echo "Run ended at ${end_date}" >> "${log_dir}/${PROJECT}_on_${run_start_time}.log"
