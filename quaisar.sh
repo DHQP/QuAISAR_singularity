@@ -872,11 +872,8 @@ for isolate in "${isolate_list[@]}"; do
 	done
 
 	# Mashtree trimming to reduce run time for ANI
-	owd=$(pwd)
-	cd ${SAMPDATADIR}/ANI/localANIDB/
-
 	echo "----- Running MASHTREE for inside ANI -----"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mashtree:1.0.4--pl526h516909a_0 mashtree --numcpus ${procs} /SAMPDIR/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/"${genus}_and_${isolate_name}_mashtree.dnd"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mashtree:1.0.4--pl526h516909a_0 mashtree --numcpus ${procs} --tempdir /SAMPDIR/ANI/temp /SAMPDIR/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/"${genus}_and_${isolate_name}_mashtree.dnd"
 
 	# Get total number of isolates compared in tree
 	sample_count=$(find ${SAMPDATADIR}/ANI/localANIDB/ -type f | wc -l)
