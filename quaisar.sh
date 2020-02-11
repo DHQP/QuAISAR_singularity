@@ -876,7 +876,7 @@ for isolate in "${isolate_list[@]}"; do
 	cd ${SAMPDATADIR}/ANI/localANIDB/
 
 	echo "----- Running MASHTREE for inside ANI -----"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mashtree:1.0.4--pl526h516909a_0 mashtree --numcpus ${procs} /SAMPDIR/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/"${genus_in}_and_${isolate_name}_mashtree.dnd"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mashtree:1.0.4--pl526h516909a_0 mashtree --numcpus ${procs} /SAMPDIR/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/"${genus}_and_${isolate_name}_mashtree.dnd"
 
 	# Get total number of isolates compared in tree
 	sample_count=$(find ${SAMPDATADIR}/ANI/localANIDB/ -type f | wc -l)
@@ -930,7 +930,7 @@ for isolate in "${isolate_list[@]}"; do
 		fi
 		mv "${SAMPDATADIR}/ANI/localANIDB" "${SAMPDATADIR}/ANI/localANIDB_full"
 		mv "${SAMPDATADIR}/ANI/localANIDB_trimmed" "${SAMPDATADIR}/ANI/localANIDB"
-		rm -r "${SAMPDATADIR}/ANI/localANIDB_full"
+		#rm -r "${SAMPDATADIR}/ANI/localANIDB_full"
 
 	# Continue without reducing the tree, as there are not enough samples to require reduction
 	else
