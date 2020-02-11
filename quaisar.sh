@@ -410,7 +410,7 @@ for isolate in "${isolate_list[@]}"; do
 			mkdir -p "${SAMPDATADIR}/removedAdapters"
 		fi
 		### Run bbduk
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/thanhleviet/bbtools bbduk.sh -${bbduk_mem} threads=${procs} in=/SAMPDIR/FASTQs/${isolate_name}_R1_001.fastq in2=/SAMPDIR/FASTQs/${isolate_name}_R2_001.fastq out=/SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R1.fsq out2=/SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=${bbduk_k} hdist=${bbduk_hdist}
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/bbtools.simg bbduk.sh -${bbduk_mem} threads=${procs} in=/SAMPDIR/FASTQs/${isolate_name}_R1_001.fastq in2=/SAMPDIR/FASTQs/${isolate_name}_R2_001.fastq out=/SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R1.fsq out2=/SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=${bbduk_k} hdist=${bbduk_hdist}
 		# Get end time of bbduk and calculate run time and append to time summary (and sum to total time used)
 		end=$SECONDS
 		timeAdapt=$((end - start))
@@ -947,7 +947,7 @@ for isolate in "${isolate_list[@]}"; do
 	fi
 
 	#Calls pyani on local db folder
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/pyani:0.2.7--py35h24bf2e0_1 average_nucleotide_identity.py -i /SAMPDIR/ANI/localANIDB -o /SAMPDIR/aniM --write_excel
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/pyani:0.2.7--py35h24bf2e0_1 average_nucleotide_identity.py -i /SAMPDIR/ANI/localANIDB -o /SAMPDIR/aniM --write_excel
 
 	#Extracts the query sample info line for percentage identity from the percent identity file
 	while IFS='' read -r line; do
