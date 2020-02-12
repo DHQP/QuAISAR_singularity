@@ -878,6 +878,7 @@ for isolate in "${isolate_list[@]}"; do
 	# Mashtree trimming to reduce run time for ANI
 	echo "----- Running MASHTREE for inside ANI -----"
 	genus="Acinetobacter"
+	species="baumannii"
 	cd ${SAMPDATADIR}/ANI/localANIDB
 	singularity -s exec docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} *.fasta > ${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd
 	cd ${src}
@@ -903,7 +904,7 @@ for isolate in "${isolate_list[@]}"; do
 			filename=$(echo ${sample} | cut -d':' -f1)
 			echo "${filename}"
 			filename="${filename}.fasta"
-			if [ "${filename}" = "sample_${genus}_${species}.fasta" ]; then
+			if [[ "${filename}" == "sample_${genus}_${species}.fasta" ]]; then
 				match=${counter}
 				echo "Match @ ${counter} and half=${half_max}"
 				if [[ ${match} -le ${half_max} ]]; then
@@ -918,8 +919,6 @@ for isolate in "${isolate_list[@]}"; do
 				fi
 					echo "${#samples_trimmed[@]}-${samples_trimmed[@]}"
 					break
-			else
-						echo "${filename} != sample_${genus}_${species}.fasta"
 			fi
 					#echo ${filename}
 		done
