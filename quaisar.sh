@@ -321,6 +321,9 @@ for isolate in "${isolate_list[@]}"; do
 	# Set arguments to isolate_name PROJECT (miseq run id) and SAMPDATADIR(${output_dir}/PROJECT/isolate_name)
 	isolate_name=$(echo "${isolate}" | awk -F/ '{print $2}' | tr -d '[:space:]')
 	SAMPDATADIR="${PROJDATADIR}/${isolate_name}"
+	# Test if this helps with mounting in singularities
+	root_dir=$(echo "${PROJDATADIR}" | cut -d '/' -f1)
+	echo "${root_dir}"
 
 # 	# Remove old run stats as the presence of the file indicates run completion
 # 	if [[ -f "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt" ]]; then
@@ -875,7 +878,7 @@ for isolate in "${isolate_list[@]}"; do
 	# Mashtree trimming to reduce run time for ANI
 	echo "----- Running MASHTREE for inside ANI -----"
 	genus="Acinetobacter"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} /SAMPDIR/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd
+	singularity -s exec -B ${root_dir}:/ROOTDIR docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} ${SAMPDATADIR}/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd
 
 exit
 	# Get total number of isolates compared in tree
