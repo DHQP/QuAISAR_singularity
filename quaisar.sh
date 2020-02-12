@@ -918,6 +918,8 @@ for isolate in "${isolate_list[@]}"; do
 				fi
 					echo "${#samples_trimmed[@]}-${samples_trimmed[@]}"
 					break
+			else
+						echo "${filename} != sample_${genus}_${species}.fasta"
 			fi
 					#echo ${filename}
 		done
