@@ -905,18 +905,18 @@ for isolate in "${isolate_list[@]}"; do
 			filename="${filename}.fasta"
 			if [[ "${filename}" == "sample_${genus}_${species}.fasta" ]]; then
 				match=${counter}
-				#echo "Match @ ${counter} and half=${half_max}"
+				echo "Match @ ${counter} and half=${half_max}"
 				if [[ ${match} -le ${half_max} ]]; then
-					#echo "LE"
+					echo "LE"
 					samples_trimmed=${samples[@]:0:$(( max_ani_samples + 1 ))}
 				elif [[ ${match} -ge $(( sample_count - half_max)) ]]; then
-					#echo "GE"
+					echo "GE"
 					samples_trimmed=${samples[@]:$(( max_ani_samples * -1 - 1 ))}
 				else
-					#echo "MID - $(( match - half_max )) to $(( counter + half_max + 1))"
+					echo "MID - $(( match - half_max )) to $(( counter + half_max + 1))"
 					samples_trimmed=${samples[@]:$(( match - half_max )):${max_ani_samples}}
 				fi
-					#echo "${#samples_trimmed[@]}-${samples_trimmed[@]}"
+					echo "${#samples_trimmed[@]}-${samples_trimmed[@]}"
 					break
 			fi
 					#echo ${filename}
