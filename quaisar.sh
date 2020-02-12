@@ -903,7 +903,7 @@ for isolate in "${isolate_list[@]}"; do
 			filename=$(echo ${sample} | cut -d':' -f1)
 			echo "${filename}"
 			filename="${filename}.fasta"
-			if [[ "${filename}" == "sample_${genus}_${species}.fasta" ]]; then
+			if [ "${filename}" = "sample_${genus}_${species}.fasta" ]; then
 				match=${counter}
 				echo "Match @ ${counter} and half=${half_max}"
 				if [[ ${match} -le ${half_max} ]]; then
