@@ -879,7 +879,8 @@ for isolate in "${isolate_list[@]}"; do
 	echo "----- Running MASHTREE for inside ANI -----"
 	genus="Acinetobacter"
 	cd ${SAMPDATADIR}/ANI/localANIDB
-	singularity --no-home -s exec docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} *.fasta > ${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd
+	singularity -s exec docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} *.fasta > ${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd
+	cd ${src}
 
 exit
 	# Get total number of isolates compared in tree
