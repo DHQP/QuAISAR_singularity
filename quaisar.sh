@@ -1823,7 +1823,7 @@ ${src}/run_sum.sh ${PROJECT}
 
 # Copy the config file to the log directory so as not to hold up any future quaisar runs that count the number of config files present, but for some reason does not remove from script folder
 echo "Moving config file(${config_file}) to log directory ($log_dir)"
-	mv "${config_file}" "${log_dir}/config_${PROJECT}.sh"
+	cp "${config_file}" "${log_dir}/config_${PROJECT}.sh"
 
 end_date=$(date "+%m_%d_%Y_at_%Hh_%Mm")
 echo "Run ended at ${end_date}" >> "${log_dir}/${PROJECT}_on_${run_start_time}.log"
