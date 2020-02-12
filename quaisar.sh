@@ -301,27 +301,27 @@ else
 	echo "No files found in ${list_path}"
 fi
 
-# run_start_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
-#
-# #Each file in the list is checked individually for successful completion and added then added to the log for the run
-# log_dir="${PROJDATADIR}"
-#
-# #Get the time the run started to use as the identifier
-# outarray=()
-# echo "Run started at ${run_start_time}; Log saved to ${log_dir}/${PROJECT}_on_${run_start_time}.log"
-# echo "Run started at ${run_start_time}" > "${log_dir}/${PROJECT}_on_${run_start_time}.log"
-# outarray+=("${PROJECT} started at ${run_start_time} and saved to ${log_dir}/${PROJECT}_on_${run_start_time}.log")
-#
-# for isolate in "${isolate_list[@]}"; do
-#
-# 	#Time tracker to gauge time used by each step
-# 	totaltime=0
-# 	start_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
-#
-# 	# Set arguments to isolate_name PROJECT (miseq run id) and SAMPDATADIR(${output_dir}/PROJECT/isolate_name)
-# 	isolate_name=$(echo "${isolate}" | awk -F/ '{print $2}' | tr -d '[:space:]')
-# 	SAMPDATADIR="${PROJDATADIR}/${isolate_name}"
-#
+run_start_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
+
+#Each file in the list is checked individually for successful completion and added then added to the log for the run
+log_dir="${PROJDATADIR}"
+
+#Get the time the run started to use as the identifier
+outarray=()
+echo "Run started at ${run_start_time}; Log saved to ${log_dir}/${PROJECT}_on_${run_start_time}.log"
+echo "Run started at ${run_start_time}" > "${log_dir}/${PROJECT}_on_${run_start_time}.log"
+outarray+=("${PROJECT} started at ${run_start_time} and saved to ${log_dir}/${PROJECT}_on_${run_start_time}.log")
+
+for isolate in "${isolate_list[@]}"; do
+
+	#Time tracker to gauge time used by each step
+	totaltime=0
+	start_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
+
+	# Set arguments to isolate_name PROJECT (miseq run id) and SAMPDATADIR(${output_dir}/PROJECT/isolate_name)
+	isolate_name=$(echo "${isolate}" | awk -F/ '{print $2}' | tr -d '[:space:]')
+	SAMPDATADIR="${PROJDATADIR}/${isolate_name}"
+
 # 	# Remove old run stats as the presence of the file indicates run completion
 # 	if [[ -f "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt" ]]; then
 # 		rm "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt"
@@ -874,6 +874,7 @@ fi
 
 	# Mashtree trimming to reduce run time for ANI
 	echo "----- Running MASHTREE for inside ANI -----"
+	genus="Acinetobacter"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} /SAMPDIR/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd
 
 exit
