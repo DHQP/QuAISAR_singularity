@@ -882,7 +882,6 @@ for isolate in "${isolate_list[@]}"; do
 	singularity -s exec docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} *.fasta > ${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd
 	cd ${src}
 
-exit
 	# Get total number of isolates compared in tree
 	sample_count=$(find ${SAMPDATADIR}/ANI/localANIDB/ -type f | wc -l)
 	# Must remove sample of interest
@@ -1028,6 +1027,8 @@ exit
 	timeANI=$((end - start))
 	echo "autoANI - ${timeANI} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + timeANI))
+
+	exit
 
 	# Get taxonomy from currently available files
 	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
