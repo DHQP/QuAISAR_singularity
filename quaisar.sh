@@ -645,7 +645,7 @@ for isolate in "${isolate_list[@]}"; do
 
 	# Blasts the NCBI database to find the closest hit to every entry in the 16s fasta list
 	###### MAX_TARGET_SEQS POSSIBLE ERROR
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/blast:2.9.0--pl526h3066fca_4 blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 1 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seqs.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname";
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/blast:2.9.0--pl526h3066fca_4 blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 1 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seqs.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname"
 	# Sorts the list based on sequence match length to find the largest hit
 	sort -k4 -n "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN" --reverse > "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN.sorted"
 
@@ -874,7 +874,7 @@ for isolate in "${isolate_list[@]}"; do
 
 	# Mashtree trimming to reduce run time for ANI
 	echo "----- Running MASHTREE for inside ANI -----"
-	sudo bash -c 'singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} /SAMPDIR/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/"${genus}_and_${isolate_name}_mashtree.dnd"'
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} /SAMPDIR/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/"${genus}_and_${isolate_name}_mashtree.dnd"
 
 	# Get total number of isolates compared in tree
 	sample_count=$(find ${SAMPDATADIR}/ANI/localANIDB/ -type f | wc -l)
@@ -945,7 +945,7 @@ for isolate in "${isolate_list[@]}"; do
 	fi
 
 	#Calls pyani on local db folder
-	sudo bash -c 'singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/pyani:0.2.7--py35_0 average_nucleotide_identity.py -i /SAMPDIR/ANI/localANIDB -o /SAMPDIR/ANI/aniM'
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/pyani:0.2.7--py35_0 average_nucleotide_identity.py -i /SAMPDIR/ANI/localANIDB -o /SAMPDIR/ANI/aniM
 
 	#Extracts the query sample info line for percentage identity from the percent identity file
 	while IFS='' read -r line; do
@@ -1052,7 +1052,12 @@ for isolate in "${isolate_list[@]}"; do
 		# Show which database entry will be used for comparison
 		echo "buscoDB:${buscoDB}"
 		# Run busco
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}/BUSCO:/DATABASES docker://quay.io/biocontainers/busco:3.0.2--py35_4 run_BUSCO.py -i /SAMPDIR/prokka/${isolate_name}_PROKKA.faa -o /SAMPDIR/BUSCO -l /DATABASES/${buscoDB} -m prot
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}/BUSCO:/DATABASES docker://quay.io/biocontainers/busco:3.0.2--py35_4 run_BUSCO.py -i /SAMPDIR/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l /DATABASES/${buscoDB} -m prot
+		if [ ! -d "${SAMPDATADIR}/BUSCO" ]; then  #create outdir if absent
+			echo "Creating ${SAMPDATADIR}/BUSCO"
+			mkdir -p "${SAMPDATADIR}/BUSCO"
+		fi
+		mv ${src}/${isolate_name}_BUSCO/* ${SAMPDATADIR}/BUSCO/
 
 		# Get end time of busco and calculate run time and append to time summary (and sum to total time used
 		end=$SECONDS
@@ -1356,7 +1361,7 @@ for isolate in "${isolate_list[@]}"; do
 	if [[ "${family,}" == "enterobacteriaceae" ]]; then
 		echo "Checking against Enterobacteriaceae plasmids"
 		#plasmidfinder -i ${SAMPDATADIR}/${inpath} -o ${SAMPDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p enterobacteriaceae
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p enterobacteriaceae
 		# Rename all files to include ID
 		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_entero.fsa
 		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_enetero.fsa
@@ -1366,7 +1371,7 @@ for isolate in "${isolate_list[@]}"; do
 	# If family is staph, strp, or enterococcus, then run against the gram positive database
 elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" ]] || [[ "${genus,}" == "enterococcus" ]]; then
 		echo "Checking against Staph, Strep, and Enterococcus plasmids"
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p gram_positive
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p gram_positive
 		# Rename all files to include ID
 		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_gramp.fsa
 		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_gramp.fsa
@@ -1376,7 +1381,7 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 	# Family is not one that has been designated by the creators of plasmidFinder to work well, but still attempting to run against both databases
 	else
 		echo "Checking against ALL plasmids, but unlikely to find anything"
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p enterobacteriaceae
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p enterobacteriaceae
 		# Rename all files to include ID
 		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_entero.fsa
 		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_enetero.fsa
@@ -1384,7 +1389,7 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_entero.txt
 		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_entero.txt
 		#plasmidfinder -i ${SAMPDATADIR}/${inpath} -o ${SAMPDATADIR} -k ${plasmidFinder_identity} -p gram_positive
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p gram_positive
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p gram_positive
 		# Rename all files to include ID
 		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_gramp.fsa
 		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_gramp.fsa
@@ -1534,7 +1539,7 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 		if [[ "${family,}" == "enterobacteriaceae" ]]; then
 			echo "Checking against Enterobacteriaceae plasmids"
 			#plasmidfinder -i ${SAMPDATADIR}/${inpath} -o ${SAMPDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmid_on_plasFlow -k ${plasmidFinder_identity} -p enterobacteriaceae
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmid_on_plasFlow -k ${plasmidFinder_identity} -p enterobacteriaceae
 			# Rename all files to include ID
 			mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_entero.fsa
 			mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_enetero.fsa
@@ -1544,7 +1549,7 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 		# If family is staph, strp, or enterococcus, then run against the gram positive database
 	elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" ]] || [[ "${genus,}" == "enterococcus" ]]; then
 			echo "Checking against Staph, Strep, and Enterococcus plasmids"
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmid_on_plasFlow -k ${plasmidFinder_identity} -p gram_positive
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmid_on_plasFlow -k ${plasmidFinder_identity} -p gram_positive
 			# Rename all files to include ID
 			mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_gramp.fsa
 			mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_gramp.fsa
@@ -1554,7 +1559,7 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 		# Family is not one that has been designated by the creators of plasmidFinder to work well, but still attempting to run against both databases
 		else
 			echo "Checking against ALL plasmids, but unlikely to find anything"
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmid_on_plasFlow -k ${plasmidFinder_identity} -p enterobacteriaceae
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmid_on_plasFlow -k ${plasmidFinder_identity} -p enterobacteriaceae
 			# Rename all files to include ID
 			mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_entero.fsa
 			mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_enetero.fsa
@@ -1562,7 +1567,7 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 			mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_entero.txt
 			mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_entero.txt
 			#plasmidfinder -i ${SAMPDATADIR}/${inpath} -o ${SAMPDATADIR} -k ${plasmidFinder_identity} -p gram_positive
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmid_on_plasFlow -k ${plasmidFinder_identity} -p gram_positive
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmid_on_plasFlow -k ${plasmidFinder_identity} -p gram_positive
 			# Rename all files to include ID
 			mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_gramp.fsa
 			mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_gramp.fsa
