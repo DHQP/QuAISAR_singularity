@@ -874,7 +874,7 @@ for isolate in "${isolate_list[@]}"; do
 
 	# Mashtree trimming to reduce run time for ANI
 	echo "----- Running MASHTREE for inside ANI -----"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} /SAMPDIR/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/"${genus}_and_${isolate_name}_mashtree.dnd"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} /SAMPDIR/ANI/localANIDB/*.fasta > ${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd
 
 	# Get total number of isolates compared in tree
 	sample_count=$(find ${SAMPDATADIR}/ANI/localANIDB/ -type f | wc -l)
@@ -1057,7 +1057,8 @@ for isolate in "${isolate_list[@]}"; do
 			echo "Creating ${SAMPDATADIR}/BUSCO"
 			mkdir -p "${SAMPDATADIR}/BUSCO"
 		fi
-		mv ${src}/${isolate_name}_BUSCO/* ${SAMPDATADIR}/BUSCO/
+		mv ${src}/run_${isolate_name}_BUSCO/* ${SAMPDATADIR}/BUSCO/
+		rm -r ${src}/run_${isolate_name}_BUSCO
 
 		# Get end time of busco and calculate run time and append to time summary (and sum to total time used
 		end=$SECONDS
@@ -1349,8 +1350,6 @@ for isolate in "${isolate_list[@]}"; do
 	timeMLST=$((end - start))
 	echo "MLST - ${timeMLST} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + timeMLST))
-
-	exit
 
 	# Try to find any plasmids
 	echo "----- Identifying plasmids using plasmidFinder -----"
