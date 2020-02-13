@@ -1419,7 +1419,7 @@ for isolate in "${isolate_list[@]}"; do
 # 	totaltime=$((totaltime + timeplasfin))
 
 
-	family = "Enterobacteriaceae"
+	family="Enterobacteriaceae"
 
 	# Run plasFlow if isolate is from the Enterobacteriaceae family  ##### When should we check if this will be expanded?
 	if [[ "${family}" == "Enterobacteriaceae" ]]; then
