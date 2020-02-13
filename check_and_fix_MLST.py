@@ -28,13 +28,12 @@ def parseArgs(args=None):
 	parser = argparse.ArgumentParser(description='Script to check MLST types for duplicate alleles and implications on final typing')
 	parser.add_argument('-i', '--input', required=True, help='input mlst filename')
 	parser.add_argument('-t', '--filetype', required=True, help='filetype of mlst file (standard or srst2)')
+	parser.add_argument('-d', '--database', required=True, help='Where are the database files located')
 	return parser.parse_args()
 
 # main function that looks if all MLST types are defined for an outptu mlst file
-def do_MLST_check(input_MLST_file, MLST_filetype):
+def do_MLST_check(input_MLST_file, MLST_filetype, Database_path):
 	# Must check if input_MLST_file has more than 1 line, different versions of MLST make different outputs
-	MLST_changed_file="/scicomp/groups/OID/NCEZID/DHQP/CEMB/Nick_DIR/updated_MLSTs.txt"
-	blanks_file="/scicomp/groups/OID/NCEZID/DHQP/CEMB/Nick_DIR/blank_MLSTs.txt"
 	filepath=input_MLST_file[::-1].split("/")[2:4]
 	#print(filepath)
 	for i in range(0, len(filepath)):
@@ -150,27 +149,27 @@ def do_MLST_check(input_MLST_file, MLST_filetype):
 	 		print("This sample is singular and defined\n")
 		else:
 			print("This sample is singular and UNdefined\n")
-			new_types=get_type(schemes, allele_names, db_name, MLST_filetype)
+			new_types=get_type(schemes, allele_names, db_name, MLST_filetype, Database_path)
 			checking=True
 	elif len(schemes) > 1:
 		if "NAF" in mlstype:
 			print("This sample had no alleles found last time, must be very poor quality or compared to the wrong database\n")
-			new_types=get_type(schemes, allele_names, db_name, MLST_filetype)
+			new_types=get_type(schemes, allele_names, db_name, MLST_filetype, Database_path)
 			checking=True
 		elif "-" not in mlstype and "AU" not in mlstype and "SUB" not in mlstype:
 			if len(schemes) == len(mlstype):
 				print("This sample is a multiple and defined\n")
 			elif len(schemes) > len(mlstype):
 				print("Not enough types to match schemes, checking")
-				new_types=get_type(schemes, allele_names, db_name, MLST_filetype)
+				new_types=get_type(schemes, allele_names, db_name, MLST_filetype, Database_path)
 				checking=True
 			elif len(schemes) < len(mlstype):
 				print("Not enough schemes to match types, checking")
-				new_types=get_type(schemes, allele_names, db_name, MLST_filetype)
+				new_types=get_type(schemes, allele_names, db_name, MLST_filetype, Database_path)
 				checking=True
 		else:
 			print("This sample is a multiple and something is UNdefined")
-			new_types=get_type(schemes, allele_names, db_name, MLST_filetype)
+			new_types=get_type(schemes, allele_names, db_name, MLST_filetype, Database_path)
 			checking=True
 	print("Old types:", mlstype)
 
@@ -240,7 +239,7 @@ def do_MLST_check(input_MLST_file, MLST_filetype):
 		print("Sticking with already found mlstype", mlstype,"\n")
 
 # Uses the local copy of DB file to look up actual ST type
-def get_type(list_of_profiles, list_of_allele_names, DB_file, source_filetype):
+def get_type(list_of_profiles, list_of_allele_names, DB_file, source_filetype, Database_path):
 	types=["Not_initialized"]
 	#print(list_of_profiles,":", list_of_allele_names)
 	if source_filetype == "srst2":
@@ -252,7 +251,7 @@ def get_type(list_of_profiles, list_of_allele_names, DB_file, source_filetype):
 				list_of_allele_names[i] = "Pas_"+list_of_allele_names[i]
 		else:
 			print("No adjustments needed to names in list_of_allele_names")
-	full_db_path="/scicomp/groups/OID/NCEZID/DHQP/CEMB/databases/pubmlsts/"+DB_file+"/"+DB_file+".txt"
+	full_db_path=Database_path+"/"+DB_file+"/"+DB_file+".txt"
 	with open(full_db_path,'r') as scheme:
 		profile_size=0
 		types = [-1] * len(list_of_profiles)
@@ -334,10 +333,10 @@ def find_DB_taxonomy(genus, species):
 		return "bcc"
 	db_test_species=str(genus[0:1]).lower()+species
 	#print("Test_species_DB=", db_test_species)
-	species_exists = os.path.exists('/scicomp/groups/OID/NCEZID/DHQP/CEMB/databases/pubmlsts/'+db_test_species)
-	genus_exists = os.path.exists('/scicomp/groups/OID/NCEZID/DHQP/CEMB/databases/pubmlsts/'+genus.lower())
-	species_path = Path('/scicomp/groups/OID/NCEZID/DHQP/CEMB/databases/pubmlsts/'+db_test_species)
-	genus_path = Path('/scicomp/groups/OID/NCEZID/DHQP/CEMB/databases/pubmlsts/'+db_test_species)
+	species_exists = os.path.exists(Database_path+'/'+db_test_species)
+	genus_exists = os.path.exists(Database_path+'/'+genus.lower())
+	species_path = Path(Database_path+'/'+db_test_species)
+	genus_path = Path(Database_path+'/'+db_test_species)
 	if species_path.exists():
 		print("Found species DB:", db_test_species)
 		return db_test_species
@@ -353,7 +352,7 @@ def find_DB_taxonomy(genus, species):
 print("Parsing MLST file ...")
 args = parseArgs()
 if os.stat(args.input).st_size > 0:
-	do_MLST_check(args.input, args.filetype) #, "/scicomp/groups/OID/NCEZID/DHQP/CEMB/databases/mlst/abaumannii_Pasteur.txt") #sys.argv[3])
+	do_MLST_check(args.input, args.filetype, args.database) #, "/scicomp/groups/OID/NCEZID/DHQP/CEMB/databases/mlst/abaumannii_Pasteur.txt") #sys.argv[3])
 else:
 	print(args.input,"has an empty mlst file, so it will be deleted")
 	os.remove(args.input)

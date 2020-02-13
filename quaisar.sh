@@ -325,1098 +325,1101 @@ for isolate in "${isolate_list[@]}"; do
 	root_dir=$(echo "${PROJDATADIR}" | cut -d '/' -f1)
 	echo "${root_dir}"
 
-	# Remove old run stats as the presence of the file indicates run completion
-	if [[ -f "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt" ]]; then
-		rm "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt"
-	fi
-
-	# Create an empty time_summary file that tracks clock time of tools used
-	touch "${SAMPDATADIR}/${isolate_name}_time_summary.txt"
-	time_summary="${SAMPDATADIR}/${isolate_name}_time_summary.txt"
-
-	echo "Time summary for ${PROJECT}/${isolate_name}: Started ${global_time}" >> "${time_summary}"
-	echo "${PROJECT}/${isolate_name} started at ${global_time}"
-
-	echo "Starting processing of ${PROJECT}/${isolate_name}"
-	if [[ "${assemblies}" == "false" ]]; then
-		#Checks if FASTQ folder exists for current sample
-		if [[ -d "${SAMPDATADIR}/FASTQs" ]]; then
-			# Checks if FASTQ folder contains any files then continue
-			if [[ "$(ls -A "${SAMPDATADIR}/FASTQs")" ]]; then
-				# Checks to see if those files in the folder are unzipped fastqs
-				count_unzip=`ls -1 ${SAMPDATADIR}/FASTQs/*.fastq 2>/dev/null | wc -l`
-				count_zip=`ls -1 ${SAMPDATADIR}/FASTQs/*.fastq.gz 2>/dev/null | wc -l`
-				if [[ ${count_unzip} != 0 ]]; then
-					echo "----- FASTQ(s) exist, continuing analysis -----"
-					if [[ -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq" ]] && [[ ! -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq.gz" ]]; then
-						gzip < "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq" > "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq.gz"
-					fi
-					if [[ -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq" ]] && [[ ! -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz" ]]; then
-						gzip < "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq" > "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz"
-					fi
-				# Checks if they are zipped fastqs (checks for R1 first)
-				elif [[ -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq.gz" ]]; then
-					#echo "R1 zipped exists - unzipping"
-					gunzip -c "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq.gz" > "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq"
-					# Checks for paired R2 file
-					if [[ -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz" ]]; then
-						#echo "R2 zipped exists - unzipping"
-						gunzip -c "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz" > "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq"
-					else
-						echo "No matching R2 to unzip :("
-					fi
-				# Checks to see if there is an abandoned R2 zipped fastq
-				elif [[ -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz" ]]; then
-					#echo "R2 zipped  exists - unzipping"
-					gunzip -c "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz" > "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq"
-					echo "No matching R1 to unzip :("
-				fi
-			# If the folder is empty then return from function
-			else
-				echo "FASTQs folder empty - No fastqs available for ${isolate_name} (and download was not requested). Either unzip fastqs to ${SAMPDATADIR}/FASTQs or run the -d flag to trigger unzipping of gzs"
-			fi
-		# If the fastq folder does not exist then return out of function
-		else
-			echo "FASTQs not downloaded and FASTQs folder does not exist for ${isolate_name}. No fastqs available (and download was not requested). Unzip fastqs to ${SAMPDATADIR}/FASTQs"
-		fi
-
-		# Get start time for qc check
-		start=$SECONDS
-		### Count the number of Q20, Q30, bases and reads within a pair of FASTQ files
-		echo "----- Counting read quality -----"
-		# Checks for and creates the specified output folder for the QC counts
-		if [ ! -d "${SAMPDATADIR}/preQCcounts" ]; then
-			echo "Creating ${SAMPDATADIR}/preQCcounts"
-			mkdir -p "${SAMPDATADIR}/preQCcounts"
-		fi
-		# Run qc count check on raw reads
-		python3 "${src}/Fastq_Quality_Printer.py" -1 "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq" -2 "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_counts.txt"
-		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
-		end=$SECONDS
-		timeQCcount=$((end - start))
-		echo "QC count - ${timeQCcount} seconds" >> "${time_summary}"
-		totaltime=$((totaltime + timeQCcount))
-
-		###  Trimming and Quality Control  ###
-		echo "----- Running BBDUK on reads -----"
-		# Gets start time for bbduk
-		start=$SECONDS
-		# Creates folder for BBDUK output
-		if [ ! -d "${SAMPDATADIR}/removedAdapters" ]; then
-			echo "Creating ${SAMPDATADIR}/removedAdapters"
-			mkdir -p "${SAMPDATADIR}/removedAdapters"
-		# It complains if a folder already exists, so the current one is removed (shouldnt happen anymore as each analysis will move old runs to new folder)
-		else
-			echo "Removing old ${SAMPDATADIR}/removedAdapters"
-			rm -r "${SAMPDATADIR}/removedAdapters"
-			echo "Recreating ${SAMPDATADIR}/removedAdapters"
-			mkdir -p "${SAMPDATADIR}/removedAdapters"
-		fi
-		### Run bbduk
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/bbtools.simg bbduk.sh -${bbduk_mem} threads=${procs} in=/SAMPDIR/FASTQs/${isolate_name}_R1_001.fastq in2=/SAMPDIR/FASTQs/${isolate_name}_R2_001.fastq out=/SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R1.fsq out2=/SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=${bbduk_k} hdist=${bbduk_hdist}
-		# Get end time of bbduk and calculate run time and append to time summary (and sum to total time used)
-		end=$SECONDS
-		timeAdapt=$((end - start))
-		echo "Removing Adapters - ${timeAdapt} seconds" >> "${time_summary}"
-		totaltime=$((totaltime + timeAdapt))
-
-
-		### Quality and Adapter Trimming using trimmomatic ###
-		echo "----- Running Trimmomatic on reads -----"
-		# Get start time of trimmomatic
-		start=$SECONDS
-		# Creates folder for trimmomatic output if it does not exist
-		if [ ! -d "${SAMPDATADIR}/trimmed" ]; then
-			mkdir -p "${SAMPDATADIR}/trimmed"
-		fi
-		### Run trimmomatic
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/trimmomatic:0.36--5 trimmomatic ${trim_endtype} -${trim_phred} -threads ${procs} /SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R1.fsq /SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R2.fsq /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R1_001.unpaired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.unpaired.fq ILLUMINACLIP:/DATABASES/adapters.fasta:${trim_seed_mismatch}:${trim_palindrome_clip_threshold}:${trim_simple_clip_threshold}:${trim_min_adapt_length}:${trim_complete_palindrome} SLIDINGWINDOW:${trim_window_size}:${trim_window_qual} LEADING:${trim_leading} TRAILING:${trim_trailing} MINLEN:${trim_min_length}
-		# Get end time of trimmomatic and calculate run time and append to time summary (and sum to total time used)
-		end=$SECONDS
-		timeTrim=$((end - start))
-		echo "Trimming - ${timeTrim} seconds" >> "${time_summary}"
-		totaltime=$((totaltime + timeTrim))
-		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq"
-		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq"
-
-		# Check differences after QC and trimming (also for gottcha proper read count for assessing unclassified reads)
-		# Get start time for qc check on trimmed reads
-		start=$SECONDS
-		### Count the number of Q20, Q30, bases and reads within the trimmed pair of FASTQ files
-		echo "----- Counting read quality of trimmed files-----"
-		# Run qc count check on filtered reads
-		python3 "${src}/Fastq_Quality_Printer.py" -1 "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq" -2 "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_trimmed_counts.txt"
-		# Merge both unpaired fq files into one for GOTTCHA
-		cat "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.unpaired.fq" "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.unpaired.fq" > "${SAMPDATADIR}/trimmed/${isolate_name}.single.fq"
-		cat "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq" "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" > "${SAMPDATADIR}/trimmed/${isolate_name}.paired.fq"
-
-		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
-		end=$SECONDS
-		timeQCcount_trimmed=$((end - start))
-		echo "QC count trimmed - ${timeQCcount_trimmed} seconds" >> "${time_summary}"
-		totaltime=$((totaltime + timeQCcount))
-
-		######  Run Kraken on cleaned reads  ######
-		echo "----- Running Kraken on cleaned reads -----"
-		# Get start time of kraken on reads
-		start=$SECONDS
-		# Create directory for kraken dataset
-		if [[ ! -d "${SAMPDATADIR}/kraken/preAssembly" ]]; then
-			mkdir -p "${SAMPDATADIR}/kraken/preAssembly"
-		fi
-		# Run kraken
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --paired --db /DATABASES/minikrakenDB/  --preload --fastq-input --threads 4 --output /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken --classified-out /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.classified /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa"
-		python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa" -k "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.krona"
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.krona -o /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.html
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.list"
-		"${src}/best_hit_from_kraken.sh" "${isolate_name}" "pre" "paired" "${PROJECT}" "kraken"
-		# Get end time of kraken on reads and calculate run time and append to time summary (and sum to total time used)
-		end=$SECONDS
-		timeKrak=$((end - start))
-		echo "Kraken - ${timeKrak} seconds" >> "${time_summary}"
-		totaltime=$((totaltime + timeKrak))
-
-		##### Run gottcha(v1) on cleaned reads #####
-		echo "----- Running gottcha on cleaned reads -----"
-		# Get start time of gottcha
-		start=$SECONDS
-		# run gottcha
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DBs ${src}/singularity_images/gottcha.simg gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DBs/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/gottcha/gottcha_S/${isolate_name}_temp/${isolate_name}.lineage.tsv -o /SAMPDIR/gottcha/${isolate_name}_species.krona.html
-		#Create a best hit from gottcha1 file
-		"${src}/best_hit_from_gottcha1.sh" "${isolate_name}" "${PROJECT}"
-		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
-		end=$SECONDS
-		timeGott=$((end - start))
-		echo "Gottcha - ${timeGott} seconds" >> "${time_summary}"
-		totaltime=$((totaltime + timeGott))
-
-		# Check reads using SRST2
-		echo "----- Running SRST2 -----"
-		start=$SECONDS
-
-		if [[ ! -d "${SAMPDATADIR}/srst2" ]]; then
-				mkdir "${SAMPDATADIR}/srst2"
-		fi
-
-		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz
-		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz
-
-		singularity exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DBs ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/${isolate_name}_ResGANNCBI_20191227 --gene_db /DBs/star/ResGANNCBI_20191227_srst2.fasta
-
-		# Cleans up leftover files
-		rm "${SAMPDATADIR}/srst2/"*".bam"
-		rm "${SAMPDATADIR}/srst2/"*".pileup"
-		rm "${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz"
-		rm "${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz"
-
-		# Removes the extra ResGANNCBI__ from all files created
-		find ${SAMPDATADIR}/srst2 -type f -name "*ResGANNCBI__*" | while read FILE ; do
-		  dirname=$(dirname $FILE)
-			filename=$(basename $FILE)
-			filename="${filename/_ResGANNCBI__/__}"
-			#echo "Found-${FILE}"
-			#echo "${filename}"
-		    mv "${FILE}" "${dirname}/${filename}"
-		done
-		end=$SECONDS
-		timesrst2=$((end - start))
-		echo "SRST2 - ${timesrst2} seconds" >> "${time_summary}"
-		totaltime=$((totaltime + timesrst2))
-
-		######  Assembling Using SPAdes  ######
-		echo "----- Assembling Using SPAdes -----"
-		# Get start time of SPAdes
-		start=$SECONDS
-		# script tries 3 times for a completed assembly
-		for i in 1 2 3
-		do
-			# If assembly exists already and this is the first attempt (then the previous run will be used) [should not happen anymore as old runs are now renamed]
-			if [ -s "${SAMPDATADIR}/Assembly/scaffolds.fasta" ]; then
-				echo "Previous assembly already exists, using it (delete/rename the assembly folder at ${SAMPDATADIR}/ if you'd like to try to reassemble"
-			# Run normal mode if no assembly file was found
-			else
-				singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/spades:3.13.0--0 spades.py --careful --memory 16 --only-assembler --pe1-1 /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq --pe1-2 /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq --pe1-s /SAMPDIR/trimmed/${isolate_name}.single.fq -o /SAMPDIR/Assembly --phred-offset "${phred}" -t "${procs}"
-			fi
-			# Removes any core dump files (Occured often during testing and tweaking of memory parameter
-			if [ -n "$(find "${src}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then
-				echo "Found core dump files in assembly (assumed to be from SPAdes, but could be anything before that as well) and attempting to delete"
-				find "${src}" -maxdepth 1 -name 'core.*' -exec rm -f {} \;
-			fi
-		done
-		# Returns if all 3 assembly attempts fail
-		if [[ -f "${SAMPDATADIR}/Assembly/scaffolds.fasta" ]] && [[ -s "${SAMPDATADIR}/Assembly/scaffolds.fasta" ]]; then
-			echo "Assembly completed and created a non-empty scaffolds file"
-		else
-			echo "Assembly FAILED 3 times, continuing to next sample..." >&2
-			return 1
-		fi
-		# Get end time of SPAdes and calculate run time and append to time summary (and sum to total time used)
-		end=$SECONDS
-		timeSPAdes=$((end - start))
-		echo "SPAdes - ${timeSPAdes} seconds" >> "${time_summary}"
-		totaltime=$((totaltime + timeSPAdes))
-	fi
-
-	### Removing Short Contigs  ###
-	echo "----- Removing Short Contigs -----"
-	python3 "${src}/removeShortContigs.py" -i "${SAMPDATADIR}/Assembly/scaffolds.fasta" -t 500 -s "normal_SPAdes"
-	mv "${SAMPDATADIR}/Assembly/scaffolds.fasta.TRIMMED.fasta" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
-
-	# Checks to see that the trimming and renaming worked properly, returns if unsuccessful
-	if [ ! -s "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" ]; then
-		echo "Trimmed contigs file does not exist continuing to next sample">&2
-		continue
-	fi
-
-	### ReKraken on Assembly ###
-	echo "----- Running Kraken on Assembly -----"
-	# Get start time of kraken on assembly
-	start=$SECONDS
-	# Create directory for kraken dataset on assembly
-	if [[ ! -d "${SAMPDATADIR}/kraken/postAssembly" ]]; then
-		mkdir -p "${SAMPDATADIR}/kraken/postAssembly"
-	fi
-	# Run kraken on assembly
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/minikrakenDB/  --preload --threads ${procs} --output /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken --classified-out /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.classified /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
-	python3 ${src}/Kraken_Assembly_Converter_2_Exe.py -i "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa"
-	python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa" -k "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.krona"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted.krona -o /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted_BP_krona.html
-	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled_BP" "${PROJECT}" "kraken"
-	singularity -s exec -B ${SAMPDATADIR}/kraken/postAssembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /INPUT/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa"
-	python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa" -k "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.krona"
-	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.krona -o /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.html
-	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
-	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled" "${PROJECT}" "kraken"
-	# Get end time of kraken on assembly and calculate run time and append to time summary (and sum to total time used)
-	end=$SECONDS
-	timeKrakAss=$((end - start))
-	echo "Kraken on Assembly - ${timeKrakAss} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + timeKrakAss))
-
-	# Get ID fom 16s
-	echo "----- Identifying via 16s blast -----"
-	start=$SECONDS
-
-	if [ ! -d "${SAMPDATADIR}/16s" ]; then
-		echo "Creating ${SAMPDATADIR}/16s"
-		mkdir "${SAMPDATADIR}/16s"
-	fi
-
-	# Get original working directory so that it can return to it after running (may not need to do this but havent tested it out yet)
-	owd=$(pwd)
-	cd ${SAMPDATADIR}/16s
-
-	# Run barrnap to discover ribosomal sequences
-	#barrnap --kingdom bac --threads ${procs} "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" > ${SAMPDATADIR}/16s/${isolate_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta
-
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/barrnap:0.8--0 barrnap --kingdom bac /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/16s/${isolate_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta"
-
-	# Checks for successful output from barrnap, *rRNA_seqs.fasta
-	if [[ ! -s ${SAMPDATADIR}/16s/${isolate_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta ]]; then
-		echo "rNA_seqs.fasta does NOT exist"
-	fi
-
-	# Checks barrnap output and finds all 16s hits and creates a multi-fasta file to list all possible matches
-	lines=0
-	found_16s="false"
-	while IFS='' read -r line || [ -n "$line" ]; do
-		if [ ${lines} -gt 0 ]; then
-			contig=$(echo ${line} | cut -d' ' -f1)
-			cstart=$(echo ${line} | cut -d' ' -f4)
-			cstop=$(echo ${line} | cut -d' ' -f5)
-			ribosome=$(echo ${line} | cut -d' ' -f9 | cut -d'=' -f3)
-			if [ "${ribosome}" = "16S" ]; then
-				# Replace with subsequence once it can handle multi-fastas
-				#make_fasta $1 $2 $contig $cstart $cstop
-				python3 ${src}/get_subsequence.py -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" -s ${cstart} -e ${cstop} -t ${contig} >> ${SAMPDATADIR}/16s/${isolate_name}_16s_rna_seqs.txt
-				found_16s="true"
-			fi
-		fi
-		lines=$((lines + 1))
-	done < "${SAMPDATADIR}/16s/${isolate_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta"
-
-	# Adds No hits found to output file in the case where no 16s ribosomal sequences were found
-	if [[ "${found_16s}" == "false" ]]; then
-		echo -e "best_hit	${isolate_name}	No_16s_sequences_found" > "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
-		echo -e "largest_hit	${isolate_name}	No_16s_sequences_found" >> "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
-	fi
-
-	# Blasts the NCBI database to find the closest hit to every entry in the 16s fasta list
-	###### MAX_TARGET_SEQS POSSIBLE ERROR
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/blast:2.9.0--pl526h3066fca_4 blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 1 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seqs.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname"
-	# Sorts the list based on sequence match length to find the largest hit
-	sort -k4 -n "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN" --reverse > "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN.sorted"
-
-	# Gets taxon info from the best bitscore (literal top) hit from the blast list
-	if [[ -s "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN" ]]; then
-		me=$(whoami)
-		accessions=$(head -n 1 "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN")
-		hits=$(echo "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN" | wc -l)
-	#	echo ${accessions}
-		gb_acc=$(echo "${accessions}" | cut -d' ' -f2 | cut -d'|' -f4)
-		echo ${gb_acc}
-		attempts=0
-		# Will try getting info from entrez up to 5 times, as it has a higher chance of not finishing correctly on the first try
-		while [[ ${attempts} -lt 5 ]]; do
-			blast_id=$(singularity exec ${src}/singularity_images/entrez_taxon.simg python3 /entrez/entrez_get_taxon_from_accession.py -a "${gb_acc}" -e "${runner}")
-			if [[ ! -z ${blast_id} ]]; then
-				break
-			else
-				attempts=$(( attempts + 1 ))
-			fi
-			sleep 1
-		done
-		echo ${blast_id}
-		if [[ -z ${blast_id} ]]; then
-			blast_id="No_16s_matches_found"
-		fi
-		#blast_id=$(echo ${blast_id} | tr -d '\n')
-		echo -e "best_hit	${isolate_name}	${blast_id}" > "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
-		if [[ "${hits}" -eq 1 ]]; then
-			echo -e "largest	${isolate_name}	${blast_id}" >> "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
-			skip_largest="true"
-		fi
-	else
-		echo "No remote blast file"
-	fi
-
-	best_blast_id=${blast_id}
-
-	# Gets taxon info from the largest hit from the blast list
-	if [[ ${skip_largest} != "true" ]]; then
-		# Gets taxon info from the largest hit from the blast list
-		if [[ -s "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN.sorted" ]]; then
-			me=$(whoami)
-			accessions=$(head -n 1 "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN.sorted")
-			gb_acc=$(echo "${accessions}" | cut -d' ' -f2 | cut -d'|' -f4)
-			attempts=0
-			# Will try getting info from entrez up to 5 times, as it has a higher chance of not finishing correctly on the first try
-			while [[ ${attempts} -lt 5 ]]; do
-				blast_id=$(singularity exec ${src}/singularity_images/entrez_taxon.simg python3 /entrez/entrez_get_taxon_from_accession.py -a "${gb_acc}" -e "${runner}")
-				if [[ ! -z ${blast_id} ]]; then
-					break
-				else
-					attempts=$(( attempts + 1 ))
-				fi
-			done
-			echo ${blast_id}
-			if [[ -z ${blast_id} ]]; then
-				blast_id="No_16s_matches_found"
-			fi
-			#	blast_id$(echo ${blast_id} | tr -d '\n')
-			if [[ "${hits}" -eq 1 ]] && [[ "${best_blast_id}" == "No_16s_matches_found" ]]; then
-				echo -e "best_hit	${isolate_name}	${blast_id}" > "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
-			fi
-			echo -e "largest	${isolate_name}	${blast_id}" >> "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
-		else
-			echo "No sorted remote blast file"
-		fi
-	fi
-
-	# Go back to original working directory
-	cd ${owd}
-	end=$SECONDS
-	time16s=$((end - start))
-	echo "16S - ${time16s} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + time16s))
-
-	# Get taxonomy from currently available files (Only ANI, has not been run...yet, will change after discussions)
-	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
-	# Capture the anticipated taxonomy of the sample using kraken on assembly output
-	echo "----- Extracting Taxonomy from Taxon Summary -----"
-	# Checks to see if the kraken on assembly completed successfully
-	if [ -s "${SAMPDATADIR}/${isolate_name}.tax" ]; then
-		# Read each line of the kraken summary file and pull out each level  taxonomic unit and store for use later in busco and ANI
-		while IFS= read -r line  || [ -n "$line" ]; do
-			# Grab first letter of line (indicating taxonomic level)
-			first=${line::1}
-			# Assign taxonomic level value from 4th value in line (1st-classification level,2nd-% by kraken, 3rd-true % of total reads, 4th-identifier)
-			if [ "${first}" = "s" ]
-			then
-				species=$(echo "${line}" | awk -F '	' '{print $2}')
-			elif [ "${first}" = "G" ]
-			then
-				genus=$(echo "${line}" | awk -F ' ' '{print $2}')
-			elif [ "${first}" = "F" ]
-			then
-				family=$(echo "${line}" | awk -F ' ' '{print $2}')
-			elif [ "${first}" = "O" ]
-			then
-				order=$(echo "${line}" | awk -F ' ' '{print $2}')
-			elif [ "${first}" = "C" ]
-			then
-				class=$(echo "${line}" | awk -F ' ' '{print $2}')
-			elif [ "${first}" = "P" ]
-			then
-				phylum=$(echo "${line}" | awk -F ' ' '{print $2}')
-			elif [ "${first}" = "K" ]
-			then
-				kingdom=$(echo "${line}" | awk -F ' ' '{print $2}')
-			elif [ "${first}" = "D" ]
-			then
-				domain=$(echo "${line}" | awk -F ' ' '{print $2}')
-			fi
-		done < "${SAMPDATADIR}/${isolate_name}.tax"
-		# Print out taxonomy for confirmation/fun
-		echo "Taxonomy - ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species}"
-		# If no kraken summary file was found
-	else
-		echo "No Taxonomy output available to make best call from, skipped"
-	fi
-
-	### Check quality of Assembly ###
-	echo "----- Running quality checks on Assembly -----"
-	# Get start time of QC assembly check
-	start=$SECONDS
-	# Run qc assembly check
-
-	owd="$(pwd)"
- # Checks for output folder existence and creates creates if not
-	if [ ! -d "${SAMPDATADIR}/Assembly_Stats" ]; then
-		echo "Creating ${SAMPDATADIR}/Assembly_Stats"
-		mkdir -p "${SAMPDATADIR}/Assembly_Stats"
-	fi
-	cd "${SAMPDATADIR}/Assembly_Stats"
-	# Call QUAST
-	#python2 "/apps/x86_64/quast/quast-4.3/quast.py" -o "${SAMPDATADIR}/Assembly_Stats" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/QUAST5.simg python3 /quast/quast.py -o /SAMPDIR/Assembly_Stats /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
-	mv "${SAMPDATADIR}/Assembly_Stats/report.txt" "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.txt"
-	mv "${SAMPDATADIR}/Assembly_Stats/report.tsv" "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv"
-	# Get end time of qc quality check and calculate run time and append to time summary (and sum to total time used)
-	end=$SECONDS
-	timeQCcheck=$((end - start))
-	echo "QC Check of Assembly - ${timeQCcheck} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + timeQCcheck))
-
-	### Prokka on assembly ###
-	echo "----- Running Prokka on Assembly -----"
-	# Get start time for prokka
-	start=$SECONDS
-	# Run prokka
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/prokka:1.14.5--pl526_0 prokka --outdir /SAMPDIR/prokka /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
-	#echo "About to rename files"
-	for pfile in ${SAMPDATADIR}/prokka/*.*; do
-		fullname=$(basename "${pfile}")
-		ext="${fullname##*.}"
-		echo "Renaming ${pfile} to ${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.${ext}"
-		mv "${pfile}" "${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.${ext}"
-	done
-	# Get end time of prokka and calculate run time and append to time summary (and sum to total time used)
-	end=$SECONDS
-	timeProk=$((end - start))
-	echo "Identifying Genes (Prokka) - ${timeProk} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + timeProk))
-
-	# Rename contigs to something helpful (Had to wait until after prokka runs due to the strict naming requirements
-	mv "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed_original.fasta"
-	python3 "${src}/fasta_headers.py" -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed_original.fasta" -o "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
-
-	### Average Nucleotide Identity ###
-	echo "----- Running ANI for Species confirmation -----"
-	# ANI uses assembly and sample would have exited already if assembly did not complete, so no need to check
-	# Get start time of ANI
-	start=$SECONDS
-	# run ANI
-	# Temp fix for strange genera until we do vs ALL all the time.
-	if [[ "${genus}" = "Peptoclostridium" ]] || [[ "${genus}" = "Clostridioides" ]]; then
-		genus="Clostridium"
-	elif [[ "${genus}" = "Shigella" ]]; then
-		genus="Escherichia"
-	fi
-
-	if [ ! -d "${SAMPDATADIR}/ANI" ]; then  #create outdir if absent
-		echo "${SAMPDATADIR}/ANI"
-		mkdir -p "${SAMPDATADIR}/ANI"
-	fi
-
-	if [ ! -s "${local_DBs}/aniDB/${genus,}" ]; then
-		echo "The genus does not exist in the ANI database. This will be noted and the curator of the database will be notified. However, since nothing can be done at the moment....exiting"
-		# Write non-results to a file in ANI folder
-		echo "No matching ANI database found for ${genus}" >> "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_${genus}).txt"
-		global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
-		echo "ANI: ${genus} - Found as ${isolate_name} on ${global_time}" >> "${src}/maintenance_To_Do.txt"
-	fi
-
-	# Checks to see if the local DB ANI folder already exists and creates it if not. This is used to store a local copy of all samples in DB to be compared to (as to not disturb the source DB)
-	if [ ! -d "${SAMPDATADIR}/ANI/localANIDB" ]; then  #create outdir if absent
-		echo "Creating ${SAMPDATADIR}/ANI/localANIDB"
-		mkdir -p "${SAMPDATADIR}/ANI/localANIDB"
-	else
-		rm -r "${SAMPDATADIR}/ANI/localANIDB"
-		mkdir -p "${SAMPDATADIR}/ANI/localANIDB"
-	fi
-
-	# Checks to see if the local DB ANI temp folder already exists and creates it if not. This is used to store a local copy of all samples in DB to be compared to (as to not disturb the source DB)
-	if [ ! -d "${SAMPDATADIR}/ANI/temp" ]; then  #create outdir if absent
-		echo "Creating ${SAMPDATADIR}/ANI/temp"
-		mkdir -p "${SAMPDATADIR}/ANI/temp"
-	else
-		rm -r "${SAMPDATADIR}/ANI/temp"
-		mkdir -p "${SAMPDATADIR}/ANI/temp"
-	fi
-
-	#Creates a local copy of the database folder
-	echo "trying to copy ${local_DBs}/aniDB/${genus,}/"
-	cp "${local_DBs}/aniDB/${genus,}/"*".fna.gz" "${SAMPDATADIR}/ANI/localANIDB/"
-	gunzip ${SAMPDATADIR}/ANI/localANIDB/*.gz
-
-	#Copies the samples assembly contigs to the local ANI db folder
-	cp "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${SAMPDATADIR}/ANI/localANIDB/sample_${genus}_${species}.fasta"
-
-	#Renames all files in the localANIDB folder by changing extension from fna to fasta (which pyani needs)
-	for file in ${SAMPDATADIR}/ANI/localANIDB/*.fna;
-	do
-		fasta_name=$(basename "${file}" .fna)".fasta"
-		mv "${file}" "${SAMPDATADIR}/ANI/localANIDB/${fasta_name}"
-	done
-
-	# Mashtree trimming to reduce run time for ANI
-	echo "----- Running MASHTREE for inside ANI -----"
-	cd ${SAMPDATADIR}/ANI/localANIDB
-	singularity -s exec docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} *.fasta > ${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd
-	cd ${src}
-
-	# Get total number of isolates compared in tree
-	sample_count=$(find ${SAMPDATADIR}/ANI/localANIDB/ -type f | wc -l)
-	# Must remove sample of interest
-	sample_count=$(( sample_count - 1 ))
-	# Check if sample count is greater than the max samples for tree size, if so then reduce tree size to max closest samples balanced around submitted isolate
-	if [[ ${sample_count} -gt ${max_ani_samples} ]]; then
-		sleep 2
-		tree=$(head -n 1 "${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd")
-		echo $tree
-		tree=$(echo "${tree}" | tr -d '()')
-		echo $tree
-		IFS=',' read -r -a samples <<< "${tree}"
-		counter=0
-		half_max=$(( (max_ani_samples+1) / 2 ))
-		echo "Halfsies = ${half_max}"
-		for sample in ${samples[@]};
-		do
-			counter=$(( counter + 1 ))
-			filename=$(echo ${sample} | cut -d':' -f1)
-			echo "${filename}"
-			filename="${filename}.fasta"
-			if [[ "${filename}" == "sample_${genus}_${species}.fasta" ]]; then
-				match=${counter}
-				echo "Match @ ${counter} and half=${half_max}"
-				if [[ ${match} -le ${half_max} ]]; then
-					echo "LE"
-					samples_trimmed=${samples[@]:0:$(( max_ani_samples + 1 ))}
-				elif [[ ${match} -ge $(( sample_count - half_max)) ]]; then
-					echo "GE"
-					samples_trimmed=${samples[@]:$(( max_ani_samples * -1 - 1 ))}
-				else
-					echo "MID - $(( match - half_max - 1 )) to $(( counter + half_max + 1))"
-					samples_trimmed=${samples[@]:$(( match - half_max -1 )):${max_ani_samples}}
-				fi
-					echo "${#samples_trimmed[@]}-${samples_trimmed[@]}"
-					break
-			fi
-					#echo ${filename}
-		done
-		mkdir "${SAMPDATADIR}/ANI/localANIDB_trimmed"
-		for sample in ${samples_trimmed[@]};
-		do
-			filename=$(echo ${sample} | cut -d':' -f1)
-			filename="${filename}.fasta"
-			echo "Moving ${filename}"
-			cp ${SAMPDATADIR}/ANI/localANIDB/${filename} ${SAMPDATADIR}/ANI/localANIDB_trimmed/
-		done
-		if [[ -d "${SAMPDATADIR}/ANI/localANIDB_full" ]]; then
-			rm -r "${SAMPDATADIR}/ANI/localANIDB_full"
-		fi
-		mv "${SAMPDATADIR}/ANI/localANIDB" "${SAMPDATADIR}/ANI/localANIDB_full"
-		mv "${SAMPDATADIR}/ANI/localANIDB_trimmed" "${SAMPDATADIR}/ANI/localANIDB"
-		#rm -r "${SAMPDATADIR}/ANI/localANIDB_full"
-
-	# Continue without reducing the tree, as there are not enough samples to require reduction
-	else
-		echo "Sample count below limit, not trimming ANI database"
-	fi
-
-	cd ${owd}
-	# Resume normal ANI analysis after mashtree reduction
-
-	# Checks for a previous copy of the aniM folder, removes it if found
-	if [ -d "${SAMPDATADIR}/ANI/aniM" ]; then
-		echo "Removing old ANIm results in ${SAMPDATADIR}/ANI/aniM"
-		rm -r "${SAMPDATADIR}/ANI/aniM"
-	fi
-
-	#Calls pyani on local db folder
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/pyani:0.2.7--py35_0 average_nucleotide_identity.py -i /SAMPDIR/ANI/localANIDB -o /SAMPDIR/ANI/aniM
-
-	#Extracts the query sample info line for percentage identity from the percent identity file
-	while IFS='' read -r line; do
-	#	echo "!-${line}"
-		if [[ ${line:0:7} = "sample_" ]]; then
-			sampleline=${line}
-	#		echo "found it-"$sampleline
-			break
-		fi
-	done < "${SAMPDATADIR}/ANI/aniM/ANIm_percentage_identity.tab"
-
-	#Extracts the top line from the %id file to get all the sample names used in analysis (they are tab separated along the top row)
-	if [[ -s "${SAMPDATADIR}/ANI/aniM/ANIm_percentage_identity.tab" ]]; then
-		firstline=$(head -n 1 "${SAMPDATADIR}/ANI/aniM/ANIm_percentage_identity.tab")
-	else
-		echo "No ${SAMPDATADIR}/ANI/aniM/ANIm_percentage_identity.tab file, exiting"
-	fi
-
-	#Arrays to read sample names and the %ids for the query sample against those other samples
-	IFS="	" read -r -a samples <<< "${firstline}"
-	IFS="	" read -r -a percents <<< "${sampleline}"
-
-	#How many samples were compared
-	n=${#samples[@]}
-
-	#Extracts all %id against the query sample (excluding itself) and writes them to file
-	for (( i=0; i<n; i++ ));
-	do
-	#	echo ${i}-${samples[i]}
-		if [[ ${samples[i]:0:7} = "sample_" ]];
-		then
-	#		echo "Skipping ${i}"
-			continue
-		fi
-		definition=$(head -1 "${SAMPDATADIR}/ANI/localANIDB/${samples[i]}.fasta")
-		# Prints all matching samples to file (Except the self comparison) by line as percent_match  sample_name  fasta_header
-		echo "${percents[i+1]} ${samples[i]} ${definition}" >> "${SAMPDATADIR}/ANI/best_hits.txt"
-	done
-
-	#Sorts the list in the file based on %id (best to worst)
-	sort -nr -t' ' -k1 -o "${SAMPDATADIR}/ANI/best_hits_ordered.txt" "${SAMPDATADIR}/ANI/best_hits.txt"
-	#Extracts the first line of the file (best hit)
-	best=$(head -n 1 "${SAMPDATADIR}/ANI/best_hits_ordered.txt")
-	#Creates an array from the best hit
-	IFS=' ' read -r -a def_array <<< "${best}"
-	#Captures the assembly file name that the best hit came from
-	best_file=${def_array[1]}
-	#Formats the %id to standard percentage (xx.xx%)
-	best_percent=$(awk -v per="${def_array[0]}" 'BEGIN{printf "%.2f", per * 100}')
-	#echo "${best_file}"
-	#Extracts the accession number from the definition line
-	accession=$(echo "${def_array[2]}" | cut -d' ' -f1  | cut -d'>' -f2)
-	#Looks up the NCBI genus species from the accession number
-	if [[ "${accession}" == "No_Accession_Number" ]]; then
-		best_organism_guess="${def_array[3]} ${def_array[4]}"
-	else
-		attempts=0
-		while [[ ${attempts} -lt 25 ]]; do
-			best_organism_guess=$(singularity exec ${src}/singularity_images/entrez_taxon.simg python3 /entrez/entrez_get_taxon_from_accession.py -a "${accession}" -e "${runner}")
-			if [[ ! -z ${best_organism_guess} ]]; then
-				break
-			else
-				attempts=$(( attempts + 1 ))
-			fi
-		done
-	fi
-
-	#Creates a line at the top of the file to show the best match in an easily readable format that matches the style on the MMB_Seq log
-	echo -e "${best_percent}%-${best_organism_guess}(${best_file}.fna)\\n$(cat "${SAMPDATADIR}/ANI/best_hits_ordered.txt")" > "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_${genus}).txt"
-
-	#Removes the transient hit files
-	if [ -s "${SAMPDATADIR}/ANI/best_hits.txt" ]; then
-		rm "${SAMPDATADIR}/ANI/best_hits.txt"
-	#	echo "1"
-	fi
-	if [ -s "${SAMPDATADIR}/ANI/best_hits_ordered.txt" ]; then
-		rm "${SAMPDATADIR}/ANI/best_hits_ordered.txt"
-	#	echo "2"
-	fi
-
-	# Get end time of ANI and calculate run time and append to time summary (and sum to total time used
-	end=$SECONDS
-	timeANI=$((end - start))
-	echo "autoANI - ${timeANI} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + timeANI))
-
-	# Get taxonomy from currently available files
-	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
-
-	### BUSCO on prokka output ###
-	echo "----- Running BUSCO on Assembly -----"
-	# Check to see if prokka finished successfully
-	if [ -s "${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.gbf" ] || [ -s "${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.gff" ]; then
-		# Get start time of busco
-		start=$SECONDS
-		# Set default busco database as bacteria in event that we dont have a database match for sample lineage
-		buscoDB="bacteria_odb10"
-		# Iterate through taxon levels (species to domain) and test if a match occurs to entry in database. If so, compare against it
-		busco_found=0
-		for tax in $species $genus $family $order $class $phylum $kingdom $domain
-		do
-			if [ -d "${local_DBs}/BUSCO/${tax,}_odb10" ]
-			then
-				buscoDB="${tax,}_odb10"
-				busco_found=1
-				break
-			fi
-		done
-		# Report an unknown sample to the maintenance file to look into
-		if [[ "${busco_found}" -eq 0 ]]; then
-			global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
-			echo "BUSCO: ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species} - Found as ${PROJECT}/${isolate_name} on ${global_time}" >> "${src}/maintenance_To_Do.txt"
-		fi
-		# Show which database entry will be used for comparison
-		echo "buscoDB:${buscoDB}"
-		# Run busco
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}/BUSCO:/DATABASES docker://quay.io/biocontainers/busco:3.0.2--py35_4 run_BUSCO.py -i /SAMPDIR/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l /DATABASES/${buscoDB} -m prot
-		if [ ! -d "${SAMPDATADIR}/BUSCO" ]; then  #create outdir if absent
-			echo "Creating ${SAMPDATADIR}/BUSCO"
-			mkdir -p "${SAMPDATADIR}/BUSCO"
-		fi
-		mv ${src}/run_${isolate_name}_BUSCO/* ${SAMPDATADIR}/BUSCO/
-		mv ${SAMPDATADIR}/BUSCO/short_summary_${isolate_name}.txt ${SAMPDATADIR}/BUSCO/short_summary_${isolate_name}_BUSCO.txt
-		rm -r ${src}/run_${isolate_name}_BUSCO
-
-		# Get end time of busco and calculate run time and append to time summary (and sum to total time used
-		end=$SECONDS
-		timeBUSCO=$((end - start))
-		echo "BUSCO - ${timeBUSCO} seconds" >> "${time_summary}"
-		totaltime=$((totaltime + timeBUSCO))
-	# Prokka did not complete successfully and busco cant run (since it relies on prokka output)
-	else
-		echo "Prokka output not found, not able to process BUSCO"
-	fi
-
-	### c-SSTAR for finding AR Genes ###
-	echo "----- Running c-SSTAR for AR Gene identification -----"
-	# c-SSTAR uses assembly and sample would have exited already if assembly did not complete, so no need to check
-	# Get start time of ccstar
-	start=$SECONDS
-
-	# Run csstar in default mode from config.sh
-	if [ ! -d "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}" ]; then  #create outdir if absent
-		echo "Creating ${SAMPDATADIR}/c-sstar${ResGANNCBI_srst2_filename}_${csstar_gapping}"
-		mkdir -p "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
-	fi
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -s "${csim}" -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar"
-
-	###################################### FIND WAY TO CATCH FAILURE? !!!!!!!!!! ###############################
-
-	# Goes through ResGANNCBI outfile and adds labels as well as resistance conferred to the beginning of the line
-	# Takes .sstar file in and outputs as .sstar_grouped
-	while IFS= read -r line; do
-
-		#echo ${line}
-		# Extract gene (label1) and allele (label2) from line, also force all characters to be lowercase
-		label1=$(echo "${line}" | cut -d '	' -f3 | tr '[:upper:]' '[:lower:]')
-		label2=$(echo "${line}" | cut -d '	' -f4 | tr '[:upper:]' '[:lower:]')
-		# Determine what flags were thrown for this gene by csstar
-		info1=""
-		# Truncated allele
-		if [[ "${label1}" = *"TRUNC" ]] && [[ "${label1}" != "str" ]]; then
-			#echo "Label 1 was truncated"
-			label1="${label1:0:${#label1} - 2}"
-			info1="${info1}trunc-"
-		fi
-		# Likely novel allele
-		if ( [[ "${label1}" = *"*"* ]] || [[ "${label1}" = *"*" ]] ) && [[ "${label1}" != "str" ]]; then
-			#echo "Label 1 is likely novel"
-			label1="${label1:0:${#label1} - 1}"
-			info1="${info1}novel-"
-		fi
-		# Incomplete alignment length, Uncertainy exists in one allele
-		if ( [[ "${label1}" = *"?"* ]] || [[ "${label1}" = *"?" ]] ) && [[ "${label1}" != "str" ]]; then
-			#echo "Label 1 is uncertain due to incomplete alignment"
-			label1="${label1:0:${#label1} - 1}"
-			info1="${info1}alinc-"
-		fi
-		# Incomplete alignment length at edge
-		if ( [[ "${label1}" = *"$"* ]] || [[ "${label1}" = *"$" ]] ) && [[ "${label1}" != "str" ]]; then
-			#echo "Label 1 is uncertain due to incomplete alignment"
-			label1="${label1:0:${#label1} - 1}"
-			info1="${info1}edge-"
-		fi
-		# Removes character add-ons of genes and alleles, also lower cases all characters for searching later
-		label1=$(echo "${label1,,}" | tr -d '*?$')
-		label2=$(echo "${label2,,}" | tr -d '*?$')
-		# Extract source database that AR gene match came from
-		source=$(echo "${line,,}" | cut -d '	' -f1 | tr -d '[:space:]')
-		# Extract the type of resistance that is conferred by the gene
-		resistance=$(echo "${line}" | cut -d '	' -f2 | tr -d '[:space:]')
-		# Trim contig identifier of spaces
-		contig=$(echo "${line}" | cut -d '	' -f5 | tr -d '[:space:]')
-		# Extract % from line
-		percent=$(echo "${line}" | cut -d '	' -f6 | cut -d'%' -f1 | tr -d '[:space:]')
-		# Determine length of query and subject sequences
-		len1=$(echo "${line}" | cut -d '	' -f7 | tr -d '[:space:]')
-		len2=$(echo "${line}" | cut -d '	' -f8 | tr -d '[:space:]')
-		plen=$(echo "${line}" | cut -d '	' -f9 | tr -d '[:space:]')
-		# Check and display any flags found, otherwise mark it as normal
-		if [[ -z "${info1}" ]]; then
-			info1="normal"
-		else
-			info1=${info1::-1}
-		fi
-		#printf "%-10s %-50s %-15s %-25s %-25s %-40s %-4s %-5d %-5d %-5d\\n" "${source}1" "${resistance}2" "${label1}3" "${info1}4" "${label2}5" "${contig}A" "${percent}B" "${len1}C" "${len2}D" "${plen}E"
-		echo "${source}	${resistance}	${label1}	${info1}	${label2}	${contig}	${percent}	${len1}	${len2}	${plen}"
-	done < "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar" > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar_grouped"
-	# Writes all AR genes to file based on %ID, %length, and finally length of gene
-	sort -k7,7nr -k10,10nr -k8,8n "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar_grouped" > "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt"
-
-	# Catches an empty or missing file, adding that no AMR genes were found if no file was created
-	if [ ! -s "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt" ]; then
-		echo "No anti-microbial genes were found using c-SSTAR with both resFinder and ARG-ANNOT DBs" > "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt"
-	fi
-	end=$SECONDS
-	timestar=$((end - start))
-	echo "c-SSTAR - ${timestar} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + timestar))
-
-	start=$SECONDS
-	# Run GAMA on assembly
-	echo "----- Running GAMA -----"
-	if [ ! -d "${SAMPDATADIR}/GAMA" ]; then  #create outdir if absent
-		echo "Creating ${SAMPDATADIR}/GAMA"
-		mkdir -p "${SAMPDATADIR}/GAMA"
-	fi
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta -o /SAMPDIR/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
-
-	end=$SECONDS
-	timeGAMA=$((end - start))
-	echo "GAMA - ${timeGAMA} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + timeGAMA))
-
-	# Get MLST profile
-	echo "----- Running MLST -----"
-	if [ ! -d "${SAMPDATADIR}/MLST" ]; then  #create outdir if absent
-		echo "Creating ${SAMPDATADIR}/MLST"
-		mkdir -p "${SAMPDATADIR}/MLST"
-	fi
-	start=$SECONDS
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}.mlst"
-	python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}.mlst" -t standard
-	type=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
-	if [[ "${genus}_${species}" = "Acinetobacter_baumannii" ]]; then
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst --scheme "abaumannii" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst"
-		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst" -t standard
-		mv "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Oxford.mlst"
-		mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
-		#Check for "-", unidentified type
-		type1=$(tail -n1 ${SAMPDATADIR}/MLST/${isolate_name}_Oxford.mlst | cut -d' ' -f3)
-		type2=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst | cut -d' ' -f3)
-		if [[ "${type1}" = "-" ]]; then
-			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Acinetobacter baumannii#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
-			sed -i -e 's/Oxf_//g' "${SAMPDATADIR}/MLST/srst2/Acinetobacter_baumannii#1.fasta"
-			sed -i -e 's/Oxf_//g' "${SAMPDATADIR}/MLST/srst2/abaumannii.txt"
-			db_name="Oxford"
-			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
-			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
-			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
-			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
-			if [[ "${mlst_delimiter}" != "'_'" ]]; then
-				echo "Unknown delimiter - \"${mlst_delimiter}\""
-			else
-				mlst_delimiter="_"
-			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
-
-			today=$(date "+%Y-%m-%d")
-
-			# Cleans up extra files and renames output file
-			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Acinetobacter_baumannii#1__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#1-${db_name}.mlst"
-			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Acinetobacter_baumannii#1_${today}.log" "${SAMPDATADIR}/MLST/"
-			rm -r "${SAMPDATADIR}/MLST/srst2"
-
-			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.pileup" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.pileup"
-			fi
-			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.sorted.bam" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.sorted.bam"
-			fi
-			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#1-${db_name}.mlst" -t srst2
-		fi
-		if [[ "${type2}" = "-" ]]; then
-			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Acinetobacter baumannii#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
-			sed -i -e 's/Pas_//g' "${SAMPDATADIR}/MLST/srst2/Acinetobacter_baumannii#2.fasta"
-			sed -i -e 's/Pas_//g' "${SAMPDATADIR}/MLST/srst2/abaumannii_2.txt"
-			db_name="Pasteur"
-			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
-			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
-			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
-			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
-			if [[ "${mlst_delimiter}" != "'_'" ]]; then
-				echo "Unknown delimiter - \"${mlst_delimiter}\""
-			else
-				mlst_delimiter="_"
-			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
-
-			today=$(date "+%Y-%m-%d")
-
-			# Cleans up extra files and renames output file
-			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Acinetobacter_baumannii#2__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#2-${db_name}.mlst"
-			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Acinetobacter_baumannii#2_${today}.log" "${SAMPDATADIR}/MLST/"
-			rm -r "${SAMPDATADIR}/MLST/srst2"
-
-			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.pileup" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.pileup"
-			fi
-			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.sorted.bam" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.sorted.bam"
-			fi
-			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#2-${db_name}.mlst" -t srst2
-		fi
-	elif [[ "${genus}_${species}" = "Escherichia_coli" ]]; then
-		# Verify that ecoli_2 is default and change accordingly
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst --scheme "ecoli_2" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst"
-		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst" -t standard
-		mv "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
-		mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Achtman.mlst"
-		type2=$(tail -n1 ${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst | cut -d' ' -f3)
-		type1=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
-		if [[ "${type1}" = "-" ]]; then
-			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
-			db_name="Achtman"
-			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
-			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
-			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
-			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
-			if [[ "${mlst_delimiter}" != "'_'" ]]; then
-				echo "Unknown delimiter - \"${mlst_delimiter}\""
-			else
-				mlst_delimiter="_"
-				#echo "Delimiter is OK (${mlst_delimiter})"
-			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDir/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
-			today=$(date "+%Y-%m-%d")
-					# Cleans up extra files and renames output file
-			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Escherichia_coli#1__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#1-${db_name}.mlst"
-			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Escherichia_coli#1_${today}.log" "${SAMPDATADIR}/MLST/"
-			rm -r "${SAMPDATADIR}/MLST/srst2"
-
-			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#1.pileup" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#1.pileup"
-			fi
-			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#1.sorted.bam" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#1.sorted.bam"
-			fi
-
-			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#1-${db_name}.mlst" -t srst2
-		fi
-		if [[ "${type2}" = "-" ]]; then
-			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
-			db_name="Pasteur"
-			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
-			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
-			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
-			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
-			if [[ "${mlst_delimiter}" != "'_'" ]]; then
-				echo "Unknown delimiter - \"${mlst_delimiter}\""
-			else
-				mlst_delimiter="_"
-				#echo "Delimiter is OK (${mlst_delimiter})"
-			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
-			today=$(date "+%Y-%m-%d")
-					# Cleans up extra files and renames output file
-			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Escherichia_coli#2__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#2-${db_name}.mlst"
-			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Escherichia_coli#2_${today}.log" "${SAMPDATADIR}/MLST/"
-			rm -r "${SAMPDATADIR}/MLST/srst2"
-
-			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#2.pileup" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#2.pileup"
-			fi
-			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#2.sorted.bam" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#2.sorted.bam"
-			fi
-
-			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#2-${db_name}.mlst" -t srst2
-		fi
-	else
-		if [[ "${type}" == "-" ]]; then
-			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
-			db_name="Pasteur"
-			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
-			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
-			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
-			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
-			if [[ "${mlst_delimiter}" != "'_'" ]]; then
-				echo "Unknown delimiter - \"${mlst_delimiter}\""
-			else
-				mlst_delimiter="_"
-				#echo "Delimiter is OK (${mlst_delimiter})"
-			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
-			today=$(date "+%Y-%m-%d")
-					# Cleans up extra files and renames output file
-			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__${genus}_${species}__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_${genus}_${species}-${db_name}.mlst"
-			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_${genus}_${species}_${today}.log" "${SAMPDATADIR}/MLST/"
-			rm -r "${SAMPDATADIR}/MLST/srst2"
-
-			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.${genus}_${species}.pileup" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.${genus}_${species}.pileup"
-			fi
-			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.${genus}_${species}.sorted.bam" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.${genus}_${species}.sorted.bam"
-			fi
-			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_${genus}_${species}-${db_name}.mlst" -t srst2
-		fi
-		mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
-	fi
-	end=$SECONDS
-	timeMLST=$((end - start))
-	echo "MLST - ${timeMLST} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + timeMLST))
-
-	# Try to find any plasmids
-	echo "----- Identifying plasmids using plasmidFinder -----"
-	start=$SECONDS
-
-	echo "${family}-${genus}"
-	# If family is enterobacteriaceae, then run against that DB
-	if [[ "${family,}" == "enterobacteriaceae" ]]; then
-		echo "Checking against Enterobacteriaceae plasmids"
-		#plasmidfinder -i ${SAMPDATADIR}/${inpath} -o ${SAMPDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p enterobacteriaceae
-		# Rename all files to include ID
-		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_entero.fsa
-		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_enetero.fsa
-		mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_entero.txt
-		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_entero.txt
-		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_summary.txt
-	# If family is staph, strp, or enterococcus, then run against the gram positive database
-elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" ]] || [[ "${genus,}" == "enterococcus" ]]; then
-		echo "Checking against Staph, Strep, and Enterococcus plasmids"
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p gram_positive
-		# Rename all files to include ID
-		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_gramp.fsa
-		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_gramp.fsa
-		mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_gramp.txt
-		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_gramp.txt
-		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_summary.txt
-	# Family is not one that has been designated by the creators of plasmidFinder to work well, but still attempting to run against both databases
-	else
-		echo "Checking against ALL plasmids, but unlikely to find anything"
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p enterobacteriaceae
-		# Rename all files to include ID
-		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_entero.fsa
-		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_enetero.fsa
-		mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_entero.txt
-		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_entero.txt
-		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_entero.txt
-		#plasmidfinder -i ${SAMPDATADIR}/${inpath} -o ${SAMPDATADIR} -k ${plasmidFinder_identity} -p gram_positive
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p gram_positive
-		# Rename all files to include ID
-		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_gramp.fsa
-		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_gramp.fsa
-		mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_gramp.txt
-		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_gramp.txt
-		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_gramp.txt
-		cat	${SAMPDATADIR}/${isolate_name}_results_table_gramp.txt ${SAMPDATADIR}/${isolate_name}_results_table_entero.txt > ${SAMPDATADIR}/${isolate_name}_results_table_summary.txt
-	fi
-	end=$SECONDS
-	timeplasfin=$((end - start))
-	echo "plasmidFinder - ${timeplasfin} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + timeplasfin))
+# 	# Remove old run stats as the presence of the file indicates run completion
+# 	if [[ -f "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt" ]]; then
+# 		rm "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt"
+# 	fi
+#
+# 	# Create an empty time_summary file that tracks clock time of tools used
+# 	touch "${SAMPDATADIR}/${isolate_name}_time_summary.txt"
+# 	time_summary="${SAMPDATADIR}/${isolate_name}_time_summary.txt"
+#
+# 	echo "Time summary for ${PROJECT}/${isolate_name}: Started ${global_time}" >> "${time_summary}"
+# 	echo "${PROJECT}/${isolate_name} started at ${global_time}"
+#
+# 	echo "Starting processing of ${PROJECT}/${isolate_name}"
+# 	if [[ "${assemblies}" == "false" ]]; then
+# 		#Checks if FASTQ folder exists for current sample
+# 		if [[ -d "${SAMPDATADIR}/FASTQs" ]]; then
+# 			# Checks if FASTQ folder contains any files then continue
+# 			if [[ "$(ls -A "${SAMPDATADIR}/FASTQs")" ]]; then
+# 				# Checks to see if those files in the folder are unzipped fastqs
+# 				count_unzip=`ls -1 ${SAMPDATADIR}/FASTQs/*.fastq 2>/dev/null | wc -l`
+# 				count_zip=`ls -1 ${SAMPDATADIR}/FASTQs/*.fastq.gz 2>/dev/null | wc -l`
+# 				if [[ ${count_unzip} != 0 ]]; then
+# 					echo "----- FASTQ(s) exist, continuing analysis -----"
+# 					if [[ -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq" ]] && [[ ! -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq.gz" ]]; then
+# 						gzip < "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq" > "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq.gz"
+# 					fi
+# 					if [[ -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq" ]] && [[ ! -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz" ]]; then
+# 						gzip < "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq" > "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz"
+# 					fi
+# 				# Checks if they are zipped fastqs (checks for R1 first)
+# 				elif [[ -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq.gz" ]]; then
+# 					#echo "R1 zipped exists - unzipping"
+# 					gunzip -c "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq.gz" > "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq"
+# 					# Checks for paired R2 file
+# 					if [[ -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz" ]]; then
+# 						#echo "R2 zipped exists - unzipping"
+# 						gunzip -c "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz" > "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq"
+# 					else
+# 						echo "No matching R2 to unzip :("
+# 					fi
+# 				# Checks to see if there is an abandoned R2 zipped fastq
+# 				elif [[ -f "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz" ]]; then
+# 					#echo "R2 zipped  exists - unzipping"
+# 					gunzip -c "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz" > "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq"
+# 					echo "No matching R1 to unzip :("
+# 				fi
+# 			# If the folder is empty then return from function
+# 			else
+# 				echo "FASTQs folder empty - No fastqs available for ${isolate_name} (and download was not requested). Either unzip fastqs to ${SAMPDATADIR}/FASTQs or run the -d flag to trigger unzipping of gzs"
+# 			fi
+# 		# If the fastq folder does not exist then return out of function
+# 		else
+# 			echo "FASTQs not downloaded and FASTQs folder does not exist for ${isolate_name}. No fastqs available (and download was not requested). Unzip fastqs to ${SAMPDATADIR}/FASTQs"
+# 		fi
+#
+# 		# Get start time for qc check
+# 		start=$SECONDS
+# 		### Count the number of Q20, Q30, bases and reads within a pair of FASTQ files
+# 		echo "----- Counting read quality -----"
+# 		# Checks for and creates the specified output folder for the QC counts
+# 		if [ ! -d "${SAMPDATADIR}/preQCcounts" ]; then
+# 			echo "Creating ${SAMPDATADIR}/preQCcounts"
+# 			mkdir -p "${SAMPDATADIR}/preQCcounts"
+# 		fi
+# 		# Run qc count check on raw reads
+# 		python3 "${src}/Fastq_Quality_Printer.py" -1 "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq" -2 "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_counts.txt"
+# 		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
+# 		end=$SECONDS
+# 		timeQCcount=$((end - start))
+# 		echo "QC count - ${timeQCcount} seconds" >> "${time_summary}"
+# 		totaltime=$((totaltime + timeQCcount))
+#
+# 		###  Trimming and Quality Control  ###
+# 		echo "----- Running BBDUK on reads -----"
+# 		# Gets start time for bbduk
+# 		start=$SECONDS
+# 		# Creates folder for BBDUK output
+# 		if [ ! -d "${SAMPDATADIR}/removedAdapters" ]; then
+# 			echo "Creating ${SAMPDATADIR}/removedAdapters"
+# 			mkdir -p "${SAMPDATADIR}/removedAdapters"
+# 		# It complains if a folder already exists, so the current one is removed (shouldnt happen anymore as each analysis will move old runs to new folder)
+# 		else
+# 			echo "Removing old ${SAMPDATADIR}/removedAdapters"
+# 			rm -r "${SAMPDATADIR}/removedAdapters"
+# 			echo "Recreating ${SAMPDATADIR}/removedAdapters"
+# 			mkdir -p "${SAMPDATADIR}/removedAdapters"
+# 		fi
+# 		### Run bbduk
+# 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/bbtools.simg bbduk.sh -${bbduk_mem} threads=${procs} in=/SAMPDIR/FASTQs/${isolate_name}_R1_001.fastq in2=/SAMPDIR/FASTQs/${isolate_name}_R2_001.fastq out=/SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R1.fsq out2=/SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=${bbduk_k} hdist=${bbduk_hdist}
+# 		# Get end time of bbduk and calculate run time and append to time summary (and sum to total time used)
+# 		end=$SECONDS
+# 		timeAdapt=$((end - start))
+# 		echo "Removing Adapters - ${timeAdapt} seconds" >> "${time_summary}"
+# 		totaltime=$((totaltime + timeAdapt))
+#
+#
+# 		### Quality and Adapter Trimming using trimmomatic ###
+# 		echo "----- Running Trimmomatic on reads -----"
+# 		# Get start time of trimmomatic
+# 		start=$SECONDS
+# 		# Creates folder for trimmomatic output if it does not exist
+# 		if [ ! -d "${SAMPDATADIR}/trimmed" ]; then
+# 			mkdir -p "${SAMPDATADIR}/trimmed"
+# 		fi
+# 		### Run trimmomatic
+# 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/trimmomatic:0.36--5 trimmomatic ${trim_endtype} -${trim_phred} -threads ${procs} /SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R1.fsq /SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R2.fsq /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R1_001.unpaired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.unpaired.fq ILLUMINACLIP:/DATABASES/adapters.fasta:${trim_seed_mismatch}:${trim_palindrome_clip_threshold}:${trim_simple_clip_threshold}:${trim_min_adapt_length}:${trim_complete_palindrome} SLIDINGWINDOW:${trim_window_size}:${trim_window_qual} LEADING:${trim_leading} TRAILING:${trim_trailing} MINLEN:${trim_min_length}
+# 		# Get end time of trimmomatic and calculate run time and append to time summary (and sum to total time used)
+# 		end=$SECONDS
+# 		timeTrim=$((end - start))
+# 		echo "Trimming - ${timeTrim} seconds" >> "${time_summary}"
+# 		totaltime=$((totaltime + timeTrim))
+# 		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq"
+# 		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq"
+#
+# 		# Check differences after QC and trimming (also for gottcha proper read count for assessing unclassified reads)
+# 		# Get start time for qc check on trimmed reads
+# 		start=$SECONDS
+# 		### Count the number of Q20, Q30, bases and reads within the trimmed pair of FASTQ files
+# 		echo "----- Counting read quality of trimmed files-----"
+# 		# Run qc count check on filtered reads
+# 		python3 "${src}/Fastq_Quality_Printer.py" -1 "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq" -2 "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_trimmed_counts.txt"
+# 		# Merge both unpaired fq files into one for GOTTCHA
+# 		cat "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.unpaired.fq" "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.unpaired.fq" > "${SAMPDATADIR}/trimmed/${isolate_name}.single.fq"
+# 		cat "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq" "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" > "${SAMPDATADIR}/trimmed/${isolate_name}.paired.fq"
+#
+# 		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
+# 		end=$SECONDS
+# 		timeQCcount_trimmed=$((end - start))
+# 		echo "QC count trimmed - ${timeQCcount_trimmed} seconds" >> "${time_summary}"
+# 		totaltime=$((totaltime + timeQCcount))
+#
+# 		######  Run Kraken on cleaned reads  ######
+# 		echo "----- Running Kraken on cleaned reads -----"
+# 		# Get start time of kraken on reads
+# 		start=$SECONDS
+# 		# Create directory for kraken dataset
+# 		if [[ ! -d "${SAMPDATADIR}/kraken/preAssembly" ]]; then
+# 			mkdir -p "${SAMPDATADIR}/kraken/preAssembly"
+# 		fi
+# 		# Run kraken
+# 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --paired --db /DATABASES/minikrakenDB/  --preload --fastq-input --threads 4 --output /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken --classified-out /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.classified /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq
+# 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa"
+# 		python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa" -k "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.krona"
+# 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.krona -o /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.html
+# 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.list"
+# 		"${src}/best_hit_from_kraken.sh" "${isolate_name}" "pre" "paired" "${PROJECT}" "kraken"
+# 		# Get end time of kraken on reads and calculate run time and append to time summary (and sum to total time used)
+# 		end=$SECONDS
+# 		timeKrak=$((end - start))
+# 		echo "Kraken - ${timeKrak} seconds" >> "${time_summary}"
+# 		totaltime=$((totaltime + timeKrak))
+#
+# 		##### Run gottcha(v1) on cleaned reads #####
+# 		echo "----- Running gottcha on cleaned reads -----"
+# 		# Get start time of gottcha
+# 		start=$SECONDS
+# 		# run gottcha
+# 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DBs ${src}/singularity_images/gottcha.simg gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DBs/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species
+# 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/gottcha/gottcha_S/${isolate_name}_temp/${isolate_name}.lineage.tsv -o /SAMPDIR/gottcha/${isolate_name}_species.krona.html
+# 		#Create a best hit from gottcha1 file
+# 		"${src}/best_hit_from_gottcha1.sh" "${isolate_name}" "${PROJECT}"
+# 		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
+# 		end=$SECONDS
+# 		timeGott=$((end - start))
+# 		echo "Gottcha - ${timeGott} seconds" >> "${time_summary}"
+# 		totaltime=$((totaltime + timeGott))
+#
+# 		# Check reads using SRST2
+# 		echo "----- Running SRST2 -----"
+# 		start=$SECONDS
+#
+# 		if [[ ! -d "${SAMPDATADIR}/srst2" ]]; then
+# 				mkdir "${SAMPDATADIR}/srst2"
+# 		fi
+#
+# 		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz
+# 		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz
+#
+# 		singularity exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DBs ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/${isolate_name}_ResGANNCBI --gene_db /DBs/star/ResGANNCBI_20191227_srst2.fasta
+#
+# 		# Cleans up leftover files
+# 		rm "${SAMPDATADIR}/srst2/"*".bam"
+# 		rm "${SAMPDATADIR}/srst2/"*".pileup"
+# 		rm "${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz"
+# 		rm "${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz"
+#
+# 		# Removes the extra ResGANNCBI__ from all files created
+# 		find ${SAMPDATADIR}/srst2 -type f -name "*ResGANNCBI__*" | while read FILE ; do
+# 		  dirname=$(dirname $FILE)
+# 			filename=$(basename $FILE)
+# 			filename="${filename/_ResGANNCBI__/__}"
+# 			#echo "Found-${FILE}"
+# 			#echo "${filename}"
+# 		    mv "${FILE}" "${dirname}/${filename}"
+# 		done
+#
+# 		end=$SECONDS
+# 		timesrst2=$((end - start))
+# 		echo "SRST2 - ${timesrst2} seconds" >> "${time_summary}"
+# 		totaltime=$((totaltime + timesrst2))
+#
+# 		######  Assembling Using SPAdes  ######
+# 		echo "----- Assembling Using SPAdes -----"
+# 		# Get start time of SPAdes
+# 		start=$SECONDS
+# 		# script tries 3 times for a completed assembly
+# 		for i in 1 2 3
+# 		do
+# 			# If assembly exists already and this is the first attempt (then the previous run will be used) [should not happen anymore as old runs are now renamed]
+# 			if [ -s "${SAMPDATADIR}/Assembly/scaffolds.fasta" ]; then
+# 				echo "Previous assembly already exists, using it (delete/rename the assembly folder at ${SAMPDATADIR}/ if you'd like to try to reassemble"
+# 			# Run normal mode if no assembly file was found
+# 			else
+# 				singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/spades:3.13.0--0 spades.py --careful --memory 16 --only-assembler --pe1-1 /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq --pe1-2 /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq --pe1-s /SAMPDIR/trimmed/${isolate_name}.single.fq -o /SAMPDIR/Assembly --phred-offset "${phred}" -t "${procs}"
+# 			fi
+# 			# Removes any core dump files (Occured often during testing and tweaking of memory parameter
+# 			if [ -n "$(find "${src}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then
+# 				echo "Found core dump files in assembly (assumed to be from SPAdes, but could be anything before that as well) and attempting to delete"
+# 				find "${src}" -maxdepth 1 -name 'core.*' -exec rm -f {} \;
+# 			fi
+# 		done
+# 		# Returns if all 3 assembly attempts fail
+# 		if [[ -f "${SAMPDATADIR}/Assembly/scaffolds.fasta" ]] && [[ -s "${SAMPDATADIR}/Assembly/scaffolds.fasta" ]]; then
+# 			echo "Assembly completed and created a non-empty scaffolds file"
+# 		else
+# 			echo "Assembly FAILED 3 times, continuing to next sample..." >&2
+# 			return 1
+# 		fi
+# 		# Get end time of SPAdes and calculate run time and append to time summary (and sum to total time used)
+# 		end=$SECONDS
+# 		timeSPAdes=$((end - start))
+# 		echo "SPAdes - ${timeSPAdes} seconds" >> "${time_summary}"
+# 		totaltime=$((totaltime + timeSPAdes))
+# 	fi
+#
+# 	### Removing Short Contigs  ###
+# 	echo "----- Removing Short Contigs -----"
+# 	python3 "${src}/removeShortContigs.py" -i "${SAMPDATADIR}/Assembly/scaffolds.fasta" -t 500 -s "normal_SPAdes"
+# 	mv "${SAMPDATADIR}/Assembly/scaffolds.fasta.TRIMMED.fasta" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
+#
+# 	# Checks to see that the trimming and renaming worked properly, returns if unsuccessful
+# 	if [ ! -s "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" ]; then
+# 		echo "Trimmed contigs file does not exist continuing to next sample">&2
+# 		continue
+# 	fi
+#
+# 	### ReKraken on Assembly ###
+# 	echo "----- Running Kraken on Assembly -----"
+# 	# Get start time of kraken on assembly
+# 	start=$SECONDS
+# 	# Create directory for kraken dataset on assembly
+# 	if [[ ! -d "${SAMPDATADIR}/kraken/postAssembly" ]]; then
+# 		mkdir -p "${SAMPDATADIR}/kraken/postAssembly"
+# 	fi
+# 	# Run kraken on assembly
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/minikrakenDB/  --preload --threads ${procs} --output /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken --classified-out /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.classified /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
+# 	python3 ${src}/Kraken_Assembly_Converter_2_Exe.py -i "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken"
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa"
+# 	python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa" -k "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.krona"
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list"
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted.krona -o /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted_BP_krona.html
+# 	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled_BP" "${PROJECT}" "kraken"
+# 	singularity -s exec -B ${SAMPDATADIR}/kraken/postAssembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /INPUT/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa"
+# 	python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa" -k "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.krona"
+# 	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.krona -o /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.html
+# 	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
+# 	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled" "${PROJECT}" "kraken"
+# 	# Get end time of kraken on assembly and calculate run time and append to time summary (and sum to total time used)
+# 	end=$SECONDS
+# 	timeKrakAss=$((end - start))
+# 	echo "Kraken on Assembly - ${timeKrakAss} seconds" >> "${time_summary}"
+# 	totaltime=$((totaltime + timeKrakAss))
+#
+# 	# Get ID fom 16s
+# 	echo "----- Identifying via 16s blast -----"
+# 	start=$SECONDS
+#
+# 	if [ ! -d "${SAMPDATADIR}/16s" ]; then
+# 		echo "Creating ${SAMPDATADIR}/16s"
+# 		mkdir "${SAMPDATADIR}/16s"
+# 	fi
+#
+# 	# Get original working directory so that it can return to it after running (may not need to do this but havent tested it out yet)
+# 	owd=$(pwd)
+# 	cd ${SAMPDATADIR}/16s
+#
+# 	# Run barrnap to discover ribosomal sequences
+# 	#barrnap --kingdom bac --threads ${procs} "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" > ${SAMPDATADIR}/16s/${isolate_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta
+#
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/barrnap:0.8--0 barrnap --kingdom bac /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/16s/${isolate_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta"
+#
+# 	# Checks for successful output from barrnap, *rRNA_seqs.fasta
+# 	if [[ ! -s ${SAMPDATADIR}/16s/${isolate_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta ]]; then
+# 		echo "rNA_seqs.fasta does NOT exist"
+# 	fi
+#
+# 	# Checks barrnap output and finds all 16s hits and creates a multi-fasta file to list all possible matches
+# 	lines=0
+# 	found_16s="false"
+# 	while IFS='' read -r line || [ -n "$line" ]; do
+# 		if [ ${lines} -gt 0 ]; then
+# 			contig=$(echo ${line} | cut -d' ' -f1)
+# 			cstart=$(echo ${line} | cut -d' ' -f4)
+# 			cstop=$(echo ${line} | cut -d' ' -f5)
+# 			ribosome=$(echo ${line} | cut -d' ' -f9 | cut -d'=' -f3)
+# 			if [ "${ribosome}" = "16S" ]; then
+# 				# Replace with subsequence once it can handle multi-fastas
+# 				#make_fasta $1 $2 $contig $cstart $cstop
+# 				python3 ${src}/get_subsequence.py -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" -s ${cstart} -e ${cstop} -t ${contig} >> ${SAMPDATADIR}/16s/${isolate_name}_16s_rna_seqs.txt
+# 				found_16s="true"
+# 			fi
+# 		fi
+# 		lines=$((lines + 1))
+# 	done < "${SAMPDATADIR}/16s/${isolate_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta"
+#
+# 	# Adds No hits found to output file in the case where no 16s ribosomal sequences were found
+# 	if [[ "${found_16s}" == "false" ]]; then
+# 		echo -e "best_hit	${isolate_name}	No_16s_sequences_found" > "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
+# 		echo -e "largest_hit	${isolate_name}	No_16s_sequences_found" >> "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
+# 	fi
+#
+# 	# Blasts the NCBI database to find the closest hit to every entry in the 16s fasta list
+# 	###### MAX_TARGET_SEQS POSSIBLE ERROR
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/blast:2.9.0--pl526h3066fca_4 blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 1 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seqs.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname"
+# 	# Sorts the list based on sequence match length to find the largest hit
+# 	sort -k4 -n "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN" --reverse > "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN.sorted"
+#
+# 	# Gets taxon info from the best bitscore (literal top) hit from the blast list
+# 	if [[ -s "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN" ]]; then
+# 		me=$(whoami)
+# 		accessions=$(head -n 1 "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN")
+# 		hits=$(echo "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN" | wc -l)
+# 	#	echo ${accessions}
+# 		gb_acc=$(echo "${accessions}" | cut -d' ' -f2 | cut -d'|' -f4)
+# 		echo ${gb_acc}
+# 		attempts=0
+# 		# Will try getting info from entrez up to 5 times, as it has a higher chance of not finishing correctly on the first try
+# 		while [[ ${attempts} -lt 5 ]]; do
+# 			blast_id=$(singularity exec ${src}/singularity_images/entrez_taxon.simg python3 /entrez/entrez_get_taxon_from_accession.py -a "${gb_acc}" -e "${runner}")
+# 			if [[ ! -z ${blast_id} ]]; then
+# 				break
+# 			else
+# 				attempts=$(( attempts + 1 ))
+# 			fi
+# 			sleep 1
+# 		done
+# 		echo ${blast_id}
+# 		if [[ -z ${blast_id} ]]; then
+# 			blast_id="No_16s_matches_found"
+# 		fi
+# 		#blast_id=$(echo ${blast_id} | tr -d '\n')
+# 		echo -e "best_hit	${isolate_name}	${blast_id}" > "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
+# 		if [[ "${hits}" -eq 1 ]]; then
+# 			echo -e "largest	${isolate_name}	${blast_id}" >> "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
+# 			skip_largest="true"
+# 		fi
+# 	else
+# 		echo "No remote blast file"
+# 	fi
+#
+# 	best_blast_id=${blast_id}
+#
+# 	# Gets taxon info from the largest hit from the blast list
+# 	if [[ ${skip_largest} != "true" ]]; then
+# 		# Gets taxon info from the largest hit from the blast list
+# 		if [[ -s "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN.sorted" ]]; then
+# 			me=$(whoami)
+# 			accessions=$(head -n 1 "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN.sorted")
+# 			gb_acc=$(echo "${accessions}" | cut -d' ' -f2 | cut -d'|' -f4)
+# 			attempts=0
+# 			# Will try getting info from entrez up to 5 times, as it has a higher chance of not finishing correctly on the first try
+# 			while [[ ${attempts} -lt 5 ]]; do
+# 				blast_id=$(singularity exec ${src}/singularity_images/entrez_taxon.simg python3 /entrez/entrez_get_taxon_from_accession.py -a "${gb_acc}" -e "${runner}")
+# 				if [[ ! -z ${blast_id} ]]; then
+# 					break
+# 				else
+# 					attempts=$(( attempts + 1 ))
+# 				fi
+# 			done
+# 			echo ${blast_id}
+# 			if [[ -z ${blast_id} ]]; then
+# 				blast_id="No_16s_matches_found"
+# 			fi
+# 			#	blast_id$(echo ${blast_id} | tr -d '\n')
+# 			if [[ "${hits}" -eq 1 ]] && [[ "${best_blast_id}" == "No_16s_matches_found" ]]; then
+# 				echo -e "best_hit	${isolate_name}	${blast_id}" > "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
+# 			fi
+# 			echo -e "largest	${isolate_name}	${blast_id}" >> "${SAMPDATADIR}/16s/${isolate_name}_16s_blast_id.txt"
+# 		else
+# 			echo "No sorted remote blast file"
+# 		fi
+# 	fi
+#
+# 	# Go back to original working directory
+# 	cd ${owd}
+# 	end=$SECONDS
+# 	time16s=$((end - start))
+# 	echo "16S - ${time16s} seconds" >> "${time_summary}"
+# 	totaltime=$((totaltime + time16s))
+#
+# 	# Get taxonomy from currently available files (Only ANI, has not been run...yet, will change after discussions)
+# 	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
+# 	# Capture the anticipated taxonomy of the sample using kraken on assembly output
+# 	echo "----- Extracting Taxonomy from Taxon Summary -----"
+# 	# Checks to see if the kraken on assembly completed successfully
+# 	if [ -s "${SAMPDATADIR}/${isolate_name}.tax" ]; then
+# 		# Read each line of the kraken summary file and pull out each level  taxonomic unit and store for use later in busco and ANI
+# 		while IFS= read -r line  || [ -n "$line" ]; do
+# 			# Grab first letter of line (indicating taxonomic level)
+# 			first=${line::1}
+# 			# Assign taxonomic level value from 4th value in line (1st-classification level,2nd-% by kraken, 3rd-true % of total reads, 4th-identifier)
+# 			if [ "${first}" = "s" ]
+# 			then
+# 				species=$(echo "${line}" | awk -F '	' '{print $2}')
+# 			elif [ "${first}" = "G" ]
+# 			then
+# 				genus=$(echo "${line}" | awk -F ' ' '{print $2}')
+# 			elif [ "${first}" = "F" ]
+# 			then
+# 				family=$(echo "${line}" | awk -F ' ' '{print $2}')
+# 			elif [ "${first}" = "O" ]
+# 			then
+# 				order=$(echo "${line}" | awk -F ' ' '{print $2}')
+# 			elif [ "${first}" = "C" ]
+# 			then
+# 				class=$(echo "${line}" | awk -F ' ' '{print $2}')
+# 			elif [ "${first}" = "P" ]
+# 			then
+# 				phylum=$(echo "${line}" | awk -F ' ' '{print $2}')
+# 			elif [ "${first}" = "K" ]
+# 			then
+# 				kingdom=$(echo "${line}" | awk -F ' ' '{print $2}')
+# 			elif [ "${first}" = "D" ]
+# 			then
+# 				domain=$(echo "${line}" | awk -F ' ' '{print $2}')
+# 			fi
+# 		done < "${SAMPDATADIR}/${isolate_name}.tax"
+# 		# Print out taxonomy for confirmation/fun
+# 		echo "Taxonomy - ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species}"
+# 		# If no kraken summary file was found
+# 	else
+# 		echo "No Taxonomy output available to make best call from, skipped"
+# 	fi
+#
+# 	### Check quality of Assembly ###
+# 	echo "----- Running quality checks on Assembly -----"
+# 	# Get start time of QC assembly check
+# 	start=$SECONDS
+# 	# Run qc assembly check
+#
+# 	owd="$(pwd)"
+#  # Checks for output folder existence and creates creates if not
+# 	if [ ! -d "${SAMPDATADIR}/Assembly_Stats" ]; then
+# 		echo "Creating ${SAMPDATADIR}/Assembly_Stats"
+# 		mkdir -p "${SAMPDATADIR}/Assembly_Stats"
+# 	fi
+# 	cd "${SAMPDATADIR}/Assembly_Stats"
+# 	# Call QUAST
+# 	#python2 "/apps/x86_64/quast/quast-4.3/quast.py" -o "${SAMPDATADIR}/Assembly_Stats" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/QUAST5.simg python3 /quast/quast.py -o /SAMPDIR/Assembly_Stats /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
+# 	mv "${SAMPDATADIR}/Assembly_Stats/report.txt" "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.txt"
+# 	mv "${SAMPDATADIR}/Assembly_Stats/report.tsv" "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv"
+# 	# Get end time of qc quality check and calculate run time and append to time summary (and sum to total time used)
+# 	end=$SECONDS
+# 	timeQCcheck=$((end - start))
+# 	echo "QC Check of Assembly - ${timeQCcheck} seconds" >> "${time_summary}"
+# 	totaltime=$((totaltime + timeQCcheck))
+#
+# 	### Prokka on assembly ###
+# 	echo "----- Running Prokka on Assembly -----"
+# 	# Get start time for prokka
+# 	start=$SECONDS
+# 	# Run prokka
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/prokka:1.14.5--pl526_0 prokka --outdir /SAMPDIR/prokka /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
+# 	#echo "About to rename files"
+# 	for pfile in ${SAMPDATADIR}/prokka/*.*; do
+# 		fullname=$(basename "${pfile}")
+# 		ext="${fullname##*.}"
+# 		echo "Renaming ${pfile} to ${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.${ext}"
+# 		mv "${pfile}" "${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.${ext}"
+# 	done
+# 	# Get end time of prokka and calculate run time and append to time summary (and sum to total time used)
+# 	end=$SECONDS
+# 	timeProk=$((end - start))
+# 	echo "Identifying Genes (Prokka) - ${timeProk} seconds" >> "${time_summary}"
+# 	totaltime=$((totaltime + timeProk))
+#
+# 	# Rename contigs to something helpful (Had to wait until after prokka runs due to the strict naming requirements
+# 	mv "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed_original.fasta"
+# 	python3 "${src}/fasta_headers.py" -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed_original.fasta" -o "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
+#
+# 	### Average Nucleotide Identity ###
+# 	echo "----- Running ANI for Species confirmation -----"
+# 	# ANI uses assembly and sample would have exited already if assembly did not complete, so no need to check
+# 	# Get start time of ANI
+# 	start=$SECONDS
+# 	# run ANI
+# 	# Temp fix for strange genera until we do vs ALL all the time.
+# 	if [[ "${genus}" = "Peptoclostridium" ]] || [[ "${genus}" = "Clostridioides" ]]; then
+# 		genus="Clostridium"
+# 	elif [[ "${genus}" = "Shigella" ]]; then
+# 		genus="Escherichia"
+# 	fi
+#
+# 	if [ ! -d "${SAMPDATADIR}/ANI" ]; then  #create outdir if absent
+# 		echo "${SAMPDATADIR}/ANI"
+# 		mkdir -p "${SAMPDATADIR}/ANI"
+# 	fi
+#
+# 	if [ ! -s "${local_DBs}/aniDB/${genus,}" ]; then
+# 		echo "The genus does not exist in the ANI database. This will be noted and the curator of the database will be notified. However, since nothing can be done at the moment....exiting"
+# 		# Write non-results to a file in ANI folder
+# 		echo "No matching ANI database found for ${genus}" >> "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_${genus}).txt"
+# 		global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
+# 		echo "ANI: ${genus} - Found as ${isolate_name} on ${global_time}" >> "${src}/maintenance_To_Do.txt"
+# 	fi
+#
+# 	# Checks to see if the local DB ANI folder already exists and creates it if not. This is used to store a local copy of all samples in DB to be compared to (as to not disturb the source DB)
+# 	if [ ! -d "${SAMPDATADIR}/ANI/localANIDB" ]; then  #create outdir if absent
+# 		echo "Creating ${SAMPDATADIR}/ANI/localANIDB"
+# 		mkdir -p "${SAMPDATADIR}/ANI/localANIDB"
+# 	else
+# 		rm -r "${SAMPDATADIR}/ANI/localANIDB"
+# 		mkdir -p "${SAMPDATADIR}/ANI/localANIDB"
+# 	fi
+#
+# 	# Checks to see if the local DB ANI temp folder already exists and creates it if not. This is used to store a local copy of all samples in DB to be compared to (as to not disturb the source DB)
+# 	if [ ! -d "${SAMPDATADIR}/ANI/temp" ]; then  #create outdir if absent
+# 		echo "Creating ${SAMPDATADIR}/ANI/temp"
+# 		mkdir -p "${SAMPDATADIR}/ANI/temp"
+# 	else
+# 		rm -r "${SAMPDATADIR}/ANI/temp"
+# 		mkdir -p "${SAMPDATADIR}/ANI/temp"
+# 	fi
+#
+# 	#Creates a local copy of the database folder
+# 	echo "trying to copy ${local_DBs}/aniDB/${genus,}/"
+# 	cp "${local_DBs}/aniDB/${genus,}/"*".fna.gz" "${SAMPDATADIR}/ANI/localANIDB/"
+# 	gunzip ${SAMPDATADIR}/ANI/localANIDB/*.gz
+#
+# 	#Copies the samples assembly contigs to the local ANI db folder
+# 	cp "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${SAMPDATADIR}/ANI/localANIDB/sample_${genus}_${species}.fasta"
+#
+# 	#Renames all files in the localANIDB folder by changing extension from fna to fasta (which pyani needs)
+# 	for file in ${SAMPDATADIR}/ANI/localANIDB/*.fna;
+# 	do
+# 		fasta_name=$(basename "${file}" .fna)".fasta"
+# 		mv "${file}" "${SAMPDATADIR}/ANI/localANIDB/${fasta_name}"
+# 	done
+#
+# 	# Mashtree trimming to reduce run time for ANI
+# 	echo "----- Running MASHTREE for inside ANI -----"
+# 	cd ${SAMPDATADIR}/ANI/localANIDB
+# 	singularity -s exec docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} *.fasta > ${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd
+# 	cd ${src}
+#
+# 	# Get total number of isolates compared in tree
+# 	sample_count=$(find ${SAMPDATADIR}/ANI/localANIDB/ -type f | wc -l)
+# 	# Must remove sample of interest
+# 	sample_count=$(( sample_count - 1 ))
+# 	# Check if sample count is greater than the max samples for tree size, if so then reduce tree size to max closest samples balanced around submitted isolate
+# 	if [[ ${sample_count} -gt ${max_ani_samples} ]]; then
+# 		sleep 2
+# 		tree=$(head -n 1 "${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd")
+# 		echo $tree
+# 		tree=$(echo "${tree}" | tr -d '()')
+# 		echo $tree
+# 		IFS=',' read -r -a samples <<< "${tree}"
+# 		counter=0
+# 		half_max=$(( (max_ani_samples+1) / 2 ))
+# 		echo "Halfsies = ${half_max}"
+# 		for sample in ${samples[@]};
+# 		do
+# 			counter=$(( counter + 1 ))
+# 			filename=$(echo ${sample} | cut -d':' -f1)
+# 			echo "${filename}"
+# 			filename="${filename}.fasta"
+# 			if [[ "${filename}" == "sample_${genus}_${species}.fasta" ]]; then
+# 				match=${counter}
+# 				echo "Match @ ${counter} and half=${half_max}"
+# 				if [[ ${match} -le ${half_max} ]]; then
+# 					echo "LE"
+# 					samples_trimmed=${samples[@]:0:$(( max_ani_samples + 1 ))}
+# 				elif [[ ${match} -ge $(( sample_count - half_max)) ]]; then
+# 					echo "GE"
+# 					samples_trimmed=${samples[@]:$(( max_ani_samples * -1 - 1 ))}
+# 				else
+# 					echo "MID - $(( match - half_max - 1 )) to $(( counter + half_max + 1))"
+# 					samples_trimmed=${samples[@]:$(( match - half_max -1 )):${max_ani_samples}}
+# 				fi
+# 					echo "${#samples_trimmed[@]}-${samples_trimmed[@]}"
+# 					break
+# 			fi
+# 					#echo ${filename}
+# 		done
+# 		mkdir "${SAMPDATADIR}/ANI/localANIDB_trimmed"
+# 		for sample in ${samples_trimmed[@]};
+# 		do
+# 			filename=$(echo ${sample} | cut -d':' -f1)
+# 			filename="${filename}.fasta"
+# 			echo "Moving ${filename}"
+# 			cp ${SAMPDATADIR}/ANI/localANIDB/${filename} ${SAMPDATADIR}/ANI/localANIDB_trimmed/
+# 		done
+# 		if [[ -d "${SAMPDATADIR}/ANI/localANIDB_full" ]]; then
+# 			rm -r "${SAMPDATADIR}/ANI/localANIDB_full"
+# 		fi
+# 		mv "${SAMPDATADIR}/ANI/localANIDB" "${SAMPDATADIR}/ANI/localANIDB_full"
+# 		mv "${SAMPDATADIR}/ANI/localANIDB_trimmed" "${SAMPDATADIR}/ANI/localANIDB"
+# 		#rm -r "${SAMPDATADIR}/ANI/localANIDB_full"
+#
+# 	# Continue without reducing the tree, as there are not enough samples to require reduction
+# 	else
+# 		echo "Sample count below limit, not trimming ANI database"
+# 	fi
+#
+# 	cd ${owd}
+# 	# Resume normal ANI analysis after mashtree reduction
+#
+# 	# Checks for a previous copy of the aniM folder, removes it if found
+# 	if [ -d "${SAMPDATADIR}/ANI/aniM" ]; then
+# 		echo "Removing old ANIm results in ${SAMPDATADIR}/ANI/aniM"
+# 		rm -r "${SAMPDATADIR}/ANI/aniM"
+# 	fi
+#
+# 	#Calls pyani on local db folder
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/pyani:0.2.7--py35_0 average_nucleotide_identity.py -i /SAMPDIR/ANI/localANIDB -o /SAMPDIR/ANI/aniM
+#
+# 	#Extracts the query sample info line for percentage identity from the percent identity file
+# 	while IFS='' read -r line; do
+# 	#	echo "!-${line}"
+# 		if [[ ${line:0:7} = "sample_" ]]; then
+# 			sampleline=${line}
+# 	#		echo "found it-"$sampleline
+# 			break
+# 		fi
+# 	done < "${SAMPDATADIR}/ANI/aniM/ANIm_percentage_identity.tab"
+#
+# 	#Extracts the top line from the %id file to get all the sample names used in analysis (they are tab separated along the top row)
+# 	if [[ -s "${SAMPDATADIR}/ANI/aniM/ANIm_percentage_identity.tab" ]]; then
+# 		firstline=$(head -n 1 "${SAMPDATADIR}/ANI/aniM/ANIm_percentage_identity.tab")
+# 	else
+# 		echo "No ${SAMPDATADIR}/ANI/aniM/ANIm_percentage_identity.tab file, exiting"
+# 	fi
+#
+# 	#Arrays to read sample names and the %ids for the query sample against those other samples
+# 	IFS="	" read -r -a samples <<< "${firstline}"
+# 	IFS="	" read -r -a percents <<< "${sampleline}"
+#
+# 	#How many samples were compared
+# 	n=${#samples[@]}
+#
+# 	#Extracts all %id against the query sample (excluding itself) and writes them to file
+# 	for (( i=0; i<n; i++ ));
+# 	do
+# 	#	echo ${i}-${samples[i]}
+# 		if [[ ${samples[i]:0:7} = "sample_" ]];
+# 		then
+# 	#		echo "Skipping ${i}"
+# 			continue
+# 		fi
+# 		definition=$(head -1 "${SAMPDATADIR}/ANI/localANIDB/${samples[i]}.fasta")
+# 		# Prints all matching samples to file (Except the self comparison) by line as percent_match  sample_name  fasta_header
+# 		echo "${percents[i+1]} ${samples[i]} ${definition}" >> "${SAMPDATADIR}/ANI/best_hits.txt"
+# 	done
+#
+# 	#Sorts the list in the file based on %id (best to worst)
+# 	sort -nr -t' ' -k1 -o "${SAMPDATADIR}/ANI/best_hits_ordered.txt" "${SAMPDATADIR}/ANI/best_hits.txt"
+# 	#Extracts the first line of the file (best hit)
+# 	best=$(head -n 1 "${SAMPDATADIR}/ANI/best_hits_ordered.txt")
+# 	#Creates an array from the best hit
+# 	IFS=' ' read -r -a def_array <<< "${best}"
+# 	#Captures the assembly file name that the best hit came from
+# 	best_file=${def_array[1]}
+# 	#Formats the %id to standard percentage (xx.xx%)
+# 	best_percent=$(awk -v per="${def_array[0]}" 'BEGIN{printf "%.2f", per * 100}')
+# 	#echo "${best_file}"
+# 	#Extracts the accession number from the definition line
+# 	accession=$(echo "${def_array[2]}" | cut -d' ' -f1  | cut -d'>' -f2)
+# 	#Looks up the NCBI genus species from the accession number
+# 	if [[ "${accession}" == "No_Accession_Number" ]]; then
+# 		best_organism_guess="${def_array[3]} ${def_array[4]}"
+# 	else
+# 		attempts=0
+# 		while [[ ${attempts} -lt 25 ]]; do
+# 			best_organism_guess=$(singularity exec ${src}/singularity_images/entrez_taxon.simg python3 /entrez/entrez_get_taxon_from_accession.py -a "${accession}" -e "${runner}")
+# 			if [[ ! -z ${best_organism_guess} ]]; then
+# 				break
+# 			else
+# 				attempts=$(( attempts + 1 ))
+# 			fi
+# 		done
+# 	fi
+#
+# 	#Creates a line at the top of the file to show the best match in an easily readable format that matches the style on the MMB_Seq log
+# 	echo -e "${best_percent}%-${best_organism_guess}(${best_file}.fna)\\n$(cat "${SAMPDATADIR}/ANI/best_hits_ordered.txt")" > "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_${genus}).txt"
+#
+# 	#Removes the transient hit files
+# 	if [ -s "${SAMPDATADIR}/ANI/best_hits.txt" ]; then
+# 		rm "${SAMPDATADIR}/ANI/best_hits.txt"
+# 	#	echo "1"
+# 	fi
+# 	if [ -s "${SAMPDATADIR}/ANI/best_hits_ordered.txt" ]; then
+# 		rm "${SAMPDATADIR}/ANI/best_hits_ordered.txt"
+# 	#	echo "2"
+# 	fi
+#
+# 	# Get end time of ANI and calculate run time and append to time summary (and sum to total time used
+# 	end=$SECONDS
+# 	timeANI=$((end - start))
+# 	echo "autoANI - ${timeANI} seconds" >> "${time_summary}"
+# 	totaltime=$((totaltime + timeANI))
+#
+# 	# Get taxonomy from currently available files
+# 	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
+#
+# 	### BUSCO on prokka output ###
+# 	echo "----- Running BUSCO on Assembly -----"
+# 	# Check to see if prokka finished successfully
+# 	if [ -s "${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.gbf" ] || [ -s "${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.gff" ]; then
+# 		# Get start time of busco
+# 		start=$SECONDS
+# 		# Set default busco database as bacteria in event that we dont have a database match for sample lineage
+# 		buscoDB="bacteria_odb10"
+# 		# Iterate through taxon levels (species to domain) and test if a match occurs to entry in database. If so, compare against it
+# 		busco_found=0
+# 		for tax in $species $genus $family $order $class $phylum $kingdom $domain
+# 		do
+# 			if [ -d "${local_DBs}/BUSCO/${tax,}_odb10" ]
+# 			then
+# 				buscoDB="${tax,}_odb10"
+# 				busco_found=1
+# 				break
+# 			fi
+# 		done
+# 		# Report an unknown sample to the maintenance file to look into
+# 		if [[ "${busco_found}" -eq 0 ]]; then
+# 			global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
+# 			echo "BUSCO: ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species} - Found as ${PROJECT}/${isolate_name} on ${global_time}" >> "${src}/maintenance_To_Do.txt"
+# 		fi
+# 		# Show which database entry will be used for comparison
+# 		echo "buscoDB:${buscoDB}"
+# 		# Run busco
+# 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}/BUSCO:/DATABASES docker://quay.io/biocontainers/busco:3.0.2--py35_4 run_BUSCO.py -i /SAMPDIR/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l /DATABASES/${buscoDB} -m prot
+# 		if [ ! -d "${SAMPDATADIR}/BUSCO" ]; then  #create outdir if absent
+# 			echo "Creating ${SAMPDATADIR}/BUSCO"
+# 			mkdir -p "${SAMPDATADIR}/BUSCO"
+# 		fi
+# 		mv ${src}/run_${isolate_name}_BUSCO/* ${SAMPDATADIR}/BUSCO/
+# 		rm -r ${src}/run_${isolate_name}_BUSCO
+#
+# 		# Get end time of busco and calculate run time and append to time summary (and sum to total time used
+# 		end=$SECONDS
+# 		timeBUSCO=$((end - start))
+# 		echo "BUSCO - ${timeBUSCO} seconds" >> "${time_summary}"
+# 		totaltime=$((totaltime + timeBUSCO))
+# 	# Prokka did not complete successfully and busco cant run (since it relies on prokka output)
+# 	else
+# 		echo "Prokka output not found, not able to process BUSCO"
+# 	fi
+#
+# 	### c-SSTAR for finding AR Genes ###
+# 	echo "----- Running c-SSTAR for AR Gene identification -----"
+# 	# c-SSTAR uses assembly and sample would have exited already if assembly did not complete, so no need to check
+# 	# Get start time of ccstar
+# 	start=$SECONDS
+#
+# 	# Run csstar in default mode from config.sh
+# 	if [ ! -d "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}" ]; then  #create outdir if absent
+# 		echo "Creating ${SAMPDATADIR}/c-sstar${ResGANNCBI_srst2_filename}_${csstar_gapping}"
+# 		mkdir -p "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
+# 	fi
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -s "${csim}" -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar"
+#
+# 	###################################### FIND WAY TO CATCH FAILURE? !!!!!!!!!! ###############################
+#
+# 	# Goes through ResGANNCBI outfile and adds labels as well as resistance conferred to the beginning of the line
+# 	# Takes .sstar file in and outputs as .sstar_grouped
+# 	while IFS= read -r line; do
+#
+# 		#echo ${line}
+# 		# Extract gene (label1) and allele (label2) from line, also force all characters to be lowercase
+# 		label1=$(echo "${line}" | cut -d '	' -f3 | tr '[:upper:]' '[:lower:]')
+# 		label2=$(echo "${line}" | cut -d '	' -f4 | tr '[:upper:]' '[:lower:]')
+# 		# Determine what flags were thrown for this gene by csstar
+# 		info1=""
+# 		# Truncated allele
+# 		if [[ "${label1}" = *"TRUNC" ]] && [[ "${label1}" != "str" ]]; then
+# 			#echo "Label 1 was truncated"
+# 			label1="${label1:0:${#label1} - 2}"
+# 			info1="${info1}trunc-"
+# 		fi
+# 		# Likely novel allele
+# 		if ( [[ "${label1}" = *"*"* ]] || [[ "${label1}" = *"*" ]] ) && [[ "${label1}" != "str" ]]; then
+# 			#echo "Label 1 is likely novel"
+# 			label1="${label1:0:${#label1} - 1}"
+# 			info1="${info1}novel-"
+# 		fi
+# 		# Incomplete alignment length, Uncertainy exists in one allele
+# 		if ( [[ "${label1}" = *"?"* ]] || [[ "${label1}" = *"?" ]] ) && [[ "${label1}" != "str" ]]; then
+# 			#echo "Label 1 is uncertain due to incomplete alignment"
+# 			label1="${label1:0:${#label1} - 1}"
+# 			info1="${info1}alinc-"
+# 		fi
+# 		# Incomplete alignment length at edge
+# 		if ( [[ "${label1}" = *"$"* ]] || [[ "${label1}" = *"$" ]] ) && [[ "${label1}" != "str" ]]; then
+# 			#echo "Label 1 is uncertain due to incomplete alignment"
+# 			label1="${label1:0:${#label1} - 1}"
+# 			info1="${info1}edge-"
+# 		fi
+# 		# Removes character add-ons of genes and alleles, also lower cases all characters for searching later
+# 		label1=$(echo "${label1,,}" | tr -d '*?$')
+# 		label2=$(echo "${label2,,}" | tr -d '*?$')
+# 		# Extract source database that AR gene match came from
+# 		source=$(echo "${line,,}" | cut -d '	' -f1 | tr -d '[:space:]')
+# 		# Extract the type of resistance that is conferred by the gene
+# 		resistance=$(echo "${line}" | cut -d '	' -f2 | tr -d '[:space:]')
+# 		# Trim contig identifier of spaces
+# 		contig=$(echo "${line}" | cut -d '	' -f5 | tr -d '[:space:]')
+# 		# Extract % from line
+# 		percent=$(echo "${line}" | cut -d '	' -f6 | cut -d'%' -f1 | tr -d '[:space:]')
+# 		# Determine length of query and subject sequences
+# 		len1=$(echo "${line}" | cut -d '	' -f7 | tr -d '[:space:]')
+# 		len2=$(echo "${line}" | cut -d '	' -f8 | tr -d '[:space:]')
+# 		plen=$(echo "${line}" | cut -d '	' -f9 | tr -d '[:space:]')
+# 		# Check and display any flags found, otherwise mark it as normal
+# 		if [[ -z "${info1}" ]]; then
+# 			info1="normal"
+# 		else
+# 			info1=${info1::-1}
+# 		fi
+# 		#printf "%-10s %-50s %-15s %-25s %-25s %-40s %-4s %-5d %-5d %-5d\\n" "${source}1" "${resistance}2" "${label1}3" "${info1}4" "${label2}5" "${contig}A" "${percent}B" "${len1}C" "${len2}D" "${plen}E"
+# 		echo "${source}	${resistance}	${label1}	${info1}	${label2}	${contig}	${percent}	${len1}	${len2}	${plen}"
+# 	done < "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar" > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar_grouped"
+# 	# Writes all AR genes to file based on %ID, %length, and finally length of gene
+# 	sort -k7,7nr -k10,10nr -k8,8n "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar_grouped" > "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt"
+#
+# 	# Catches an empty or missing file, adding that no AMR genes were found if no file was created
+# 	if [ ! -s "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt" ]; then
+# 		echo "No anti-microbial genes were found using c-SSTAR with both resFinder and ARG-ANNOT DBs" > "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt"
+# 	fi
+# 	end=$SECONDS
+# 	timestar=$((end - start))
+# 	echo "c-SSTAR - ${timestar} seconds" >> "${time_summary}"
+# 	totaltime=$((totaltime + timestar))
+#
+# 	start=$SECONDS
+# 	# Run GAMA on assembly
+# 	echo "----- Running GAMA -----"
+# 	if [ ! -d "${SAMPDATADIR}/GAMA" ]; then  #create outdir if absent
+# 		echo "Creating ${SAMPDATADIR}/GAMA"
+# 		mkdir -p "${SAMPDATADIR}/GAMA"
+# 	fi
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta -o /SAMPDIR/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
+#
+# 	end=$SECONDS
+# 	timeGAMA=$((end - start))
+# 	echo "GAMA - ${timeGAMA} seconds" >> "${time_summary}"
+# 	totaltime=$((totaltime + timeGAMA))
+#
+# 	# Get MLST profile
+# 	echo "----- Running MLST -----"
+# 	if [ ! -d "${SAMPDATADIR}/MLST" ]; then  #create outdir if absent
+# 		echo "Creating ${SAMPDATADIR}/MLST"
+# 		mkdir -p "${SAMPDATADIR}/MLST"
+# 	fi
+# 	start=$SECONDS
+# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}.mlst"
+# 	python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}.mlst" -t standard -d ${local_DBs}/pubmlst
+# 	type=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
+# 	if [[ "${genus}_${species}" = "Acinetobacter_baumannii" ]]; then
+# 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst --scheme "abaumannii" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst"
+# 		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst" -t standard -d ${local_DBs}/pubmlst
+# 		mv "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Oxford.mlst"
+# 		mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
+# 		#Check for "-", unidentified type
+# 		type1=$(tail -n1 ${SAMPDATADIR}/MLST/${isolate_name}_Oxford.mlst | cut -d' ' -f3)
+# 		type2=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst | cut -d' ' -f3)
+# 		if [[ "${type1}" = "-" ]]; then
+# 			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Acinetobacter baumannii#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+# 			sed -i -e 's/Oxf_//g' "${SAMPDATADIR}/MLST/srst2/Acinetobacter_baumannii#1.fasta"
+# 			sed -i -e 's/Oxf_//g' "${SAMPDATADIR}/MLST/srst2/abaumannii.txt"
+# 			db_name="Oxford"
+# 			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
+# 			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
+# 			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
+# 			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
+# 			if [[ "${mlst_delimiter}" != "'_'" ]]; then
+# 				echo "Unknown delimiter - \"${mlst_delimiter}\""
+# 			else
+# 				mlst_delimiter="_"
+# 			fi
+# 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+#
+# 			today=$(date "+%Y-%m-%d")
+#
+# 			# Cleans up extra files and renames output file
+# 			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Acinetobacter_baumannii#1__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#1-${db_name}.mlst"
+# 			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Acinetobacter_baumannii#1_${today}.log" "${SAMPDATADIR}/MLST/"
+# 			rm -r "${SAMPDATADIR}/MLST/srst2"
+#
+# 			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.pileup" ]]; then
+# 				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.pileup"
+# 			fi
+# 			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.sorted.bam" ]]; then
+# 				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.sorted.bam"
+# 			fi
+# 			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#1-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlst
+# 		fi
+# 		if [[ "${type2}" = "-" ]]; then
+# 			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Acinetobacter baumannii#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+# 			sed -i -e 's/Pas_//g' "${SAMPDATADIR}/MLST/srst2/Acinetobacter_baumannii#2.fasta"
+# 			sed -i -e 's/Pas_//g' "${SAMPDATADIR}/MLST/srst2/abaumannii_2.txt"
+# 			db_name="Pasteur"
+# 			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
+# 			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
+# 			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
+# 			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
+# 			if [[ "${mlst_delimiter}" != "'_'" ]]; then
+# 				echo "Unknown delimiter - \"${mlst_delimiter}\""
+# 			else
+# 				mlst_delimiter="_"
+# 			fi
+# 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+#
+# 			today=$(date "+%Y-%m-%d")
+#
+# 			# Cleans up extra files and renames output file
+# 			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Acinetobacter_baumannii#2__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#2-${db_name}.mlst"
+# 			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Acinetobacter_baumannii#2_${today}.log" "${SAMPDATADIR}/MLST/"
+# 			rm -r "${SAMPDATADIR}/MLST/srst2"
+#
+# 			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.pileup" ]]; then
+# 				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.pileup"
+# 			fi
+# 			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.sorted.bam" ]]; then
+# 				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.sorted.bam"
+# 			fi
+# 			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#2-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlst
+# 		fi
+# 	elif [[ "${genus}_${species}" = "Escherichia_coli" ]]; then
+# 		# Verify that ecoli_2 is default and change accordingly
+# 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst --scheme "ecoli_2" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst"
+# 		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst" -t standard -d ${local_DBs}/pubmlst
+# 		mv "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
+# 		mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Achtman.mlst"
+# 		type2=$(tail -n1 ${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst | cut -d' ' -f3)
+# 		type1=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
+# 		if [[ "${type1}" = "-" ]]; then
+# 			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+# 			db_name="Achtman"
+# 			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
+# 			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
+# 			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
+# 			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
+# 			if [[ "${mlst_delimiter}" != "'_'" ]]; then
+# 				echo "Unknown delimiter - \"${mlst_delimiter}\""
+# 			else
+# 				mlst_delimiter="_"
+# 				#echo "Delimiter is OK (${mlst_delimiter})"
+# 			fi
+# 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDir/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+# 			today=$(date "+%Y-%m-%d")
+# 					# Cleans up extra files and renames output file
+# 			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Escherichia_coli#1__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#1-${db_name}.mlst"
+# 			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Escherichia_coli#1_${today}.log" "${SAMPDATADIR}/MLST/"
+# 			rm -r "${SAMPDATADIR}/MLST/srst2"
+#
+# 			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#1.pileup" ]]; then
+# 				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#1.pileup"
+# 			fi
+# 			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#1.sorted.bam" ]]; then
+# 				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#1.sorted.bam"
+# 			fi
+#
+# 			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#1-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlst
+# 		fi
+# 		if [[ "${type2}" = "-" ]]; then
+# 			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+# 			db_name="Pasteur"
+# 			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
+# 			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
+# 			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
+# 			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
+# 			if [[ "${mlst_delimiter}" != "'_'" ]]; then
+# 				echo "Unknown delimiter - \"${mlst_delimiter}\""
+# 			else
+# 				mlst_delimiter="_"
+# 				#echo "Delimiter is OK (${mlst_delimiter})"
+# 			fi
+# 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+# 			today=$(date "+%Y-%m-%d")
+# 					# Cleans up extra files and renames output file
+# 			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Escherichia_coli#2__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#2-${db_name}.mlst"
+# 			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Escherichia_coli#2_${today}.log" "${SAMPDATADIR}/MLST/"
+# 			rm -r "${SAMPDATADIR}/MLST/srst2"
+#
+# 			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#2.pileup" ]]; then
+# 				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#2.pileup"
+# 			fi
+# 			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#2.sorted.bam" ]]; then
+# 				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#2.sorted.bam"
+# 			fi
+#
+# 			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#2-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlst
+# 		fi
+# 	else
+# 		if [[ "${type}" == "-" ]]; then
+# 			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+# 			db_name="Pasteur"
+# 			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
+# 			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
+# 			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
+# 			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
+# 			if [[ "${mlst_delimiter}" != "'_'" ]]; then
+# 				echo "Unknown delimiter - \"${mlst_delimiter}\""
+# 			else
+# 				mlst_delimiter="_"
+# 				#echo "Delimiter is OK (${mlst_delimiter})"
+# 			fi
+# 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+# 			today=$(date "+%Y-%m-%d")
+# 					# Cleans up extra files and renames output file
+# 			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__${genus}_${species}__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_${genus}_${species}-${db_name}.mlst"
+# 			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_${genus}_${species}_${today}.log" "${SAMPDATADIR}/MLST/"
+# 			rm -r "${SAMPDATADIR}/MLST/srst2"
+#
+# 			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.${genus}_${species}.pileup" ]]; then
+# 				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.${genus}_${species}.pileup"
+# 			fi
+# 			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.${genus}_${species}.sorted.bam" ]]; then
+# 				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.${genus}_${species}.sorted.bam"
+# 			fi
+# 			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_${genus}_${species}-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlst
+# 		fi
+# 		mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
+# 	fi
+# 	end=$SECONDS
+# 	timeMLST=$((end - start))
+# 	echo "MLST - ${timeMLST} seconds" >> "${time_summary}"
+# 	totaltime=$((totaltime + timeMLST))
+#
+# 	# Try to find any plasmids
+# 	echo "----- Identifying plasmids using plasmidFinder -----"
+# 	start=$SECONDS
+#
+# 	echo "${family}-${genus}"
+# 	# If family is enterobacteriaceae, then run against that DB
+# 	if [[ "${family,}" == "enterobacteriaceae" ]]; then
+# 		echo "Checking against Enterobacteriaceae plasmids"
+# 		#plasmidfinder -i ${SAMPDATADIR}/${inpath} -o ${SAMPDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
+# 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p enterobacteriaceae
+# 		# Rename all files to include ID
+# 		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_entero.fsa
+# 		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_enetero.fsa
+# 		mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_entero.txt
+# 		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_entero.txt
+# 		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_summary.txt
+# 	# If family is staph, strp, or enterococcus, then run against the gram positive database
+# elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" ]] || [[ "${genus,}" == "enterococcus" ]]; then
+# 		echo "Checking against Staph, Strep, and Enterococcus plasmids"
+# 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p gram_positive
+# 		# Rename all files to include ID
+# 		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_gramp.fsa
+# 		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_gramp.fsa
+# 		mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_gramp.txt
+# 		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_gramp.txt
+# 		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_summary.txt
+# 	# Family is not one that has been designated by the creators of plasmidFinder to work well, but still attempting to run against both databases
+# 	else
+# 		echo "Checking against ALL plasmids, but unlikely to find anything"
+# 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p enterobacteriaceae
+# 		# Rename all files to include ID
+# 		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_entero.fsa
+# 		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_enetero.fsa
+# 		mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_entero.txt
+# 		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_entero.txt
+# 		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_entero.txt
+# 		#plasmidfinder -i ${SAMPDATADIR}/${inpath} -o ${SAMPDATADIR} -k ${plasmidFinder_identity} -p gram_positive
+# 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p gram_positive
+# 		# Rename all files to include ID
+# 		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_gramp.fsa
+# 		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_gramp.fsa
+# 		mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_gramp.txt
+# 		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_gramp.txt
+# 		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_gramp.txt
+# 		cat	${SAMPDATADIR}/${isolate_name}_results_table_gramp.txt ${SAMPDATADIR}/${isolate_name}_results_table_entero.txt > ${SAMPDATADIR}/${isolate_name}_results_table_summary.txt
+# 	fi
+# 	end=$SECONDS
+# 	timeplasfin=$((end - start))
+# 	echo "plasmidFinder - ${timeplasfin} seconds" >> "${time_summary}"
+# 	totaltime=$((totaltime + timeplasfin))
+
+
+	family = "Enterobacteriaceae"
 
 	# Run plasFlow if isolate is from the Enterobacteriaceae family  ##### When should we check if this will be expanded?
 	if [[ "${family}" == "Enterobacteriaceae" ]]; then
@@ -1436,13 +1439,15 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 			# Removes intermeidate fasta file
 			rm -r "${SAMPDATADIR}/Assembly/scaffolds.fasta.TRIMMED.fasta"
 			# Run plasflow on newly trimmed assembly file
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasflow:1.1.0--py35_0 --input /SAMPDIR/plasFlow/${isolate_name}_scaffolds_trimmed_2000.fasta --output /SAMPDIR/plasFlow/${isolate_name}_plasFlow_results.tsv --threshold 0.7
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasflow:1.1.0--py35_0 PlasFlow.py --input /SAMPDIR/plasFlow/${isolate_name}_scaffolds_trimmed_2000.fasta --output /SAMPDIR/plasFlow/${isolate_name}_plasFlow_results.tsv --threshold 0.7
 			mkdir ${SAMPDATADIR}/plasFlow/bowtie2-index/
 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/bowtie2-2.2.9-biocontainers.simg bowtie2-build -f /SAMPDIR/plasFlow/${isolate_name}_plasFlow_results.tsv_chromosomes.fasta /SAMPDIR/plasFlow/bowtie2-index/bowtie2_${isolate_name}_chr
 			mkdir ${SAMPDATADIR}/plasFlow/filtered_reads_70/
 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/bowtie2-2.2.9-biocontainers.simg bowtie2 -x /SAMPDIR/plasFlow/bowtie2-index/bowtie2_${isolate_name}_chr -1 /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq -2 /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq -S /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.sam -p ${procs} --local
 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/samtools:1.10--h9402c20_2 samtools view -bS /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.sam > "${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}.bam"
-  		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0 bam2fastq --no-aligned -o /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R#_bacterial.fastq /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.bam
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/samtools:1.10--h9402c20_2 samtools sort -n "${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}.bam" -o "${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}.bam.sorted"
+
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/bedtools:2.29.2--hc088bd4_0 bamToFastq -i /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}.bam.sorted -fq /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R1_bacterial.fastq -fq2 /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R2_bacterial.fastq
 			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/unicycler:0.4.4--py37h8b12597_2 unicycler -1 /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R_1_bacterial.fastq -2 /SAMPDIR/plasFlow/filtered_reads_70/${isolate_name}_R_2_bacterial.fastq -o /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly
 			mv "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/assembly.fasta" "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_original.fasta"
 			mv "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/assembly.gfa" "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_assembly.gfa"
@@ -1467,6 +1472,8 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 		 else
 			echo "No plasFlow assembly (${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta)"
 		fi
+
+		exit
 
 		# Creates the output c-sstar folder if it does not exist yet
 		if [ ! -d "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}" ]; then  #create outdir if absent
