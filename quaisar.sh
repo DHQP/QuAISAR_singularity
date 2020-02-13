@@ -503,7 +503,7 @@ for isolate in "${isolate_list[@]}"; do
 		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz
 		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz
 
-		singularity exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DBs ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/testreads_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/testreads_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/testreads_ResGANNCBI_20191227 --gene_db /DBs/star/ResGANNCBI_20191227_srst2.fasta
+		singularity exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DBs ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/${isolate_name}_ResGANNCBI_20191227 --gene_db /DBs/star/ResGANNCBI_20191227_srst2.fasta
 
 		# Cleans up leftover files
 		rm "${SAMPDATADIR}/srst2/"*".bam"
@@ -877,8 +877,6 @@ for isolate in "${isolate_list[@]}"; do
 
 	# Mashtree trimming to reduce run time for ANI
 	echo "----- Running MASHTREE for inside ANI -----"
-	genus="Acinetobacter"
-	species="baumannii"
 	cd ${SAMPDATADIR}/ANI/localANIDB
 	singularity -s exec docker://quay.io/biocontainers/mashtree:1.0.1--pl526h516909a_0 mashtree --numcpus ${procs} *.fasta > ${SAMPDATADIR}/ANI/${genus}_and_${isolate_name}_mashtree.dnd
 	cd ${src}
@@ -1023,6 +1021,16 @@ for isolate in "${isolate_list[@]}"; do
 	#Creates a line at the top of the file to show the best match in an easily readable format that matches the style on the MMB_Seq log
 	echo -e "${best_percent}%-${best_organism_guess}(${best_file}.fna)\\n$(cat "${SAMPDATADIR}/ANI/best_hits_ordered.txt")" > "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_${genus}).txt"
 
+	#Removes the transient hit files
+	if [ -s "${SAMPDATADIR}/ANI/best_hits.txt" ]; then
+		rm "${SAMPDATADIR}/ANI/best_hits.txt"
+	#	echo "1"
+	fi
+	if [ -s "${SAMPDATADIR}/ANI/best_hits_ordered.txt" ]; then
+		rm "${SAMPDATADIR}/ANI/best_hits_ordered.txt"
+	#	echo "2"
+	fi
+
 	# Get end time of ANI and calculate run time and append to time summary (and sum to total time used
 	end=$SECONDS
 	timeANI=$((end - start))
@@ -1065,6 +1073,7 @@ for isolate in "${isolate_list[@]}"; do
 			mkdir -p "${SAMPDATADIR}/BUSCO"
 		fi
 		mv ${src}/run_${isolate_name}_BUSCO/* ${SAMPDATADIR}/BUSCO/
+		mv ${SAMPDATADIR}/BUSCO/short_summary_${isolate_name}.txt ${SAMPDATADIR}/BUSCO/short_summary_${isolate_name}_BUSCO.txt
 		rm -r ${src}/run_${isolate_name}_BUSCO
 
 		# Get end time of busco and calculate run time and append to time summary (and sum to total time used
