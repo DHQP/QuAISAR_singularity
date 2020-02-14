@@ -141,9 +141,6 @@ def do_MLST_check(input_MLST_file, MLST_filetype, Database_path):
 	if len(schemes) == 0:
 		print("No schemes found???, probably needs to be deleted, just adding to blanks list currently")
 		#os.remove(args.input)
-		blanks=open(blanks_file,'a+')
-		blanks.write(filepath+"	has no scheme database determined...checked against wrong or unknown DB\n")
-		blanks.close()
 	elif len(schemes) == 1:
 		if mlstype[0] not in bad_types:
 	 		print("This sample is singular and defined\n")
@@ -212,12 +209,6 @@ def do_MLST_check(input_MLST_file, MLST_filetype, Database_path):
 						print("Investigate/Submit allele or maybe try srst2 to fix allele issue on:", filepath)
 					else:
 						print("Investigate/Submit allele to fix allele issue on:", filepath)
-				blanks=open(blanks_file,'a+')
-				if MLST_filetype == "standard":
-					blanks.write(filepath+"	standard:"+",".join(problem)+"	"+"	".join(MLST_items[1:])+"\n")
-				elif MLST_filetype == "srst2":
-					blanks.write(filepath+"	srst2:"+",".join(problem)+"	"+"	".join(MLST_items_second[1:])+"\n")
-				blanks.close()
 			# Change original type to new type(s) depending on source filetype
 			if MLST_filetype == "standard":
 				MLST_items[2]=MLST_temp_types
