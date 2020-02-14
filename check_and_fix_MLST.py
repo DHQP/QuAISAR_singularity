@@ -221,9 +221,6 @@ def do_MLST_check(input_MLST_file, MLST_filetype, Database_path):
 				MLST_file.write('	'.join(MLST_items)+"\n")
 				MLST_file.write('	'.join(MLST_items_second))
 				MLST_file.close()
-			MLST_changed_file_handler=open(MLST_changed_file,'a+')
-			MLST_changed_file_handler.write(filepath+"	"+db_name+"	"+mlstype_str+" to "+new_types+"\n")
-			MLST_changed_file_handler.close()
 		else:
 			print(input_MLST_file, "is as good as it gets with type", mlstype)
 	else:

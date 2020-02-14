@@ -808,7 +808,7 @@ else
 fi
 
 #Check BUSCO
-if [[ -s "${OUTDATADIR}/BUSCO/short_summary_${1}.txt" ]]; then
+if [[ -s "${OUTDATADIR}/BUSCO/short_summary_${1}_BUSCO.txt" ]]; then
 	# Reads each line of the busco output file to extract the 3 that contain summary data to report
 	while IFS= read -r line; do
 		# If the line contains info for found buscos, total buscos, or database info grab it
@@ -825,7 +825,7 @@ if [[ -s "${OUTDATADIR}/BUSCO/short_summary_${1}.txt" ]]; then
 			#echo "L-"${line}
 			db=$(echo "${line}" | awk -F ' ' '{print $6}')
 		fi
-	done < "${OUTDATADIR}/BUSCO/short_summary_${1}.txt"
+	done < "${OUTDATADIR}/BUSCO/short_summary_${1}_BUSCO.txt"
 	percent_BUSCO_present=$(bc<<<"${found_buscos}*100/${total_buscos}")
 	if [[ "${percent_BUSCO_present}" -gt 90 ]]; then
 		printf "%-20s: %-8s : %s\\n" "BUSCO" "SUCCESS" "${percent_BUSCO_present}% (${found_buscos}/${total_buscos}) against ${db}"
@@ -835,7 +835,7 @@ if [[ -s "${OUTDATADIR}/BUSCO/short_summary_${1}.txt" ]]; then
 	fi
 # If the busco summary file does not exist
 else
-	printf "%-20s: %-8s : %s\\n" "BUSCO" "FAILED" "/BUSCO/short_summary_${1}.txt not found"
+	printf "%-20s: %-8s : %s\\n" "BUSCO" "FAILED" "/BUSCO/short_summary_${1}_BUSCO.txt not found"
 	status="FAILED"
 fi
 #Check ANI
