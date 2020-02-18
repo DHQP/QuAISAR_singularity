@@ -14,6 +14,7 @@
 #
 
 import json
+import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--input', help='input file', required=True, dest='input_file')
