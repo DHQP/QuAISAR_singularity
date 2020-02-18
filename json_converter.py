@@ -66,12 +66,12 @@ def convert_json_to_text(infile, outfile):
     if len(entero) == 0:
         entero.append("No plasmid replicons found.")
 
-    echo("::S::")
+    print("::S::")
     for line in gramps:
-        echo(line)
+        print(line)
     for line in entero:
-        echo(line)
-    echo("::F::")
+        print(line)
+    print("::F::")
     exit
         # Write findings to file
     f=open(outfile, "w")
