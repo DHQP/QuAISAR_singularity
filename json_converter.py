@@ -23,7 +23,7 @@ def parseArgs(args=None):
     return parser.parse_args()
 
     with open(infile, 'r') as file:
-    data = file.read().replace('{"plasmidfinder": {"results": ', '')[:-2]
+        data = file.read().replace('{"plasmidfinder": {"results": ', '')[:-2]
 
     results_json=json.loads(data)
 
