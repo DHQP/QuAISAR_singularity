@@ -74,7 +74,7 @@ def convert_json_to_text(infile, outfile):
     echo("::F::")
     exit
         # Write findings to file
-    f=open(outfile, "w"):
+    f=open(outfile, "w")
     f.write("Enterococcus,Streptococcus,Staphylococcus")
     for line in gramps:
         f.write(line)
