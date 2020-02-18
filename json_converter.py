@@ -26,8 +26,12 @@ def convert_json_to_text(infile, outfile):
     with open(infile, 'r') as f:
         hits_dict = json.load(f)
 
-    for hit in hits_dict:
-        print(hit['results'])
+    for keys,values in hits_dict.items():
+        print(keys)
+        print(values)
+
+    #for hit in hits_dict:
+    #    print(hit['results'])
 
 args = parseArgs()
 convert_json_to_text(args.input, args.output)
