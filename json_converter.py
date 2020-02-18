@@ -22,16 +22,19 @@ def parseArgs(args=None):
     parser.add_argument('-o', '--output', help='output file', required=True)
     return parser.parse_args()
 
-def convert_json_to_text(infile, outfile):
-    with open(infile, 'r') as f:
-        top_layer = json.load(f)
+    with open(infile, 'r') as file:
+    data = file.read().replace('{"plasmidfinder": {"results": ', '')[:-2]
 
-    for keys,values in top_layer.items():
-        print(keys)
-        print(values)
+    results_json=json.loads(data)
 
-    results=top_layer.get('plasmidfinder')
-    results_json=json.loads(results)
+
+# def convert_json_to_text(infile, outfile):
+#     with open(infile, 'r') as f:
+#         top_layer = json.load(f)
+#
+#     for keys,values in top_layer.items():
+#         print(keys)
+#         print(values)
 
     for keys,values in results_json.items():
         print(keys)
