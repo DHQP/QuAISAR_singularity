@@ -23,23 +23,10 @@ def parseArgs(args=None):
     return parser.parse_args()
 
 def convert_json_to_text(infile, outfile):
-    with open(infile, 'r') as file:
-        data = file.read().replace('{"plasmidfinder": {"results": ', '')[:-2]
-    results_json=json.loads(data)
+    with open(infile, 'r') as f:
+        results = json.load(f)
 
-
-
-#     with open(infile, 'r') as f:
-#         top_layer = json.load(f)
-#
-#     for keys,values in top_layer.items():
-#         print(keys)
-#         print(values)
-
-    for keys,values in results_json.items():
-        print(keys)
-        print(values)
-
+    print(results['plasmidfinder'][0]['results'][0]['Gram Positive'])
 
 args = parseArgs()
 convert_json_to_text(args.input, args.output)
