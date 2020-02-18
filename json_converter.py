@@ -28,7 +28,7 @@ def convert_json_to_text(infile, outfile):
 
     print(results['plasmidfinder']['results']['Gram Positive'])
 
-    for key,value in results['plasmidfinder']['results']['Enterobacteriaceae'].iteritems():
+    for key,value in results['plasmidfinder']['results']['Enterobacteriaceae'].items():
         print(key)
         print(value)
 
