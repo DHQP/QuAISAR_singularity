@@ -30,7 +30,13 @@ def convert_json_to_text(infile, outfile):
         print(keys)
         print(values)
 
-    print(top_layer.get('plasmidfinder'))
+    results=top_layer.get('plasmidfinder')
+    results_json=json.loads(results)
+
+    for keys,values in results_json.items():
+        print(keys)
+        print(values)
+
 
 args = parseArgs()
 convert_json_to_text(args.input, args.output)
