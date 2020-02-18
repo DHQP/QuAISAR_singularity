@@ -42,7 +42,7 @@ def convert_json_to_text(infile, outfile):
             contig_position = value['positions_in_contig']
             accession_number = value['note']
             coverage = str(value['coverage'])
-            gramps.append(percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number)
+            gramps.append(plasmid+"\t"+percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number)
 
 
     # Parse all Enterobacteriaceae hits
@@ -58,7 +58,7 @@ def convert_json_to_text(infile, outfile):
             contig_position = value['positions_in_contig']
             accession_number = value['note']
             coverage = str(value['coverage'])
-            entero.append(percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number)
+            entero.append(plasmid+"\t"+percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number)
 
     # Add nothing found if no hits
     if len(gramps) == 0:
@@ -73,8 +73,9 @@ def convert_json_to_text(infile, outfile):
     #     print(line)
     # print("::F::")
 
-        # Write findings to file
+    # Write findings to file
     f=open(outfile, "w")
+    f.write("Plasmid\tidentity\tHSP/Query\tcontig\tPosition_in_contig\tAccesion")
     f.write("Enterococcus,Streptococcus,Staphylococcus")
     for line in gramps:
         f.write(line)
