@@ -23,6 +23,9 @@ def parseArgs(args=None):
     return parser.parse_args()
 
 def convert_json_to_text(infile, outfile):
+    gramps=[]
+    entero=[]
+
     with open(infile, 'r') as f:
         results = json.load(f)
 
@@ -30,11 +33,55 @@ def convert_json_to_text(infile, outfile):
     for key,value in results['plasmidfinder']['results']['Gram Positive'].items():
         print(key)
         print(value)
+        if value != "No hit found":
+            plasmid = value['plasmid']
+            percent_identity = value['identity']
+            HSP_length = value['HSP_length']
+            template_length = value['template_length']
+            contig = value['contig_name']
+            contig_position = value['positions_in_contig']
+            accession_number = value['note']
+            coverage = value['coverage']
+            gramps.append(percent_identity+"\t"+HSP_lengthy+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+note+"\t"+accession_number)
+
 
     # Parse all Enterobacteriaceae hits
     for key,value in results['plasmidfinder']['results']['Enterobacteriaceae']['enterobacteriaceae'].items():
         print(key)
         print(value)
+        if value != "No hit found":
+            plasmid = value['plasmid']
+            percent_identity = value['identity']
+            HSP_length = value['HSP_length']
+            template_length = value['template_length']
+            contig = value['contig_name']
+            contig_position = value['positions_in_contig']
+            accession_number = value['note']
+            coverage = value['coverage']
+            entero.append(percent_identity+"\t"+HSP_lengthy+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+note+"\t"+accession_number)
+
+    # Add nothing found if no hits
+    if len(gramps) == 0:
+        gramps.append("No plasmid replicons found.")
+    if len(entero) == 0:
+        entero.append("No plasmid replicons found.")
+
+    echo("::S::")
+    for line in gramps:
+        echo(line)
+    for line in entero:
+        echo(line)
+    echo("::F::")
+    exit
+        # Write findings to file
+    f=open(outfile, "w"):
+    f.write("Enterococcus,Streptococcus,Staphylococcus")
+    for line in gramps:
+        f.write(line)
+    f.write("Enterobacteriaceae")
+    for line in entero
+        f.write(line)
+    f.close()
 
 args = parseArgs()
 convert_json_to_text(args.input, args.output)
