@@ -42,7 +42,7 @@ def convert_json_to_text(infile, outfile):
             contig_position = value['positions_in_contig']
             accession_number = value['note']
             coverage = str(value['coverage'])
-            gramps.append(percent_identity+"\t"+HSP_lengthy+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+note+"\t"+accession_number)
+            gramps.append(percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+note+"\t"+accession_number)
 
 
     # Parse all Enterobacteriaceae hits
@@ -58,7 +58,7 @@ def convert_json_to_text(infile, outfile):
             contig_position = value['positions_in_contig']
             accession_number = value['note']
             coverage = str(value['coverage'])
-            entero.append(percent_identity+"\t"+HSP_lengthy+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+note+"\t"+accession_number)
+            entero.append(percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+note+"\t"+accession_number)
 
     # Add nothing found if no hits
     if len(gramps) == 0:
