@@ -16,10 +16,11 @@
 import json
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--input', help='input file', required=True, dest='input_file')
-parser.add_argument('-o', '--output', help='output file', required=True, dest='output_file')
-parameters=parser.parse_args()
+def parseArgs(args=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--input', help='input file', required=True, dest='input_file')
+    parser.add_argument('-o', '--output', help='output file', required=True, dest='output_file')
+    return parser.parse_args()
 
 def convert_json_to_text(infile, outfile):
     with open(infile, 'r') as f:
