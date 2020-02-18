@@ -1473,13 +1473,13 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 			echo "Creating ${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
 			mkdir -p "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
 		fi
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -s "${cpsim}" -d "${ResGANNCBI_srst2}" > "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}.sstar"
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -s "${cpsim}" -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta > "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}.sstar"
 
 		###################################### FIND WAY TO CATCH FAILURE !!!!!!!!!! ###############################
 
 		# Goes through ResGANNCBI outfile and adds labels as well as resistance conferred to the beginning of the line
 		# Takes .sstar file in and outputs as .sstar_grouped
-		while IFS= read -r line || [ -n "$line" ]; do
+		while IFS= read -r line; do
 
 			#echo ${line}
 			# Extract gene (label1) and allele (label2) from line, also force all characters to be lowercase
@@ -1596,8 +1596,7 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 			echo "Creating ${SAMPDATADIR}/GAMA_plasFlow"
 			mkdir -p "${SAMPDATADIR}/GAMA_plasFlow"
 		fi
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py -i /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -d "${ResGANNCBI_srst2}" -o /SAMPDIR/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
-
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py -i /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta -o /SAMPDIR/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
 
 		end=$SECONDS
 		timeplasflow=$((end - start))
