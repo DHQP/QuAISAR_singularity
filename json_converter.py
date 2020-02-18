@@ -42,7 +42,7 @@ def convert_json_to_text(infile, outfile):
             contig_position = value['positions_in_contig']
             accession_number = value['note']
             coverage = str(value['coverage'])
-            gramps.append(plasmid+"\t"+percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number)
+            gramps.append(plasmid+"\t"+percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number+"\n")
 
 
     # Parse all Enterobacteriaceae hits
@@ -58,13 +58,13 @@ def convert_json_to_text(infile, outfile):
             contig_position = value['positions_in_contig']
             accession_number = value['note']
             coverage = str(value['coverage'])
-            entero.append(plasmid+"\t"+percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number)
+            entero.append(plasmid+"\t"+percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number+"\n")
 
     # Add nothing found if no hits
     if len(gramps) == 0:
-        gramps.append("No plasmid replicons found.")
+        gramps.append("No plasmid replicons found.\n")
     if len(entero) == 0:
-        entero.append("No plasmid replicons found.")
+        entero.append("No plasmid replicons found.\n")
 
     # print("::S::")
     # for line in gramps:
@@ -75,11 +75,11 @@ def convert_json_to_text(infile, outfile):
 
     # Write findings to file
     f=open(outfile, "w")
-    f.write("Plasmid\tidentity\tHSP/Query\tcontig\tPosition_in_contig\tAccesion")
-    f.write("Enterococcus,Streptococcus,Staphylococcus")
+    f.write("Plasmid\tidentity\tHSP/Query\tcontig\tPosition_in_contig\tAccesion\n")
+    f.write("Enterococcus,Streptococcus,Staphylococcus\n")
     for line in gramps:
         f.write(line)
-    f.write("Enterobacteriaceae")
+    f.write("Enterobacteriaceae\n")
     for line in entero:
         f.write(line)
     f.close()
