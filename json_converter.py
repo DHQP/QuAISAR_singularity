@@ -17,9 +17,9 @@ import json
 import argparse
 
 def parseArgs(args=None):
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input', help='input file', required=True, dest='input_file')
-    parser.add_argument('-o', '--output', help='output file', required=True, dest='output_file')
+    parser = argparse.ArgumentParser(description='Script to parse through plasmidfinder results')
+    parser.add_argument('-i', '--input', help='input file', required=True)
+    parser.add_argument('-o', '--output', help='output file', required=True)
     return parser.parse_args()
 
 def convert_json_to_text(infile, outfile):
@@ -29,5 +29,5 @@ def convert_json_to_text(infile, outfile):
     for hit in hits_dict:
         print(hit['results'])
 
-args=parseArgs()
+args = parseArgs()
 convert_json_to_text(args.input, args.output)
