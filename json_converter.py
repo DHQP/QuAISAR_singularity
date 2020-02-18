@@ -26,7 +26,7 @@ def convert_json_to_text(infile, outfile):
     with open(infile, 'r') as f:
         top_layer = json.load(f)
 
-    for keys,values in results_layer.items():
+    for keys,values in top_layer.items():
         print(keys)
         print(values)
 
