@@ -26,7 +26,7 @@ def convert_json_to_text(infile, outfile):
     with open(infile, 'r') as f:
         results = json.load(f)
 
-    print(results['plasmidfinder']['results']['Gram Postive'])
+    print(results['plasmidfinder']['results']['Gram Positive'])
 
 args = parseArgs()
 convert_json_to_text(args.input, args.output)
