@@ -27,7 +27,7 @@ def convert_json_to_text(infile, outfile):
         results = json.load(f)
 
     # Parse all Gram positive hits
-    for key,value in results['plasmidfinder']['results']['Gram Positive'].itmes():
+    for key,value in results['plasmidfinder']['results']['Gram Positive'].items():
         print(key)
         print(value)
 
