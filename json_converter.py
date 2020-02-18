@@ -20,7 +20,7 @@ parser.add_argument('-i', '--input', help='input file', required=True, dest='inp
 parser.add_argument('-o', '--output', help='output file', required=True, dest='output_file')
 parameters=parser.parse_args()
 
-def convert_json_to_text(infile, outfile)
+def convert_json_to_text(infile, outfile):
     with open(infile, 'r') as f:
         hits_dict = json.load(f)
 
