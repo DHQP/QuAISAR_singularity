@@ -35,13 +35,13 @@ def convert_json_to_text(infile, outfile):
         print(value)
         if value != "No hit found":
             plasmid = value['plasmid']
-            percent_identity = value['identity']
-            HSP_length = value['HSP_length']
-            template_length = value['template_length']
+            percent_identity = str(value['identity'])
+            HSP_length = str(value['HSP_length'])
+            template_length = str(value['template_length'])
             contig = value['contig_name']
             contig_position = value['positions_in_contig']
             accession_number = value['note']
-            coverage = value['coverage']
+            coverage = str(value['coverage'])
             gramps.append(percent_identity+"\t"+HSP_lengthy+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+note+"\t"+accession_number)
 
 
@@ -51,13 +51,13 @@ def convert_json_to_text(infile, outfile):
         print(value)
         if value != "No hit found":
             plasmid = value['plasmid']
-            percent_identity = value['identity']
-            HSP_length = value['HSP_length']
-            template_length = value['template_length']
+            percent_identity = str(value['identity'])
+            HSP_length = str(value['HSP_length'])
+            template_length = str(value['template_length'])
             contig = value['contig_name']
             contig_position = value['positions_in_contig']
             accession_number = value['note']
-            coverage = value['coverage']
+            coverage = str(value['coverage'])
             entero.append(percent_identity+"\t"+HSP_lengthy+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+note+"\t"+accession_number)
 
     # Add nothing found if no hits
