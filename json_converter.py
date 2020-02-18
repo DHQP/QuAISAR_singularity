@@ -30,8 +30,7 @@ def convert_json_to_text(infile, outfile):
         print(keys)
         print(values)
 
-    for hit in hits_dict:
-        print(hit["Gram Positive"])
+    print(hits_dict["Gram Positive"])
 
 args = parseArgs()
 convert_json_to_text(args.input, args.output)
