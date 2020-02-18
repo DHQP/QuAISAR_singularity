@@ -24,9 +24,10 @@ def parseArgs(args=None):
 
 def convert_json_to_text(infile, outfile):
     with open(infile, 'r') as f:
-        hits_dict = json.load(f)
+        top_layer = json.load(f)
+        results_layer = json.loads(top_layer.get('plasmidinder'))
 
-    for keys,values in hits_dict.items():
+    for keys,values in results_layer.items():
         print(keys)
         print(values)
 
