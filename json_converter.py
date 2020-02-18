@@ -79,7 +79,7 @@ def convert_json_to_text(infile, outfile):
     for line in gramps:
         f.write(line)
     f.write("Enterobacteriaceae")
-    for line in entero
+    for line in entero:
         f.write(line)
     f.close()
 
