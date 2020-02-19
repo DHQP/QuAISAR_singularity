@@ -1085,289 +1085,287 @@ for isolate in "${isolate_list[@]}"; do
 	# else
 	# 	echo "Prokka output not found, not able to process BUSCO"
 	# fi
-
-	### c-SSTAR for finding AR Genes ###
-	echo "----- Running c-SSTAR for AR Gene identification -----"
-	# c-SSTAR uses assembly and sample would have exited already if assembly did not complete, so no need to check
-	# Get start time of ccstar
-	start=$SECONDS
-
-	# Run csstar in default mode from config.sh
-	if [ ! -d "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}" ]; then  #create outdir if absent
-		echo "Creating ${SAMPDATADIR}/c-sstar${ResGANNCBI_srst2_filename}_${csstar_gapping}"
-		mkdir -p "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
-	fi
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -s "${csim}" -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar"
-
-	###################################### FIND WAY TO CATCH FAILURE? !!!!!!!!!! ###############################
-
-	# Goes through ResGANNCBI outfile and adds labels as well as resistance conferred to the beginning of the line
-	# Takes .sstar file in and outputs as .sstar_grouped
-	while IFS= read -r line; do
-
-		#echo ${line}
-		# Extract gene (label1) and allele (label2) from line, also force all characters to be lowercase
-		label1=$(echo "${line}" | cut -d '	' -f3 | tr '[:upper:]' '[:lower:]')
-		label2=$(echo "${line}" | cut -d '	' -f4 | tr '[:upper:]' '[:lower:]')
-		# Determine what flags were thrown for this gene by csstar
-		info1=""
-		# Truncated allele
-		if [[ "${label1}" = *"TRUNC" ]] && [[ "${label1}" != "str" ]]; then
-			#echo "Label 1 was truncated"
-			label1="${label1:0:${#label1} - 2}"
-			info1="${info1}trunc-"
-		fi
-		# Likely novel allele
-		if ( [[ "${label1}" = *"*"* ]] || [[ "${label1}" = *"*" ]] ) && [[ "${label1}" != "str" ]]; then
-			#echo "Label 1 is likely novel"
-			label1="${label1:0:${#label1} - 1}"
-			info1="${info1}novel-"
-		fi
-		# Incomplete alignment length, Uncertainy exists in one allele
-		if ( [[ "${label1}" = *"?"* ]] || [[ "${label1}" = *"?" ]] ) && [[ "${label1}" != "str" ]]; then
-			#echo "Label 1 is uncertain due to incomplete alignment"
-			label1="${label1:0:${#label1} - 1}"
-			info1="${info1}alinc-"
-		fi
-		# Incomplete alignment length at edge
-		if ( [[ "${label1}" = *"$"* ]] || [[ "${label1}" = *"$" ]] ) && [[ "${label1}" != "str" ]]; then
-			#echo "Label 1 is uncertain due to incomplete alignment"
-			label1="${label1:0:${#label1} - 1}"
-			info1="${info1}edge-"
-		fi
-		# Removes character add-ons of genes and alleles, also lower cases all characters for searching later
-		label1=$(echo "${label1,,}" | tr -d '*?$')
-		label2=$(echo "${label2,,}" | tr -d '*?$')
-		# Extract source database that AR gene match came from
-		source=$(echo "${line,,}" | cut -d '	' -f1 | tr -d '[:space:]')
-		# Extract the type of resistance that is conferred by the gene
-		resistance=$(echo "${line}" | cut -d '	' -f2 | tr -d '[:space:]')
-		# Trim contig identifier of spaces
-		contig=$(echo "${line}" | cut -d '	' -f5 | tr -d '[:space:]')
-		# Extract % from line
-		percent=$(echo "${line}" | cut -d '	' -f6 | cut -d'%' -f1 | tr -d '[:space:]')
-		# Determine length of query and subject sequences
-		len1=$(echo "${line}" | cut -d '	' -f7 | tr -d '[:space:]')
-		len2=$(echo "${line}" | cut -d '	' -f8 | tr -d '[:space:]')
-		plen=$(echo "${line}" | cut -d '	' -f9 | tr -d '[:space:]')
-		# Check and display any flags found, otherwise mark it as normal
-		if [[ -z "${info1}" ]]; then
-			info1="normal"
-		else
-			info1=${info1::-1}
-		fi
-		#printf "%-10s %-50s %-15s %-25s %-25s %-40s %-4s %-5d %-5d %-5d\\n" "${source}1" "${resistance}2" "${label1}3" "${info1}4" "${label2}5" "${contig}A" "${percent}B" "${len1}C" "${len2}D" "${plen}E"
-		echo "${source}	${resistance}	${label1}	${info1}	${label2}	${contig}	${percent}	${len1}	${len2}	${plen}"
-	done < "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar" > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar_grouped"
-	# Writes all AR genes to file based on %ID, %length, and finally length of gene
-	sort -k7,7nr -k10,10nr -k8,8n "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar_grouped" > "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt"
-
-	# Catches an empty or missing file, adding that no AMR genes were found if no file was created
-	if [ ! -s "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt" ]; then
-		echo "No anti-microbial genes were found using c-SSTAR with both resFinder and ARG-ANNOT DBs" > "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt"
-	fi
-	end=$SECONDS
-	timestar=$((end - start))
-	echo "c-SSTAR - ${timestar} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + timestar))
-
-exit
-
-	start=$SECONDS
-	# Run GAMA on assembly
-	echo "----- Running GAMA -----"
-	if [ ! -d "${SAMPDATADIR}/GAMA" ]; then  #create outdir if absent
-		echo "Creating ${SAMPDATADIR}/GAMA"
-		mkdir -p "${SAMPDATADIR}/GAMA"
-	fi
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta -o /SAMPDIR/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
-
-	end=$SECONDS
-	timeGAMA=$((end - start))
-	echo "GAMA - ${timeGAMA} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + timeGAMA))
-
-	# Get MLST profile
-	echo "----- Running MLST -----"
-	if [ ! -d "${SAMPDATADIR}/MLST" ]; then  #create outdir if absent
-		echo "Creating ${SAMPDATADIR}/MLST"
-		mkdir -p "${SAMPDATADIR}/MLST"
-	fi
-	start=$SECONDS
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}.mlst"
-	python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}.mlst" -t standard -d ${local_DBs}/pubmlsts
-	type=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
-	if [[ "${genus}_${species}" = "Acinetobacter_baumannii" ]]; then
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst --scheme "abaumannii" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst"
-		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst" -t standard -d ${local_DBs}/pubmlsts
-		mv "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Oxford.mlst"
-		mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
-		#Check for "-", unidentified type
-		type1=$(tail -n1 ${SAMPDATADIR}/MLST/${isolate_name}_Oxford.mlst | cut -d' ' -f3)
-		type2=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst | cut -d' ' -f3)
-		if [[ "${type1}" = "-" ]]; then
-			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Acinetobacter baumannii#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
-			sed -i -e 's/Oxf_//g' "${SAMPDATADIR}/MLST/srst2/Acinetobacter_baumannii#1.fasta"
-			sed -i -e 's/Oxf_//g' "${SAMPDATADIR}/MLST/srst2/abaumannii.txt"
-			db_name="Oxford"
-			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
-			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
-			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
-			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
-			if [[ "${mlst_delimiter}" != "'_'" ]]; then
-				echo "Unknown delimiter - \"${mlst_delimiter}\""
-			else
-				mlst_delimiter="_"
-			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
-
-			today=$(date "+%Y-%m-%d")
-
-			# Cleans up extra files and renames output file
-			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Acinetobacter_baumannii#1__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#1-${db_name}.mlst"
-			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Acinetobacter_baumannii#1_${today}.log" "${SAMPDATADIR}/MLST/"
-			rm -r "${SAMPDATADIR}/MLST/srst2"
-
-			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.pileup" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.pileup"
-			fi
-			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.sorted.bam" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.sorted.bam"
-			fi
-			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#1-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlsts
-		fi
-		if [[ "${type2}" = "-" ]]; then
-			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Acinetobacter baumannii#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
-			sed -i -e 's/Pas_//g' "${SAMPDATADIR}/MLST/srst2/Acinetobacter_baumannii#2.fasta"
-			sed -i -e 's/Pas_//g' "${SAMPDATADIR}/MLST/srst2/abaumannii_2.txt"
-			db_name="Pasteur"
-			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
-			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
-			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
-			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
-			if [[ "${mlst_delimiter}" != "'_'" ]]; then
-				echo "Unknown delimiter - \"${mlst_delimiter}\""
-			else
-				mlst_delimiter="_"
-			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
-
-			today=$(date "+%Y-%m-%d")
-
-			# Cleans up extra files and renames output file
-			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Acinetobacter_baumannii#2__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#2-${db_name}.mlst"
-			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Acinetobacter_baumannii#2_${today}.log" "${SAMPDATADIR}/MLST/"
-			rm -r "${SAMPDATADIR}/MLST/srst2"
-
-			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.pileup" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.pileup"
-			fi
-			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.sorted.bam" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.sorted.bam"
-			fi
-			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#2-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlsts
-		fi
-	elif [[ "${genus}_${species}" = "Escherichia_coli" ]]; then
-		# Verify that ecoli_2 is default and change accordingly
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst --scheme "ecoli_2" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst"
-		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst" -t standard -d ${local_DBs}/pubmlsts
-		mv "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
-		mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Achtman.mlst"
-		type2=$(tail -n1 ${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst | cut -d' ' -f3)
-		type1=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
-		if [[ "${type1}" = "-" ]]; then
-			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
-			db_name="Achtman"
-			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
-			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
-			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
-			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
-			if [[ "${mlst_delimiter}" != "'_'" ]]; then
-				echo "Unknown delimiter - \"${mlst_delimiter}\""
-			else
-				mlst_delimiter="_"
-				#echo "Delimiter is OK (${mlst_delimiter})"
-			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDir/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
-			today=$(date "+%Y-%m-%d")
-					# Cleans up extra files and renames output file
-			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Escherichia_coli#1__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#1-${db_name}.mlst"
-			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Escherichia_coli#1_${today}.log" "${SAMPDATADIR}/MLST/"
-			rm -r "${SAMPDATADIR}/MLST/srst2"
-
-			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#1.pileup" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#1.pileup"
-			fi
-			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#1.sorted.bam" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#1.sorted.bam"
-			fi
-
-			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#1-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlsts
-		fi
-		if [[ "${type2}" = "-" ]]; then
-			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
-			db_name="Pasteur"
-			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
-			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
-			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
-			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
-			if [[ "${mlst_delimiter}" != "'_'" ]]; then
-				echo "Unknown delimiter - \"${mlst_delimiter}\""
-			else
-				mlst_delimiter="_"
-				#echo "Delimiter is OK (${mlst_delimiter})"
-			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
-			today=$(date "+%Y-%m-%d")
-					# Cleans up extra files and renames output file
-			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Escherichia_coli#2__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#2-${db_name}.mlst"
-			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Escherichia_coli#2_${today}.log" "${SAMPDATADIR}/MLST/"
-			rm -r "${SAMPDATADIR}/MLST/srst2"
-
-			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#2.pileup" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#2.pileup"
-			fi
-			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#2.sorted.bam" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#2.sorted.bam"
-			fi
-
-			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#2-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlsts
-		fi
-	else
-		if [[ "${type}" == "-" ]]; then
-			singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
-			db_name="Pasteur"
-			suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
-			mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
-			mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
-			mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
-			if [[ "${mlst_delimiter}" != "'_'" ]]; then
-				echo "Unknown delimiter - \"${mlst_delimiter}\""
-			else
-				mlst_delimiter="_"
-				#echo "Delimiter is OK (${mlst_delimiter})"
-			fi
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
-			today=$(date "+%Y-%m-%d")
-					# Cleans up extra files and renames output file
-			mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__${genus}_${species}__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_${genus}_${species}-${db_name}.mlst"
-			mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_${genus}_${species}_${today}.log" "${SAMPDATADIR}/MLST/"
-			rm -r "${SAMPDATADIR}/MLST/srst2"
-
-			if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.${genus}_${species}.pileup" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.${genus}_${species}.pileup"
-			fi
-			if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.${genus}_${species}.sorted.bam" ]]; then
-				rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.${genus}_${species}.sorted.bam"
-			fi
-			python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_${genus}_${species}-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlsts
-		fi
-		mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
-	fi
-	end=$SECONDS
-	timeMLST=$((end - start))
-	echo "MLST - ${timeMLST} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + timeMLST))
+	#
+	# ### c-SSTAR for finding AR Genes ###
+	# echo "----- Running c-SSTAR for AR Gene identification -----"
+	# # c-SSTAR uses assembly and sample would have exited already if assembly did not complete, so no need to check
+	# # Get start time of ccstar
+	# start=$SECONDS
+	#
+	# # Run csstar in default mode from config.sh
+	# if [ ! -d "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}" ]; then  #create outdir if absent
+	# 	echo "Creating ${SAMPDATADIR}/c-sstar${ResGANNCBI_srst2_filename}_${csstar_gapping}"
+	# 	mkdir -p "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
+	# fi
+	# singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -s "${csim}" -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar"
+	#
+	# ###################################### FIND WAY TO CATCH FAILURE? !!!!!!!!!! ###############################
+	#
+	# # Goes through ResGANNCBI outfile and adds labels as well as resistance conferred to the beginning of the line
+	# # Takes .sstar file in and outputs as .sstar_grouped
+	# while IFS= read -r line; do
+	#
+	# 	#echo ${line}
+	# 	# Extract gene (label1) and allele (label2) from line, also force all characters to be lowercase
+	# 	label1=$(echo "${line}" | cut -d '	' -f3 | tr '[:upper:]' '[:lower:]')
+	# 	label2=$(echo "${line}" | cut -d '	' -f4 | tr '[:upper:]' '[:lower:]')
+	# 	# Determine what flags were thrown for this gene by csstar
+	# 	info1=""
+	# 	# Truncated allele
+	# 	if [[ "${label1}" = *"TRUNC" ]] && [[ "${label1}" != "str" ]]; then
+	# 		#echo "Label 1 was truncated"
+	# 		label1="${label1:0:${#label1} - 2}"
+	# 		info1="${info1}trunc-"
+	# 	fi
+	# 	# Likely novel allele
+	# 	if ( [[ "${label1}" = *"*"* ]] || [[ "${label1}" = *"*" ]] ) && [[ "${label1}" != "str" ]]; then
+	# 		#echo "Label 1 is likely novel"
+	# 		label1="${label1:0:${#label1} - 1}"
+	# 		info1="${info1}novel-"
+	# 	fi
+	# 	# Incomplete alignment length, Uncertainy exists in one allele
+	# 	if ( [[ "${label1}" = *"?"* ]] || [[ "${label1}" = *"?" ]] ) && [[ "${label1}" != "str" ]]; then
+	# 		#echo "Label 1 is uncertain due to incomplete alignment"
+	# 		label1="${label1:0:${#label1} - 1}"
+	# 		info1="${info1}alinc-"
+	# 	fi
+	# 	# Incomplete alignment length at edge
+	# 	if ( [[ "${label1}" = *"$"* ]] || [[ "${label1}" = *"$" ]] ) && [[ "${label1}" != "str" ]]; then
+	# 		#echo "Label 1 is uncertain due to incomplete alignment"
+	# 		label1="${label1:0:${#label1} - 1}"
+	# 		info1="${info1}edge-"
+	# 	fi
+	# 	# Removes character add-ons of genes and alleles, also lower cases all characters for searching later
+	# 	label1=$(echo "${label1,,}" | tr -d '*?$')
+	# 	label2=$(echo "${label2,,}" | tr -d '*?$')
+	# 	# Extract source database that AR gene match came from
+	# 	source=$(echo "${line,,}" | cut -d '	' -f1 | tr -d '[:space:]')
+	# 	# Extract the type of resistance that is conferred by the gene
+	# 	resistance=$(echo "${line}" | cut -d '	' -f2 | tr -d '[:space:]')
+	# 	# Trim contig identifier of spaces
+	# 	contig=$(echo "${line}" | cut -d '	' -f5 | tr -d '[:space:]')
+	# 	# Extract % from line
+	# 	percent=$(echo "${line}" | cut -d '	' -f6 | cut -d'%' -f1 | tr -d '[:space:]')
+	# 	# Determine length of query and subject sequences
+	# 	len1=$(echo "${line}" | cut -d '	' -f7 | tr -d '[:space:]')
+	# 	len2=$(echo "${line}" | cut -d '	' -f8 | tr -d '[:space:]')
+	# 	plen=$(echo "${line}" | cut -d '	' -f9 | tr -d '[:space:]')
+	# 	# Check and display any flags found, otherwise mark it as normal
+	# 	if [[ -z "${info1}" ]]; then
+	# 		info1="normal"
+	# 	else
+	# 		info1=${info1::-1}
+	# 	fi
+	# 	#printf "%-10s %-50s %-15s %-25s %-25s %-40s %-4s %-5d %-5d %-5d\\n" "${source}1" "${resistance}2" "${label1}3" "${info1}4" "${label2}5" "${contig}A" "${percent}B" "${len1}C" "${len2}D" "${plen}E"
+	# 	echo "${source}	${resistance}	${label1}	${info1}	${label2}	${contig}	${percent}	${len1}	${len2}	${plen}"
+	# done < "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar" > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar_grouped"
+	# # Writes all AR genes to file based on %ID, %length, and finally length of gene
+	# sort -k7,7nr -k10,10nr -k8,8n "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar_grouped" > "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt"
+	#
+	# # Catches an empty or missing file, adding that no AMR genes were found if no file was created
+	# if [ ! -s "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt" ]; then
+	# 	echo "No anti-microbial genes were found using c-SSTAR with both resFinder and ARG-ANNOT DBs" > "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt"
+	# fi
+	# end=$SECONDS
+	# timestar=$((end - start))
+	# echo "c-SSTAR - ${timestar} seconds" >> "${time_summary}"
+	# totaltime=$((totaltime + timestar))
+	#
+	# start=$SECONDS
+	# # Run GAMA on assembly
+	# echo "----- Running GAMA -----"
+	# if [ ! -d "${SAMPDATADIR}/GAMA" ]; then  #create outdir if absent
+	# 	echo "Creating ${SAMPDATADIR}/GAMA"
+	# 	mkdir -p "${SAMPDATADIR}/GAMA"
+	# fi
+	# singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta -o /SAMPDIR/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
+	#
+	# end=$SECONDS
+	# timeGAMA=$((end - start))
+	# echo "GAMA - ${timeGAMA} seconds" >> "${time_summary}"
+	# totaltime=$((totaltime + timeGAMA))
+	#
+	# # Get MLST profile
+	# echo "----- Running MLST -----"
+	# if [ ! -d "${SAMPDATADIR}/MLST" ]; then  #create outdir if absent
+	# 	echo "Creating ${SAMPDATADIR}/MLST"
+	# 	mkdir -p "${SAMPDATADIR}/MLST"
+	# fi
+	# start=$SECONDS
+	# singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}.mlst"
+	# python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}.mlst" -t standard -d ${local_DBs}/pubmlsts
+	# type=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
+	# if [[ "${genus}_${species}" = "Acinetobacter_baumannii" ]]; then
+	# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst --scheme "abaumannii" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst"
+	# 	python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst" -t standard -d ${local_DBs}/pubmlsts
+	# 	mv "${SAMPDATADIR}/MLST/${isolate_name}_abaumannii.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Oxford.mlst"
+	# 	mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
+	# 	#Check for "-", unidentified type
+	# 	type1=$(tail -n1 ${SAMPDATADIR}/MLST/${isolate_name}_Oxford.mlst | cut -d' ' -f3)
+	# 	type2=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst | cut -d' ' -f3)
+	# 	if [[ "${type1}" = "-" ]]; then
+	# 		singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Acinetobacter baumannii#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+	# 		sed -i -e 's/Oxf_//g' "${SAMPDATADIR}/MLST/srst2/Acinetobacter_baumannii#1.fasta"
+	# 		sed -i -e 's/Oxf_//g' "${SAMPDATADIR}/MLST/srst2/abaumannii.txt"
+	# 		db_name="Oxford"
+	# 		suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
+	# 		mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
+	# 		mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
+	# 		mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
+	# 		if [[ "${mlst_delimiter}" != "'_'" ]]; then
+	# 			echo "Unknown delimiter - \"${mlst_delimiter}\""
+	# 		else
+	# 			mlst_delimiter="_"
+	# 		fi
+	# 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+	#
+	# 		today=$(date "+%Y-%m-%d")
+	#
+	# 		# Cleans up extra files and renames output file
+	# 		mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Acinetobacter_baumannii#1__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#1-${db_name}.mlst"
+	# 		mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Acinetobacter_baumannii#1_${today}.log" "${SAMPDATADIR}/MLST/"
+	# 		rm -r "${SAMPDATADIR}/MLST/srst2"
+	#
+	# 		if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.pileup" ]]; then
+	# 			rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.pileup"
+	# 		fi
+	# 		if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.sorted.bam" ]]; then
+	# 			rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#1.sorted.bam"
+	# 		fi
+	# 		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#1-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlsts
+	# 	fi
+	# 	if [[ "${type2}" = "-" ]]; then
+	# 		singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Acinetobacter baumannii#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+	# 		sed -i -e 's/Pas_//g' "${SAMPDATADIR}/MLST/srst2/Acinetobacter_baumannii#2.fasta"
+	# 		sed -i -e 's/Pas_//g' "${SAMPDATADIR}/MLST/srst2/abaumannii_2.txt"
+	# 		db_name="Pasteur"
+	# 		suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
+	# 		mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
+	# 		mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
+	# 		mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
+	# 		if [[ "${mlst_delimiter}" != "'_'" ]]; then
+	# 			echo "Unknown delimiter - \"${mlst_delimiter}\""
+	# 		else
+	# 			mlst_delimiter="_"
+	# 		fi
+	# 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+	#
+	# 		today=$(date "+%Y-%m-%d")
+	#
+	# 		# Cleans up extra files and renames output file
+	# 		mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Acinetobacter_baumannii#2__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#2-${db_name}.mlst"
+	# 		mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Acinetobacter_baumannii#2_${today}.log" "${SAMPDATADIR}/MLST/"
+	# 		rm -r "${SAMPDATADIR}/MLST/srst2"
+	#
+	# 		if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.pileup" ]]; then
+	# 			rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.pileup"
+	# 		fi
+	# 		if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.sorted.bam" ]]; then
+	# 			rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Acinetobacter_baumannii#2.sorted.bam"
+	# 		fi
+	# 		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Acinetobacter_baumannii#2-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlsts
+	# 	fi
+	# elif [[ "${genus}_${species}" = "Escherichia_coli" ]]; then
+	# 	# Verify that ecoli_2 is default and change accordingly
+	# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/mlst:2.16--0 mlst --scheme "ecoli_2" /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta > "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst"
+	# 	python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst" -t standard -d ${local_DBs}/pubmlsts
+	# 	mv "${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
+	# 	mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Achtman.mlst"
+	# 	type2=$(tail -n1 ${SAMPDATADIR}/MLST/${isolate_name}_ecoli_2.mlst | cut -d' ' -f3)
+	# 	type1=$(head -n1 ${SAMPDATADIR}/MLST/${isolate_name}.mlst | cut -d' ' -f3)
+	# 	if [[ "${type1}" = "-" ]]; then
+	# 		singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+	# 		db_name="Achtman"
+	# 		suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
+	# 		mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
+	# 		mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
+	# 		mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
+	# 		if [[ "${mlst_delimiter}" != "'_'" ]]; then
+	# 			echo "Unknown delimiter - \"${mlst_delimiter}\""
+	# 		else
+	# 			mlst_delimiter="_"
+	# 			#echo "Delimiter is OK (${mlst_delimiter})"
+	# 		fi
+	# 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDir/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+	# 		today=$(date "+%Y-%m-%d")
+	# 				# Cleans up extra files and renames output file
+	# 		mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Escherichia_coli#1__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#1-${db_name}.mlst"
+	# 		mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Escherichia_coli#1_${today}.log" "${SAMPDATADIR}/MLST/"
+	# 		rm -r "${SAMPDATADIR}/MLST/srst2"
+	#
+	# 		if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#1.pileup" ]]; then
+	# 			rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#1.pileup"
+	# 		fi
+	# 		if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#1.sorted.bam" ]]; then
+	# 			rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#1.sorted.bam"
+	# 		fi
+	#
+	# 		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#1-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlsts
+	# 	fi
+	# 	if [[ "${type2}" = "-" ]]; then
+	# 		singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#2" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+	# 		db_name="Pasteur"
+	# 		suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
+	# 		mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
+	# 		mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
+	# 		mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
+	# 		if [[ "${mlst_delimiter}" != "'_'" ]]; then
+	# 			echo "Unknown delimiter - \"${mlst_delimiter}\""
+	# 		else
+	# 			mlst_delimiter="_"
+	# 			#echo "Delimiter is OK (${mlst_delimiter})"
+	# 		fi
+	# 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+	# 		today=$(date "+%Y-%m-%d")
+	# 				# Cleans up extra files and renames output file
+	# 		mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__Escherichia_coli#2__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#2-${db_name}.mlst"
+	# 		mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_Escherichia_coli#2_${today}.log" "${SAMPDATADIR}/MLST/"
+	# 		rm -r "${SAMPDATADIR}/MLST/srst2"
+	#
+	# 		if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#2.pileup" ]]; then
+	# 			rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.Escherichia_coli#2.pileup"
+	# 		fi
+	# 		if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#2.sorted.bam" ]]; then
+	# 			rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.Escherichia_coli#2.sorted.bam"
+	# 		fi
+	#
+	# 		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_Escherichia_coli#2-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlsts
+	# 	fi
+	# else
+	# 	if [[ "${type}" == "-" ]]; then
+	# 		singularity -s exec ${src}/singularity_images/srst2.simg getmlst.py --species "Escherichia coli#1" > "${SAMPDATADIR}/MLST/srst2/getmlst.out"
+	# 		db_name="Pasteur"
+	# 		suggested_command=$(tail -n2 "${SAMPDATADIR}/MLST/srst2/getmlst.out" | head -n1)
+	# 		mlst_db=$(echo "${suggested_command}" | cut -d' ' -f11)
+	# 		mlst_defs=$(echo "${suggested_command}" | cut -d' ' -f13)
+	# 		mlst_delimiter=$(echo "${suggested_command}" | cut -d' ' -f15)
+	# 		if [[ "${mlst_delimiter}" != "'_'" ]]; then
+	# 			echo "Unknown delimiter - \"${mlst_delimiter}\""
+	# 		else
+	# 			mlst_delimiter="_"
+	# 			#echo "Delimiter is OK (${mlst_delimiter})"
+	# 		fi
+	# 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/MLST/srst2/${isolate_name} --mlst_db /SAMPDIR/srst2/${mlst_db} --mlst_definitions ${mlst_defs} --mlst_delimiter ${mlst_delimiter}
+	# 		today=$(date "+%Y-%m-%d")
+	# 				# Cleans up extra files and renames output file
+	# 		mv "${SAMPDATADIR}/MLST/srst2/${isolate_name}__mlst__${genus}_${species}__results.txt" "${SAMPDATADIR}/MLST/${isolate_name}_srst2_${genus}_${species}-${db_name}.mlst"
+	# 		mv "${SAMPDATADIR}/MLST/srst2/mlst_data_download_${genus}_${species}_${today}.log" "${SAMPDATADIR}/MLST/"
+	# 		rm -r "${SAMPDATADIR}/MLST/srst2"
+	#
+	# 		if [[ -f "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.${genus}_${species}.pileup" ]]; then
+	# 			rm -r "${SAMPDATADIR}/MLST/srst2/${isolate_name}__${isolate_name}.${genus}_${species}.pileup"
+	# 		fi
+	# 		if [[ -f "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.${genus}_${species}.sorted.bam" ]]; then
+	# 			rm -r "${SAMPDATADIR}/MLST/${isolate_name}__${isolate_name}.${genus}_${species}.sorted.bam"
+	# 		fi
+	# 		python3 "${src}/check_and_fix_MLST.py" -i "${SAMPDATADIR}/MLST/${isolate_name}_srst2_${genus}_${species}-${db_name}.mlst" -t srst2 -d ${local_DBs}/pubmlsts
+	# 	fi
+	# 	mv "${SAMPDATADIR}/MLST/${isolate_name}.mlst" "${SAMPDATADIR}/MLST/${isolate_name}_Pasteur.mlst"
+	# fi
+	# end=$SECONDS
+	# timeMLST=$((end - start))
+	# echo "MLST - ${timeMLST} seconds" >> "${time_summary}"
+	# totaltime=$((totaltime + timeMLST))
 
 	# Try to find any plasmids
 	echo "----- Identifying plasmid replicons using plasmidFinder -----"
@@ -1377,6 +1375,8 @@ exit
 	fi
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/plasmidfinder_with_DB.simg plasmidfinder.py -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidfinder -p /opt/plasmidfinder_db -t ${plasmidFinder_identity}
 	python "${src}/json_plasmidfinder_converter.py" -i "${SAMPDATADIR}/plasmidfinder/data.json" -o "${SAMPDATADIR}/plasmidfinder/${isolate_name}_results_table_summary.txt"
+
+exit
 
 	end=$SECONDS
 	timeplasfin=$((end - start))
