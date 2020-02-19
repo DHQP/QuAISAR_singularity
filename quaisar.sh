@@ -1063,7 +1063,7 @@ for isolate in "${isolate_list[@]}"; do
 		# Report an unknown sample to the maintenance file to look into
 		if [[ "${busco_found}" -eq 0 ]]; then
 			global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
-			echo "BUSCO: ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species} - Found as ${PROJECT}/${isolate_name} on ${global_time}" >> "${src}/maintenance_To_Do.txt"
+			#echo "BUSCO: ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species} - Found as ${PROJECT}/${isolate_name} on ${global_time}" >> "${src}/maintenance_To_Do.txt"
 		fi
 		# Show which database entry will be used for comparison
 		echo "buscoDB:${buscoDB}"
@@ -1370,7 +1370,9 @@ for isolate in "${isolate_list[@]}"; do
 	# Try to find any plasmids
 	echo "----- Identifying plasmid replicons using plasmidFinder -----"
 	start=$SECONDS
-
+	if [[ ! -d "${SAMPDATADIR}/plasmidfinder" ]]; then
+		mkdir "${SAMPDATADIR}/plasmidfinder"
+	fi
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/plasmidfinder_with_DB.simg plasmidfinder.py -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidfinder -p /opt/plasmidfinder_db -t ${plasmidFinder_identity}
 	python "${src}/json_plasmidfinder_converter.py" -i "${SAMPDATADIR}/plasmidfinder/data.json" -o "${SAMPDATADIR}/plasmidfinder/${isolate_name}_results_table_summary.txt"
 
@@ -1513,6 +1515,9 @@ for isolate in "${isolate_list[@]}"; do
 
 		# Try to find any plasmids
 		echo "----- Identifying plasmids using plasmidFinder -----"
+		if [[ ! -d "${SAMPDATADIR}/plasmidfinder_on_plasFlow" ]]; then
+			mkdir "${SAMPDATADIR}/plasmidfinder_on_plasFlow"
+		fi
 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/plasmidfinder_with_DB.simg plasmidfinder.py -i /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -o /SAMPDIR/plasmidfinder_on_plasFlow -p /opt/plasmidfinder_db -t ${plasmidFinder_identity}
 		python "${src}/json_plasmidfinder_converter.py" -i "${SAMPDATADIR}/plasmidfinder_on_plasFlow/data.json" -o "${SAMPDATADIR}/plasmidfinder_on_plasFlow/${isolate_name}_results_table_summary.txt"
 
