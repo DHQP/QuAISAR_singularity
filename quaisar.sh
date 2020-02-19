@@ -1373,7 +1373,7 @@ for isolate in "${isolate_list[@]}"; do
 	if [[ ! -d "${SAMPDATADIR}/plasmidfinder" ]]; then
 		mkdir "${SAMPDATADIR}/plasmidfinder"
 	fi
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/plasmidfinder_with_DB.simg plasmidfinder.py -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidfinder -p /opt/plasmidfinder_db #-t ${plasmidFinder_identity}
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/plasmidfinder_with_DB.simg plasmidfinder.py -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidfinder -p /opt/plasmidfinder_db -t ${plasmidFinder_identity}
 	python "${src}/json_plasmidfinder_converter.py" -i "${SAMPDATADIR}/plasmidfinder/data.json" -o "${SAMPDATADIR}/plasmidfinder/${isolate_name}_results_table_summary.txt"
 
 exit
