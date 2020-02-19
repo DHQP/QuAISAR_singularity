@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 #
-# Conversion script from plasmidfinder json output to standard text file
-# Usage python ./json_plasmidfinder_converter.py -i plasmidfinder_input_file -o output_file
+# Conversion script from plasmidFinder json output to standard text file
+# Usage python ./json_plasmidFinder_converter.py -i plasmidFinder_input_file -o output_file
 #
 # Output location: Parameter
 #
@@ -17,7 +17,7 @@ import json
 import argparse
 
 def parseArgs(args=None):
-    parser = argparse.ArgumentParser(description='Script to parse through plasmidfinder results')
+    parser = argparse.ArgumentParser(description='Script to parse through plasmidFinder results')
     parser.add_argument('-i', '--input', help='input file', required=True)
     parser.add_argument('-o', '--output', help='output file', required=True)
     return parser.parse_args()
