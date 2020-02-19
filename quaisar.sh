@@ -415,6 +415,7 @@ for isolate in "${isolate_list[@]}"; do
 		### Run bbduk
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES ${src}/singularity_images/bbtools.simg bbduk.sh -${bbduk_mem} threads=${procs} in=/SAMPDIR/FASTQs/${isolate_name}_R1_001.fastq in2=/SAMPDIR/FASTQs/${isolate_name}_R2_001.fastq out=/SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R1.fsq out2=/SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=${bbduk_k} hdist=${bbduk_hdist}
 		# Get end time of bbduk and calculate run time and append to time summary (and sum to total time used)
+		echo "bbtools:37.87 -- bbduk.sh -${bbduk_mem} threads=${procs} in=/SAMPDIR/FASTQs/${isolate_name}_R1_001.fastq in2=/SAMPDIR/FASTQs/${isolate_name}_R2_001.fastq out=/SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R1.fsq out2=/SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R2.fsq ref=/DATABASES/phiX.fasta k=${bbduk_k} hdist=${bbduk_hdist}"
 		end=$SECONDS
 		timeAdapt=$((end - start))
 		echo "Removing Adapters - ${timeAdapt} seconds" >> "${time_summary}"
@@ -1375,11 +1376,11 @@ for isolate in "${isolate_list[@]}"; do
 	# Try to find any plasmids
 	echo "----- Identifying plasmid replicons using plasmidFinder -----"
 	start=$SECONDS
-	if [[ ! -d "${SAMPDATADIR}/plasmidfinder" ]]; then
-		mkdir "${SAMPDATADIR}/plasmidfinder"
+	if [[ ! -d "${SAMPDATADIR}/plasmidFinder" ]]; then
+		mkdir "${SAMPDATADIR}/plasmidFinder"
 	fi
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/plasmidfinder_with_DB.simg plasmidfinder.py -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidfinder -p /opt/plasmidfinder_db -t ${plasmidFinder_identity}
-	python "${src}/json_plasmidfinder_converter.py" -i "${SAMPDATADIR}/plasmidfinder/data.json" -o "${SAMPDATADIR}/plasmidfinder/${isolate_name}_results_table_summary.txt"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/plasmidFinder_with_DB.simg plasmidfinder.py -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -p /opt/plasmidfinder_db -t ${plasmidFinder_identity}
+	python "${src}/json_plasmidFinder_converter.py" -i "${SAMPDATADIR}/plasmidFinder/data.json" -o "${SAMPDATADIR}/plasmidFinder/${isolate_name}_results_table_summary.txt"
 
 	end=$SECONDS
 	timeplasfin=$((end - start))
@@ -1519,11 +1520,11 @@ for isolate in "${isolate_list[@]}"; do
 
 		# Try to find any plasmids
 		echo "----- Identifying plasmids using plasmidFinder -----"
-		if [[ ! -d "${SAMPDATADIR}/plasmidfinder_on_plasFlow" ]]; then
-			mkdir "${SAMPDATADIR}/plasmidfinder_on_plasFlow"
+		if [[ ! -d "${SAMPDATADIR}/plasmidFinder_on_plasFlow" ]]; then
+			mkdir "${SAMPDATADIR}/plasmidFinder_on_plasFlow"
 		fi
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/plasmidfinder_with_DB.simg plasmidfinder.py -i /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -o /SAMPDIR/plasmidfinder_on_plasFlow -p /opt/plasmidfinder_db -t ${plasmidFinder_identity}
-		python "${src}/json_plasmidfinder_converter.py" -i "${SAMPDATADIR}/plasmidfinder_on_plasFlow/data.json" -o "${SAMPDATADIR}/plasmidfinder_on_plasFlow/${isolate_name}_results_table_summary.txt"
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/plasmidFinder_with_DB.simg plasmidfinder.py -i /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -o /SAMPDIR/plasmidFinder_on_plasFlow -p /opt/plasmidfinder_db -t ${plasmidFinder_identity}
+		python "${src}/json_plasmidFinder_converter.py" -i "${SAMPDATADIR}/plasmidFinder_on_plasFlow/data.json" -o "${SAMPDATADIR}/plasmidFinder_on_plasFlow/${isolate_name}_results_table_summary.txt"
 
 		# Try to find any plasmids
 		echo "----- Identifying AR genes with GAMA -----"
