@@ -10,7 +10,7 @@
 # Description: The full QuAISAR-H pipeline start to end serially
 #
 # Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-a]"
-#		filename postfix numbers are as follows 1:_L001_SX_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
+#		filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
 #
 # Output location: default_config.sh_output_location
 #
@@ -25,7 +25,7 @@
 if [[ $# -lt 1  || $# -gt 8 ]]; then
 	echo "If reads are in default location set in config file then"
   echo "Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-a]"
-	echo "filename postfix numbers are as follows 1:_L001_SX_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
+	echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
   echo "You have used $# args"
   exit 3
 fi
@@ -48,7 +48,7 @@ for ((i=1 ; i <= nopts ; i++)); do
 		  echo "Usage: ./parallel_quaisar.sh -p project_name"
 			echo "else if you are running it on reads not in the default location or format"
 			echo "Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-a]"
-			echo "filename postfix numbers are as follows 1:_L001_SX_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
+			echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
 			echo -e "\\n\\n\\n"
 			exit 0
 			;;
@@ -184,7 +184,7 @@ else
 				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f2- | rev)
 				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1 | rev)
 			else
-				echo "Magic - should have never gotten here as this number does not match any of the input numbers... 1:_L001_SX_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz , exiting"
+				echo "Magic - should have never gotten here as this number does not match any of the input numbers... 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz , exiting"
 				exit
 			fi
 
@@ -1368,51 +1368,12 @@ for isolate in "${isolate_list[@]}"; do
 	totaltime=$((totaltime + timeMLST))
 
 	# Try to find any plasmids
-	echo "----- Identifying plasmids using plasmidFinder -----"
+	echo "----- Identifying plasmid replicons using plasmidFinder -----"
 	start=$SECONDS
 
-	echo "${family}-${genus}"
-	# If family is enterobacteriaceae, then run against that DB
-	if [[ "${family,}" == "enterobacteriaceae" ]]; then
-		echo "Checking against Enterobacteriaceae plasmids"
-		#plasmidfinder -i ${SAMPDATADIR}/${inpath} -o ${SAMPDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p enterobacteriaceae
-		# Rename all files to include ID
-		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_entero.fsa
-		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_enetero.fsa
-		mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_entero.txt
-		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_entero.txt
-		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_summary.txt
-	# If family is staph, strp, or enterococcus, then run against the gram positive database
-elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" ]] || [[ "${genus,}" == "enterococcus" ]]; then
-		echo "Checking against Staph, Strep, and Enterococcus plasmids"
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p gram_positive
-		# Rename all files to include ID
-		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_gramp.fsa
-		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_gramp.fsa
-		mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_gramp.txt
-		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_gramp.txt
-		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_summary.txt
-	# Family is not one that has been designated by the creators of plasmidFinder to work well, but still attempting to run against both databases
-	else
-		echo "Checking against ALL plasmids, but unlikely to find anything"
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p enterobacteriaceae
-		# Rename all files to include ID
-		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_entero.fsa
-		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_enetero.fsa
-		mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_entero.txt
-		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_entero.txt
-		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_entero.txt
-		#plasmidfinder -i ${SAMPDATADIR}/${inpath} -o ${SAMPDATADIR} -k ${plasmidFinder_identity} -p gram_positive
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidFinder -k ${plasmidFinder_identity} -p gram_positive
-		# Rename all files to include ID
-		mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_gramp.fsa
-		mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_gramp.fsa
-		mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_gramp.txt
-		mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_gramp.txt
-		mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_gramp.txt
-		cat	${SAMPDATADIR}/${isolate_name}_results_table_gramp.txt ${SAMPDATADIR}/${isolate_name}_results_table_entero.txt > ${SAMPDATADIR}/${isolate_name}_results_table_summary.txt
-	fi
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/plasmidfinder_with_DB.simg plasmidfinder.py -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidfinder -p /opt/plasmidfinder_db -t ${plasmidFinder_identity}
+	python "${src}/json_plasmidfinder_converter.py" -i "${SAMPDATADIR}/plasmidfinder/data.json" -o "${SAMPDATADIR}/plasmidfinder/${isolate_name}_results_table_summary.txt"
+
 	end=$SECONDS
 	timeplasfin=$((end - start))
 	echo "plasmidFinder - ${timeplasfin} seconds" >> "${time_summary}"
@@ -1550,48 +1511,13 @@ elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" 
 			echo "No anti-microbial genes were found using c-SSTAR with both resFinder and ARG-ANNOT DBs" > "${SAMPDATADIR}/c-sstar_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}_sstar_summary.txt"
 		fi
 
-		# If family is enterobacteriaceae, then run against that DB
-		if [[ "${family,}" == "enterobacteriaceae" ]]; then
-			echo "Checking against Enterobacteriaceae plasmids"
-			#plasmidfinder -i ${SAMPDATADIR}/${inpath} -o ${SAMPDATADIR} -k ${plasmidFinder_identity} -p enterobacteriaceae
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmid_on_plasFlow -k ${plasmidFinder_identity} -p enterobacteriaceae
-			# Rename all files to include ID
-			mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_entero.fsa
-			mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_enetero.fsa
-			mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_entero.txt
-			mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_entero.txt
-			mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_summary.txt
-		# If family is staph, strp, or enterococcus, then run against the gram positive database
-	elif [[ "${genus,}" == "staphylococcus" ]] || [[ "${genus,}" == "streptococcus" ]] || [[ "${genus,}" == "enterococcus" ]]; then
-			echo "Checking against Staph, Strep, and Enterococcus plasmids"
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmid_on_plasFlow -k ${plasmidFinder_identity} -p gram_positive
-			# Rename all files to include ID
-			mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_gramp.fsa
-			mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_gramp.fsa
-			mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_gramp.txt
-			mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_gramp.txt
-			mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_summary.txt
-		# Family is not one that has been designated by the creators of plasmidFinder to work well, but still attempting to run against both databases
-		else
-			echo "Checking against ALL plasmids, but unlikely to find anything"
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmid_on_plasFlow -k ${plasmidFinder_identity} -p enterobacteriaceae
-			# Rename all files to include ID
-			mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_entero.fsa
-			mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_enetero.fsa
-			mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_entero.txt
-			mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_entero.txt
-			mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_entero.txt
-			#plasmidfinder -i ${SAMPDATADIR}/${inpath} -o ${SAMPDATADIR} -k ${plasmidFinder_identity} -p gram_positive
-			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/plasmidFinder:2.1--0 plasmidfinder -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmid_on_plasFlow -k ${plasmidFinder_identity} -p gram_positive
-			# Rename all files to include ID
-			mv ${SAMPDATADIR}/Hit_in_genome_seq.fsa ${SAMPDATADIR}/${isolate_name}_Hit_in_genome_seq_gramp.fsa
-			mv ${SAMPDATADIR}/Plasmid_seq.fsa ${SAMPDATADIR}/${isolate_name}_Plasmid_seq_gramp.fsa
-			mv ${SAMPDATADIR}/results.txt ${SAMPDATADIR}/${isolate_name}_results_gramp.txt
-			mv ${SAMPDATADIR}/results_tab.txt ${SAMPDATADIR}/${isolate_name}_results_tab_gramp.txt
-			mv ${SAMPDATADIR}/results_table.txt ${SAMPDATADIR}/${isolate_name}_results_table_gramp.txt
-			cat	${SAMPDATADIR}/${isolate_name}_results_table_gramp.txt ${SAMPDATADIR}/${isolate_name}_results_table_entero.txt > ${SAMPDATADIR}/${isolate_name}_results_table_summary.txt
-		fi
+		# Try to find any plasmids
+		echo "----- Identifying plasmids using plasmidFinder -----"
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/plasmidfinder_with_DB.simg plasmidfinder.py -i /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -o /SAMPDIR/plasmidfinder_on_plasFlow -p /opt/plasmidfinder_db -t ${plasmidFinder_identity}
+		python "${src}/json_plasmidfinder_converter.py" -i "${SAMPDATADIR}/plasmidfinder_on_plasFlow/data.json" -o "${SAMPDATADIR}/plasmidfinder_on_plasFlow/${isolate_name}_results_table_summary.txt"
 
+		# Try to find any plasmids
+		echo "----- Identifying AR genes with GAMA -----"
 		if [ ! -d "${SAMPDATADIR}/GAMA_plasFlow" ]; then  #create outdir if absent
 			echo "Creating ${SAMPDATADIR}/GAMA_plasFlow"
 			mkdir -p "${SAMPDATADIR}/GAMA_plasFlow"

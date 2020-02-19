@@ -105,22 +105,11 @@ csstar_low=80
 csstar_other=40
 
 ##### c-SSTAR standard settings #####
-#argannot_srst2=$(find ${local_DBs}/star/argannot_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-#echo "ARG Summary found: ${argannot_srst2}"
-#resFinder_srst2=$(find ${local_DBs}/star/resFinder_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-#echo "RES Summary found: ${resFinder_srst2}"
-#resGANNOT_srst2=$(find ${local_DBs}/star/ResGANNOT_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-#resGANNOT_previous_srst2=$(find ${local_DBs}/star/ResGANNOT_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 2 | tail -n 1)
-#echo "ResGANNOT Summary found: ${resGANNOT_srst2}"
 ResGANNCBI_srst2=$(find ${local_DBs}/star/ResGANNCBI_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 ResGANNCBI_previous_srst2=$(find ${local_DBs}/star/ResGANNCBI_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 2 | tail -n 1)
-#echo "ResGANNOT Summary found: ${ResGANNCBI_srst2}"
-#argannot_srst2_filename=$(echo "${argannot_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
-#resFinder_srst2_filename=$(echo "${resFinder_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
-#ResGANNOT_srst2_filename=$(echo "${resGANNOT_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
-#echo "${ResGANNCBI_srst2}"
 ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
 #echo "${ResGANNCBI_srst2_filename}"
+
 # gapped (g) versus ungapped(u)
 csstar_gapping="gapped"
 # Identity % 100(p), 99(u), 98(h), 95(m), 80(low)
@@ -155,13 +144,9 @@ gottcha_db="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species"
 
 ##### plasmidFinder ######
 #percent identity to match
-plasmidFinder_identity=95.00
+plasmidFinder_identity=95
 #percent length minimum (although not found in command line version, yet)
 plasmidFinder_length=60
-#DB
-#plasmidFinder_all_DB=$(find ${local_DBs}/plasmidFinder_DB/all_*.fsa -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-#plasmidFinder_entero_DB=$(find ${local_DBs}/plasmidFinder_DB/enterobacteriaceae_*.fsa -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-#plasmidFinder_gpos_DB=$(find ${local_DBs}/plasmidFinder_DB/gram_positive_*.fsa -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 
 
 ########## Settings used by downstream scripts ##########
