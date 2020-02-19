@@ -144,7 +144,7 @@ gottcha_db="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species"
 
 ##### plasmidFinder ######
 #percent identity to match
-plasmidFinder_identity=95
+plasmidFinder_identity=95.00
 #percent length minimum (although not found in command line version, yet)
 plasmidFinder_length=60
 
