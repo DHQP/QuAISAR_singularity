@@ -1160,7 +1160,7 @@ for isolate in "${isolate_list[@]}"; do
 		echo "${source}	${resistance}	${label1}	${info1}	${label2}	${contig}	${percent}	${len1}	${len2}	${plen}"
 	done < "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar" > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar_grouped"
 	# Writes all AR genes to file based on %ID, %length, and finally length of gene
-	sort -k7,7nr -k10,10nr -k8,8n "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar_grouped" -o "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt"
+	sort -k7,7nr -k10,10nr -k8,8n "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar_grouped" > "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt"
 
 	# Catches an empty or missing file, adding that no AMR genes were found if no file was created
 	if [ ! -s "${SAMPDATADIR}/c-sstar/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}_sstar_summary.txt" ]; then
@@ -1500,7 +1500,7 @@ exit
 			fi
 			#printf "%-10s %-50s %-15s %-25s %-25s %-40s %-4s %-5d %-5d %-5d\\n" "${source}1" "${resistance}2" "${label1}3" "${info1}4" "${label2}5" "${contig}A" "${percent}B" "${len1}C" "${len2}D" "${plen}E"
 			echo "${source}	${resistance}	${label1}	${info1}	${label2}	${contig}	${percent}	${len1}	${len2}	${plen}"
-		done < "${SAMPDATADIR}/csstar-plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}.sstar" > "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}.sstar_grouped"
+		done < "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}.sstar" > "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}.sstar_grouped"
 		# Writes all AR genes to file based on %ID, %length, and finally length of gene
 		sort -k7,7nr -k10,10nr -k8,8n "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}.sstar_grouped" > "${SAMPDATADIR}/c-sstar_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}_sstar_summary.txt"
 
