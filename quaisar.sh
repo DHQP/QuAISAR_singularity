@@ -430,7 +430,7 @@ for isolate in "${isolate_list[@]}"; do
 			mkdir -p "${SAMPDATADIR}/trimmed"
 		fi
 		### Run trimmomatic
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/trimmomatic:0.36--5 trimmomatic ${trim_endtype} -${trim_phred} -threads ${procs} /SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R1.fsq /SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R2.fsq /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R1_001.unpaired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.unpaired.fq ILLUMINACLIP:/DATABASES/adapters.fasta:${trim_seed_mismatch}:${trim_palindrome_clip_threshold}:${trim_simple_clip_threshold}:${trim_min_adapt_length}:${trim_complete_palindrome} SLIDINGWINDOW:${trim_window_size}:${trim_window_qual} LEADING:${trim_leading} TRAILING:${trim_trailing} MINLEN:${trim_min_length}
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/trimmomatic:0.36--5 trimmomatic PE -${trim_phred} -threads ${procs} /SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R1.fsq /SAMPDIR/removedAdapters/${isolate_name}-noPhiX-R2.fsq /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R1_001.unpaired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.unpaired.fq ILLUMINACLIP:/DATABASES/adapters.fasta:${trim_seed_mismatch}:${trim_palindrome_clip_threshold}:${trim_simple_clip_threshold}:${trim_min_adapt_length}:${trim_complete_palindrome} SLIDINGWINDOW:${trim_window_size}:${trim_window_qual} LEADING:${trim_leading} TRAILING:${trim_trailing} MINLEN:${trim_min_length}
 		# Get end time of trimmomatic and calculate run time and append to time summary (and sum to total time used)
 		end=$SECONDS
 		timeTrim=$((end - start))
@@ -465,11 +465,11 @@ for isolate in "${isolate_list[@]}"; do
 			mkdir -p "${SAMPDATADIR}/kraken/preAssembly"
 		fi
 		# Run kraken
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --paired --db /DATABASES/minikrakenDB/  --preload --fastq-input --threads 4 --output /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken --classified-out /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.classified /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa"
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --paired --db /DATABASES/${kraken_DB}  --preload --fastq-input --threads 4 --output /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken --classified-out /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.classified /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa"
 		python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa" -k "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.krona"
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.krona -o /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.html
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.list"
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.list"
 		"${src}/best_hit_from_kraken.sh" "${isolate_name}" "pre" "paired" "${PROJECT}" "kraken"
 		# Get end time of kraken on reads and calculate run time and append to time summary (and sum to total time used)
 		end=$SECONDS
@@ -482,7 +482,7 @@ for isolate in "${isolate_list[@]}"; do
 		# Get start time of gottcha
 		start=$SECONDS
 		# run gottcha
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DBs ${src}/singularity_images/gottcha.simg gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DBs/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DBs ${src}/singularity_images/gottcha.simg gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DBs/${gottcha_DB}
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/gottcha/gottcha_S/${isolate_name}_temp/${isolate_name}.lineage.tsv -o /SAMPDIR/gottcha/${isolate_name}_species.krona.html
 		#Create a best hit from gottcha1 file
 		"${src}/best_hit_from_gottcha1.sh" "${isolate_name}" "${PROJECT}"
@@ -538,7 +538,7 @@ for isolate in "${isolate_list[@]}"; do
 				echo "Previous assembly already exists, using it (delete/rename the assembly folder at ${SAMPDATADIR}/ if you'd like to try to reassemble"
 			# Run normal mode if no assembly file was found
 			else
-				singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/spades:3.13.0--0 spades.py --careful --memory 16 --only-assembler --pe1-1 /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq --pe1-2 /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq --pe1-s /SAMPDIR/trimmed/${isolate_name}.single.fq -o /SAMPDIR/Assembly --phred-offset "${phred}" -t "${procs}"
+				singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/spades:3.13.0--0 spades.py --careful --only-assembler --pe1-1 /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq --pe1-2 /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq --pe1-s /SAMPDIR/trimmed/${isolate_name}.single.fq -o /SAMPDIR/Assembly --phred-offset "${phred}" -t "${procs}"
 			fi
 			# Removes any core dump files (Occured often during testing and tweaking of memory parameter
 			if [ -n "$(find "${src}" -maxdepth 1 -name 'core.*' -print -quit)" ]; then
@@ -580,18 +580,18 @@ for isolate in "${isolate_list[@]}"; do
 		mkdir -p "${SAMPDATADIR}/kraken/postAssembly"
 	fi
 	# Run kraken on assembly
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/minikrakenDB/  --preload --threads ${procs} --output /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken --classified-out /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.classified /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/${kraken_DB}  --preload --threads ${procs} --output /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken --classified-out /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.classified /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
 	python3 ${src}/Kraken_Assembly_Converter_2_Exe.py -i "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa"
 	python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa" -k "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.krona"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted.krona -o /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted_BP_krona.html
 	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled_BP" "${PROJECT}" "kraken"
-	singularity -s exec -B ${SAMPDATADIR}/kraken/postAssembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /INPUT/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa"
+	singularity -s exec -B ${SAMPDATADIR}/kraken/postAssembly:/INPUT -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/${kraken_DB} /INPUT/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa"
 	python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa" -k "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.krona"
 	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.krona -o /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.html
-	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/minikrakenDB/ /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
+	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
 	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled" "${PROJECT}" "kraken"
 	# Get end time of kraken on assembly and calculate run time and append to time summary (and sum to total time used)
 	end=$SECONDS
@@ -1375,8 +1375,6 @@ for isolate in "${isolate_list[@]}"; do
 	fi
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/plasmidfinder_with_DB.simg plasmidfinder.py -i /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -o /SAMPDIR/plasmidfinder -p /opt/plasmidfinder_db -t ${plasmidFinder_identity}
 	python "${src}/json_plasmidfinder_converter.py" -i "${SAMPDATADIR}/plasmidfinder/data.json" -o "${SAMPDATADIR}/plasmidfinder/${isolate_name}_results_table_summary.txt"
-
-exit
 
 	end=$SECONDS
 	timeplasfin=$((end - start))
