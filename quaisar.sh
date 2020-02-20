@@ -1434,7 +1434,7 @@ for isolate in "${isolate_list[@]}"; do
 				echo "Creating ${SAMPDATADIR}/Assembly_Stats_plasFlow"
 		 		mkdir -p "${SAMPDATADIR}/Assembly_Stats_plasFlow"
 		 	fi
-		 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/QUAST5.simg python3 /quast/quast.py -o /SAMPDIR/Assembly_Stats_plasFlow /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
+		 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/QUAST5.simg python3 /quast/quast.py -o /SAMPDIR/Assembly_Stats_plasFlow /SAMPDIR/Assembly/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta
 
 		 	mv "${SAMPDATADIR}/Assembly_Stats_plasFlow/report.txt" "${SAMPDATADIR}/Assembly_Stats_plasFlow/${isolate_name}_report.txt"
 		 	mv "${SAMPDATADIR}/Assembly_Stats_plasFlow/report.tsv" "${SAMPDATADIR}/Assembly_Stats_plasFlow/${isolate_name}_report.tsv"
