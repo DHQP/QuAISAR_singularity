@@ -9,7 +9,7 @@
 #
 # Description: The full QuAISAR-H pipeline start to end serially
 #
-# Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-a]"
+# Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-a|r]"
 #		filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
 #
 # Output location: default_config.sh_output_location
@@ -24,7 +24,7 @@
 # Checking for proper number of arguments from command line
 if [[ $# -lt 1  || $# -gt 8 ]]; then
 	echo "If reads are in default location set in config file then"
-  echo "Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-a]"
+  echo "Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-a|r]"
 	echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
   echo "You have used $# args"
   exit 3
@@ -99,9 +99,13 @@ for ((i=1 ; i <= nopts ; i++)); do
 			fi
 			;;
 		-a | --assemblies)
-				assemblies="true"
-				shift
-				;;
+			assemblies="true"
+			shift
+			;;
+		-r | --retry_from_assembly)
+			assemblies="retry"
+			shift
+			;;
 		#Captures any other characters in the args
 		\?)
 			echo "ERROR: ${BOLD}$2${NORM} is not a valid argument" >&2
@@ -559,13 +563,14 @@ for isolate in "${isolate_list[@]}"; do
 		timeSPAdes=$((end - start))
 		echo "SPAdes - ${timeSPAdes} seconds" >> "${time_summary}"
 		totaltime=$((totaltime + timeSPAdes))
+
+		### Removing Short Contigs  ###
+		echo "----- Removing Short Contigs -----"
+		python3 "${src}/removeShortContigs.py" -i "${SAMPDATADIR}/Assembly/scaffolds.fasta" -t 500 -s "normal_SPAdes"
+		mv "${SAMPDATADIR}/Assembly/scaffolds.fasta.TRIMMED.fasta" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
 	fi
 
-	### Removing Short Contigs  ###
-	echo "----- Removing Short Contigs -----"
-	python3 "${src}/removeShortContigs.py" -i "${SAMPDATADIR}/Assembly/scaffolds.fasta" -t 500 -s "normal_SPAdes"
-	mv "${SAMPDATADIR}/Assembly/scaffolds.fasta.TRIMMED.fasta" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
-
+	# Resumes remaineder of pipeline if assemblies were set to true or retry
 	# Checks to see that the trimming and renaming worked properly, returns if unsuccessful
 	if [ ! -s "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" ]; then
 		echo "Trimmed contigs file does not exist continuing to next sample">&2
