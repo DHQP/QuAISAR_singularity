@@ -46,7 +46,7 @@ def convert_json_to_text(infile, outfile):
 
 
     # Parse all Enterobacteriaceae hits
-    print(results['plasmidfinder']['results']['Enterobacteriaceae']['enterobacteriaceae']):
+    print(results['plasmidfinder']['results']['Enterobacteriaceae']['enterobacteriaceae'])
     for key,value in results['plasmidfinder']['results']['Enterobacteriaceae']['enterobacteriaceae'].items():
         #print(key)
         #print(value)
