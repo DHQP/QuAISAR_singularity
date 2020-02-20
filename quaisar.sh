@@ -1514,8 +1514,8 @@ for isolate in "${isolate_list[@]}"; do
 		fi
 
 		# Clean up
-		mv "${src}/${isolate_name}_plasmid_scaffolds_trimmed"* "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/"
-		mv "${src}/c-SSTAR_${isolate_name}_plasmid_scaffolds_trimmed.log" "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/"
+		mv "${src}/${isolate_name}_plasmid_assembly_trimmed"* "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/"
+		mv "${src}/c-SSTAR_${isolate_name}_plasmid_assembly_trimmed.log" "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/"
 
 
 		# Try to find any plasmids
