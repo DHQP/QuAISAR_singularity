@@ -22,7 +22,7 @@
 #
 
 # Checking for proper number of arguments from command line
-if [[ $# -lt 1  || $# -gt 8 ]]; then
+if [[ $# -lt 1  || $# -gt 9 ]]; then
 	echo "If reads are in default location set in config file then"
   echo "Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-a|r]"
 	echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
@@ -1591,7 +1591,7 @@ while IFS= read -r bug_lines  || [ -n "$bug_lines" ]; do
 done < ${local_DBs}/MMB_Bugs.txt
 
 # Set output folder as directory of input list
-> "${PROJDATADIR}/Seqlog_output.txt"
+#> "${PROJDATADIR}/Seqlog_output.txt"
 
 # Goes through each item on the list and pulls all relevant info
 while IFS= read -r var || [ -n "$var" ]; do
