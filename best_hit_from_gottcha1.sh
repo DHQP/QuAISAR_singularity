@@ -188,7 +188,7 @@ else
 fi
 
 #Prints the final best taxon identification output (using species output from gottcha) to the gottcha directory for the sample
-echo -e "U: ${unclass_percent} (${u_percent}%-${unclass_reads}) unclassified\\nD: ${domain_percent} (${domain_percent_total}) ${domain}\\nP: ${phylum_percent} (${phylum_percent_total}) ${phylum}\\nC: ${class_percent} (${class_percent_total}) ${class}\\nO: ${order_percent} (${order_percent_total}) ${order}\\nF: ${family_percent} (${family_percent_total}) ${family}\\nG: ${genus_percent} (${genus_percent_total}) ${genus}\\nS: ${species_percent} (${species_percent_total}) ${species}" > "${OUTDATADIR}/${1}_gottcha_species_summary.txt"
+echo -e "U: ${unclass_percent} (${u_percent}%-${unclass_reads}) unclassified\\nD: ${domain_percent} (${domain_percent_total}) ${domain}\\nP: ${phylum_percent} (${phylum_percent_total}) ${phylum}\\nC: ${class_percent} (${class_percent_total}) ${class}\\nO: ${order_percent} (${order_percent_total}) ${order}\\nF: ${family_percent} (${family_percent_total}) ${family}\\nG: ${genus_percent} (${genus_percent_total}) ${genus}\\ns: ${species_percent} (${species_percent_total}) ${species}" > "${OUTDATADIR}/${1}_gottcha_species_summary.txt"
 
 #Script exited gracefully (unless something else inside failed...working on finding all possible failure points!)
 exit 0
