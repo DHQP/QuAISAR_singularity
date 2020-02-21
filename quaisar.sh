@@ -327,6 +327,8 @@ for isolate in "${isolate_list[@]}"; do
 	isolate_name=$(echo "${isolate}" | awk -F/ '{print $2}' | tr -d '[:space:]')
 	SAMPDATADIR="${PROJDATADIR}/${isolate_name}"
 
+	echo -e "${isolate} started at ${start_time}\n" >> "${log_file}"
+
 	# Remove old run stats as the presence of the file indicates run completion
 	if [[ -f "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt" ]]; then
 		rm "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt"
@@ -1607,6 +1609,8 @@ for isolate in "${isolate_list[@]}"; do
 	# Append total time to bottom of time summary
 	echo "Total time: ${totaltime} seconds" >> "${time_summary}"
 	echo "Completed at ${global_end_time}"
+
+	echo -e "\n${isolate} complete at ${global_end_time}\n" >> "${log_file}"
 
 	# Designate end of this sample #
 	echo "
