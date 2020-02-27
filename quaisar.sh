@@ -600,7 +600,7 @@ for isolate in "${isolate_list[@]}"; do
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/${kraken_DB}  --preload --threads ${procs} --output /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken --classified-out /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.classified /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
 	echo "kraken:1.0 -- kraken --db ${local_DBs}/${kraken_DB}  --preload --threads ${procs} --output ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken --classified-out ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.classified ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"  >> "${log_file}"
 	python3 ${src}/Kraken_Assembly_Converter_2_Exe.py -i "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db ${local_DBs}/${kraken_DB} /SAMPDATADIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db ${local_DBs}/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa
   echo "kraken:1.0 -- kraken-mpa-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa" >> "${log_file}"
 	python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa" -k "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.krona"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list"
@@ -1478,9 +1478,9 @@ for isolate in "${isolate_list[@]}"; do
 				echo "Creating ${SAMPDATADIR}/Assembly_Stats_plasFlow"
 		 		mkdir -p "${SAMPDATADIR}/Assembly_Stats_plasFlow"
 		 	fi
-		 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/QUAST5.simg python3 /quast/quast.py -o /SAMPDIR/Assembly_Stats_plasFlow /SAMPDIR/Assembly/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta
+		 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${src}/singularity_images/QUAST5.simg python3 /quast/quast.py -o /SAMPDIR/Assembly_Stats_plasFlow /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta
 			echo "QUAST:5.0.0 -- python3 /quast/quast.py -o ${SAMPDATADIR}/Assembly_Stats_plasFlow ${SAMPDATADIR}/Assembly/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta" >> "${log_file}"
-		 	mv "${SAMPDATADIR}/Assembly_Stats_plasFlow/report.txt" "${SAMPDATADIR}/Assembly_Stats_plasFlow/${isolate_name}_report.txt"
+			mv "${SAMPDATADIR}/Assembly_Stats_plasFlow/report.txt" "${SAMPDATADIR}/Assembly_Stats_plasFlow/${isolate_name}_report.txt"
 		 	mv "${SAMPDATADIR}/Assembly_Stats_plasFlow/report.tsv" "${SAMPDATADIR}/Assembly_Stats_plasFlow/${isolate_name}_report.tsv"
 		 else
 			echo "No plasFlow assembly (${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta)"
