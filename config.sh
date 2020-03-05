@@ -29,6 +29,8 @@ output_dir="/raid5/MiSeqAnalysisFiles"
 src="$(pwd)"
 # Local databases that are necessary for pipeline...ANI, BUSCO, star, adapters, phiX
 local_DBs="/raid5/QuAISAR_databases"
+# Location of custom singularity images
+local_singularities="/raid5/custom_singularities"
 # Number of processors requested by numerous applications within the pipeline
 procs=12 # Number of processors
 
@@ -85,7 +87,10 @@ spades_cov_cutoff="auto"
 ##### ANI specific options #####
 #Max number of samples to be kept (not including source sample) when creating the mash tree
 max_ani_samples=20
-
+ani_coverage_threshold=70
+# Shortcuts used to find newest REFSEQ mash sketch
+REFSEQ=$(find ${local_DBs}/ANI/REFSEQ_*.msh -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+REFSEQ_date=$(echo ${REFSEQ} | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1,2)
 
 ##### c-SSTAR standard settings #####
 # gapped versus ungapped
@@ -102,14 +107,14 @@ unclass_flag=30
 # Will throw a warning flag during run summary if percent of 2nd organism is above this value
 contamination_threshold=25
 # MiniKraken DB (smaller, but effective option)
-kraken_DB_path="${local_DBs}/minikrakenDB/"
-kraken_DB="minikrakenDB/"
+kraken_DB_path="${local_DBs}/minikraken_20171019_4GB"
+kraken_DB=$(echo "${kraken_DB_path}" | rev | cut -d'/' -f2 | rev)
 
 
 ##### gottcha #####
 # gottcha DB
-gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species"
-gottcha_DB="gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species"
+gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30__xHUMAN3x.species"
+gottcha_DB=$(echo ${gottcha_DB_path} | rev | cut -d'/' -f1 | rev)
 
 
 ##### plasmidFinder ######

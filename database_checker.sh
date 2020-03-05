@@ -1,0 +1,154 @@
+#!/bin/bash -l
+
+#$ -o database_checker.out
+#$ -e database_checker.err
+#$ -N database_checker
+#$ -cwd
+#$ -q short.q
+
+#Import the config file with shortcuts and settings
+if [[ ! -f "./config.sh" ]]; then
+	cp ./config_template.sh ./config.sh
+fi
+. ./config.sh
+
+#
+# Description: Script checks for all databases used by QuAISAR pipeline and sets up any missing ones
+#
+# Usage ./database_checker.sh
+#
+# Output location: ${local_DBs} in config file
+#
+# Modules required: None
+#
+# v1.0 (03/04/2020)
+#
+# Created by Nick Vlachos (nvx4@cdc.gov)
+#
+
+# Check for parent directory
+if [[ ! -d ${local_DBs} ]]; then
+	mkdir -p ${local_DBs}
+fi
+
+# Check for BUSCO
+if [[ ! -d "${local_DBs}/BUSCO"" ]]; then
+	mkdir -p "${local_DBs}/BUSCO""
+	# Check for top level bacteria database
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/bacteria_odb10.2019-06-26.tar.gz"
+	fi
+	# Check for Order level Alteromonadales database
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/alteromonadales_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Order level Bacillales database
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/bacillales_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Class level Bacilli database
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/bacilli_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Phylum level Bacteroidetes database
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/bacteroidetes_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Class level Betaproteobacteria database
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/betaproteobacteria_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Order level Burkholderiales database
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/burkholderiales_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Order level Campylobacterales database
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/campylobacterales_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Order level Clostridiales database
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/clostridiales_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Class level Clostridia database
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/clostridia_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Order level Corynebacteriales database
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/corynebacteriales_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Order level Enterobacterales database
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/enterobacterales_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Class level Epsilonproteobacteria
+	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/epsilonproteobacteria_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Phylum level Firmicutes database
+	if [[ ! -d "${local_DBs}/firmicutes_odb10.2019-04-24" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/firmicutes_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Order level Flavobacteriales database
+	if [[ ! -d "${local_DBs}/flavobacteriales_odb10.2019-04-24" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/flavobacteriales_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Class level Flavobacteriia database
+	if [[ ! -d "${local_DBs}/flavobacteriia_odb10.2019-04-24" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/flavobacteriia_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Class level Gammaproteobacteria database
+	if [[ ! -d "${local_DBs}/gammaproteobacteria_odb10.2019-04-24" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/gammaproteobacteria_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Order level lactobacillales database
+	if [[ ! -d "${local_DBs}/lactobacillales_odb10.2019-04-24" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/lactobacillales_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Order level Neisseriales database
+	if [[ ! -d "${local_DBs}/neisseriales_odb10.2019-04-24" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/neisseriales_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Phylum level Proteobacteria database
+	if [[ ! -d "${local_DBs}/proteobacteria_odb10.2019-04-24" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/proteobacteria_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Order level Pseudomonadales database
+	if [[ ! -d "${local_DBs}/pseudomonadales_odb10.2019-04-24" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/pseudomonadales_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Order level Xanthomonadales database
+	if [[ ! -d "${local_DBs}/xanthomonadales_odb10.2019-04-24" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/xanthomonadales_odb10.2019-04-24.tar.gz"
+	fi
+	# Check for Class level Actinobacteria database. This is the only conflict database as there is also a phylum level Actinobacteria which is not going to be used.
+	if [[ ! -d "${local_DBs}/actinobacteria_class_odb10.2019-04-24" ]]; then
+		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/actinobacteria_class_odb10.2019-04-24.tar.gz"
+	fi
+	gunzip ${local_DBs}/BUSCO/*.gz
+fi
+
+# Check to see if gottcha database is installed
+if [[ ! -d "${local_DBs}/gottcha" ]]; then
+	mkdir -p "${local_DBs}/gottcha"
+	wget -p "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+	tar -xvzf "${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+fi
+
+# Check to see if kraken mini database is installed
+if [[ ! -d "${local_DBs}/kraken" ]]; then
+	mkdir -p "${local_DBs}/kraken"
+	wget -p "${local_DBs}/kraken" "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+	tar -xvzf "${local_DBs}/kraken/minikraken_20171019_4GB.tgz"
+fi
+
+# All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
+	# ANI sketch file / aniDB (150MBs/1.3Gbs)
+	# star (6 Mbs)
+	# custom singularity images (3.6GBs)
+	# individual Files (21 KBs)
+		#phiX (6 KBs)
+		#Adapters (6KBs)
+		#taxes (3KBs)
+		#bugs (6KBs)
