@@ -161,7 +161,7 @@ else
 		if [[ "${file}" = *.gz ]] || [[ "${file}" = *.fastq ]]; then
 			echo "isolate_name: ${file}"
 			# Gets full file name from path
-			full_isolate_name=${file##*/}
+			full_sample_name=${file##*/}
 			if [[ "${full_sample_name}" = *"_R1_"* ]]; then
 				full_sample_name_pair=${full_sample_name/_R1_/_R2_}
 			elif [[ "${full_sample_name}" = *"_R2_"* ]]; then
