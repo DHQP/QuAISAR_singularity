@@ -42,12 +42,12 @@ elif [ -z "$2" ]; then
 	exit 1
 fi
 
-OUTDATADIR=${output_dir}/${2}/${1}
+OUTDATADIR=${processed}/${2}/${1}
 
 # Creates and prints header info for the sample being processed
 today=$(date)
 echo "----------Checking ${2}/${1} for successful completion on ----------"
-echo "Sample output folder starts at: " "${output_dir}/${2}/${1}"
+echo "Sample output folder starts at: " "${processed}/${2}/${1}"
 status="SUCCESS"
 # Checks to see if the sample has a time summary file associated with it
 if [[ -s "${OUTDATADIR}/time_summary.txt" ]]; then
@@ -387,10 +387,10 @@ fi
 # #Check plasFlow plasmid assembly
 plasmidsFoundviaplasFlow=0
 if [[ -d "${OUTDATADIR}/plasFlow" ]]; then
-	if [[ -s "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_original.fasta" ]]; then
+	if [[ -s "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly.fasta" ]]; then
 		# Count the number of '>' in the assembly file before trimming
 		plas_scaffolds=">"
-		plas_scaffolds=$(grep -c ${plas_scaffolds} "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_original.fasta")
+		plas_scaffolds=$(grep -c ${plas_scaffolds} "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly.fasta")
 		if [ -z ${plas_scaffolds} ]; then
 			plas_scaffolds=0
 		fi
@@ -404,7 +404,7 @@ if [[ -d "${OUTDATADIR}/plasFlow" ]]; then
 			fi
 		fi
 	else
-		printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "SUCCESS" "No plasmid scaffold found using plasmidSpades"
+		printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "SUCCESS" "No plasmid scaffold found using plasFlow"
 	fi
 elif [[ "${dec_family}" == "Enterobacteriaceae" ]]; then
 	printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "FAILED" "/plasFlow not found"
@@ -522,7 +522,7 @@ fi
 kraken_weighted_success=false
 if [[ ! -s "${OUTDATADIR}/kraken/postAssembly/${1}_assembled_BP.kraken" ]]; then
 	if [[ -s "${OUTDATADIR}/kraken/postAssembly/${1}_assembled.kraken" ]]; then
-		${src}/run_kraken.sh "${1}" "post" "assembled" "${2}"
+		${shareScript}/run_kraken.sh "${1}" "post" "assembled" "${2}"
 	fi
 fi
 
@@ -672,7 +672,7 @@ fi
 
 # Get determinde taxonomy
 if [[ ! -s "${OUTDATADIR}/${1}.tax" ]]; then
-	"${src}/determine_taxID.sh" "${1}" "${2}"
+	"${shareScript}/determine_taxID.sh" "${1}" "${2}"
 fi
 
 source_call=$(head -n1 "${OUTDATADIR}/${1}.tax")
@@ -808,7 +808,7 @@ else
 fi
 
 #Check BUSCO
-if [[ -s "${OUTDATADIR}/BUSCO/short_summary_${1}_BUSCO.txt" ]]; then
+if [[ -s "${OUTDATADIR}/BUSCO/short_summary_${1}.txt" ]]; then
 	# Reads each line of the busco output file to extract the 3 that contain summary data to report
 	while IFS= read -r line; do
 		# If the line contains info for found buscos, total buscos, or database info grab it
@@ -825,7 +825,7 @@ if [[ -s "${OUTDATADIR}/BUSCO/short_summary_${1}_BUSCO.txt" ]]; then
 			#echo "L-"${line}
 			db=$(echo "${line}" | awk -F ' ' '{print $6}')
 		fi
-	done < "${OUTDATADIR}/BUSCO/short_summary_${1}_BUSCO.txt"
+	done < "${OUTDATADIR}/BUSCO/short_summary_${1}.txt"
 	percent_BUSCO_present=$(bc<<<"${found_buscos}*100/${total_buscos}")
 	if [[ "${percent_BUSCO_present}" -gt 90 ]]; then
 		printf "%-20s: %-8s : %s\\n" "BUSCO" "SUCCESS" "${percent_BUSCO_present}% (${found_buscos}/${total_buscos}) against ${db}"
@@ -835,7 +835,7 @@ if [[ -s "${OUTDATADIR}/BUSCO/short_summary_${1}_BUSCO.txt" ]]; then
 	fi
 # If the busco summary file does not exist
 else
-	printf "%-20s: %-8s : %s\\n" "BUSCO" "FAILED" "/BUSCO/short_summary_${1}_BUSCO.txt not found"
+	printf "%-20s: %-8s : %s\\n" "BUSCO" "FAILED" "/BUSCO/short_summary_${1}.txt not found"
 	status="FAILED"
 fi
 #Check ANI
@@ -868,23 +868,29 @@ else
 fi
 # Checks to see if the match boolean was toggled, if so it extracts the best match info and database from the string
 if [[ "${ani_found}" = true ]]; then
-	genusDB=$(echo "${filename##*/}" | cut -d'_' -f6 | cut -d')' -f1)
-	percent_match="${ani_info:0:2}"
-	#echo "${percent_match--}"
+	genusDB=$(echo "${ani_info}" | cut -d'-' -f3 | cut -d' ' -f1)
+	percent_match=$(echo "${ani_info}" | cut -d'.' -f1)
+	coverage_match=$(echo "${ani_info}" | cut -d'-' -f2 | cut -d'.' -f1)
+	#echo "${coverage_match}"
+	#echo "${percent_match}"
 	if [[ "${percent_match}" = "0." ]]; then
 		printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "No assembly file to work with"
 		status="FAILED"
 	else
-		if [[ "${percent_match}" -ge 95 ]]; then
+		if [[ "${percent_match}" -ge 95 ]] && [[ "${coverage_match}" -ge ${ani_coverage_threshold} ]]; then
 			printf "%-20s: %-8s : %s\\n" "ANI" "SUCCESS" "${ani_info} against ${genusDB}"
 		else
-			printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "${percent_match}% is too low, ${ani_info}"
+			if [[ "${percent_match}" -lt 95 ]]; then
+				printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "${percent_match}% identity is too low, ${ani_info}"
+			elif [[ "${coverage_match}" -lt ${ani_coverage_threshold} ]]; then
+				printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "${coverage_match}% coverage is too low, ${ani_info}"
+			fi
 			status="FAILED"
 		fi
 	fi
 else
 	if [[ "${dec_genus}" == "" ]]; then
-		printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "Determine_TAXID did not discover a genus. Cant ANI on all samples, yet"
+		printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "Determine_TAXID did not discover a genus. Try run_ANI_REFSEQ.sh or run_ANI_OSII.sh"
 		status="FAILED"
 	elif [[ ! -d "${OUTDATADIR}/ANI/" ]]; then
 		printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "/ANI/ does not exist"
@@ -894,6 +900,91 @@ else
 		status="FAILED"
 	fi
 fi
+
+#Check ANI REFSEQ. Not fully implemented yet, so not causing a failure in reporting
+if [[ -f "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_${REFSEQ_date}).txt" ]]; then
+	#echo "ALL"
+	ani_info=$(head -n 1 "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_${REFSEQ_date}).txt")
+	percent_match=$(echo "${ani_info}" | cut -d'.' -f1)
+	coverage_match=$(echo "${ani_info}" | cut -d'-' -f2 | cut -d'.' -f1)
+	#echo "${percent_match--}"
+	if [[ "${percent_match}" = "0." ]]; then
+		printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "No assembly file to work with"
+		#status="FAILED"
+	else
+		if [[ "${percent_match}" -ge 95 ]] && [[ "${coverage_match}" -ge ${ani_coverage_threshold} ]]; then
+			printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "SUCCESS" "${ani_info} against ${REFSEQ_date}"
+		else
+			if [[ "${percent_match}" -lt 95 ]]; then
+				printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "${percent_match}% identity is too low, ${ani_info}"
+			elif [[ "${coverage_match}" -lt ${ani_coverage_threshold} ]]; then
+				printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "${coverage_match}% coverage is too low, ${ani_info}"
+			fi
+			#status="FAILED"
+		fi
+	fi
+else
+	# Old version found, should still be good, but would mark as an ALERT, maybe Warning
+	if [[ -f "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_REFSEQ*).txt" ]]; then
+		old_ani_file=$(find ${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_REFSEQ*).txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n)
+		old_ani_date=$(echo "${old_ani_file}" | rev | cut -d'_' -f1,2 | rev | cut -d'.' -f1)
+		old_ani_info=$(head -n1 "${old_ani_file}")
+		percent_match=$(echo "${old_ani_info}" | cut -d'.' -f1)
+		coverage_match=$(echo "${old_ani_info}" | cut -d'-' -f2 | cut -d'.' -f1)
+		if [[ "${percent_match}" = "0." ]]; then
+			printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "No assembly file to work with (REFSEQ database is out of date (${old_ani_date}), not ${REFSEQ_date})"
+			#status="FAILED"
+		else
+			if [[ "${percent_match}" -ge 95 ]] && [[ "${coverage_match}" -ge ${ani_coverage_threshold} ]]; then
+				printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "ALERT" "REFSEQ database is out of date (${old_ani_date}), not ${REFSEQ_date}. ${ani_info}"
+			else
+				if [[ "${percent_match}" -lt 95 ]]; then
+					printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "REFSEQ database is out of date (${old_ani_date}), ${percent_match}% identity is too low, ${ani_info}"
+				elif [[ "${coverage_match}" -lt ${ani_coverage_threshold} ]]; then
+					printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "REFSEQ database is out of date (${old_ani_date}), ${coverage_match}% coverage is too low, ${ani_info}"
+				fi
+				status="FAILED"
+			fi
+		fi
+	elif [[ ! -d "${OUTDATADIR}/ANI/" ]]; then
+		printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "/ANI/ does not exist"
+		#status="FAILED"
+	else
+		printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "NO REFSEQ ANI best_hits file"
+		#status="FAILED"
+	fi
+fi
+
+#Check ANI of OSII
+if [[ -f "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_OSII).txt" ]]; then
+	#echo "ALL"
+	ani_info=$(head -n 1 "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_OSII).txt")
+	percent_match=$(echo "${ani_info}" | cut -d'.' -f1)
+	coverage_match=$(echo "${ani_info}" | cut -d'-' -f2 | cut -d'.' -f1)
+	#echo "${percent_match--}"
+	if [[ "${percent_match}" = "0." ]]; then
+		printf "%-20s: %-8s : %s\\n" "ANI_OSII" "FAILED" "No assembly file to work with"
+		#status="FAILED"
+	else
+		if [[ "${percent_match}" -ge 95 ]] && [[ "${coverage_match}" -ge ${ani_coverage_threshold} ]]; then
+			printf "%-20s: %-8s : %s\\n" "ANI_OSII" "SUCCESS" "${ani_info} against OSII"
+		else
+			if [[ "${percent_match}" -lt 95 ]]; then
+				printf "%-20s: %-8s : %s\\n" "ANI_OSII" "FAILED" "${percent_match}% identity is too low, ${ani_info}"
+			elif [[ "${coverage_match}" -lt ${ani_coverage_threshold} ]]; then
+				printf "%-20s: %-8s : %s\\n" "ANI_OSII" "FAILED" "${coverage_match}% coverage is too low, ${ani_info}"
+			fi
+			#status="FAILED"
+		fi
+	fi
+elif [[ ! -d "${OUTDATADIR}/ANI/" ]]; then
+	printf "%-20s: %-8s : %s\\n" "ANI_OSII" "FAILED" "/ANI/ does not exist"
+	#status="FAILED"
+else
+	printf "%-20s: %-8s : %s\\n" "ANI_OSII" "FAILED" "No OSII ANI best_hits file"
+	#status="FAILED"
+fi
+
 
 #Check c-SSTAR
 if [[ -d "${OUTDATADIR}/c-sstar/" ]]; then
@@ -1125,11 +1216,7 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 		elif [ "${mlstype}" = "-" ] || [ "${mlstype}" = "SUB" ]; then
 			printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
 			report_info=$(echo "${info}" | cut -d' ' -f2-)
-
-			# New way to handle this sort of thing???
-			#echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-
+			echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 				status="WARNING"
 			fi
@@ -1156,11 +1243,7 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
 					printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
-
-					# New way to handle this sort of thing???
-					#echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-
+					echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
 					fi
@@ -1185,11 +1268,7 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
 					printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
-
-					# New way to handle this sort of thing???
-					#echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-
+					echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
 					fi
@@ -1223,11 +1302,7 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 		if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
 			printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
 			report_info=$(echo "${info}" | cut -d' ' -f2-)
-
-			# New way to handle this sort of thing???
-			#echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-			# New way to handle this sort of thing???
+			echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 				status="WARNING"
 			fi
@@ -1246,11 +1321,7 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
 					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
-
-					# New way to handle this sort of thing???
-					#echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-
+					echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
 					fi
@@ -1268,11 +1339,7 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
 					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
-
-					# New way to handle this sort of thing???
-					# echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-
+					echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
 					fi
@@ -1291,11 +1358,7 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
 					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
-
-					# New way to handle this sort of thing???
-					# echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-
+					echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
 					fi
@@ -1313,11 +1376,7 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
 					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
-
-					# New way to handle this sort of thing???
-					#echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-
+					echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
 					fi
@@ -1380,27 +1439,17 @@ if [[ -d "${OUTDATADIR}/16s/" ]]; then
 				fi
 			fi
 			#report_info=$(echo "${info_b}" | cut -d' ' -f2-)
-
-			# New way to handle this sort of thing???
-			#echo "${2}/${1}: 16s ID Warning - ${report_info}" >> "${src}/maintenance_To_Do.txt"
+			#echo "${2}/${1}: 16s ID Warning - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 
 		elif [ -z "${genus_b}" ]; then
 			printf "%-20s: %-8s : %s\\n" "16s_best_hit" "FAILED" "No genus found, Adding to maintenance_To_Do list"
 			report_info=$(echo "${info_b}" | cut -d' ' -f2-)
-
-			# New way to handle this sort of thing???
-			#echo "${2}/${1}: 16s ID Failure - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-
+			echo "${2}/${1}: 16s ID Failure - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			status="FAILED"
 		else
 			printf "%-20s: %-8s : %s\\n" "16s_best_hit" "FAILED" "Nothing found in ${1}_16s_blast_id.txt, Adding to maintenance_To_Do list"
 			report_info=$(echo "${info_l}" | cut -d' ' -f2-)
-
-			# New way to handle this sort of thing???
-			#echo "${2}/${1}: 16s ID Failure - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-
+			echo "${2}/${1}: 16s ID Failure - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			status="FAILED"
 		fi
 		info_l=$(tail -n 1 "${OUTDATADIR}/16s/${1}_16s_blast_id.txt")
@@ -1435,29 +1484,17 @@ if [[ -d "${OUTDATADIR}/16s/" ]]; then
 				fi
 			#printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "Warning" "Genus=${genus_l}, but no species found, Adding to maintenance_To_Do list"
 			#report_info=$(echo "${info_l}" | cut -d' ' -f2-)
-
-			# New way to handle this sort of thing???
-			#echo "${2}/${1}: 16s ID Warning - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-
+			#echo "${2}/${1}: 16s ID Warning - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			fi
 		elif [ -z "${genus_l}" ]; then
 			printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "FAILED" "no genus found, Adding to maintenance_To_Do list"
 			report_info=$(echo "${info_l}" | cut -d' ' -f2-)
-
-			# New way to handle this sort of thing???
-			# echo "${2}/${1}: 16s ID Failure - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-
+			echo "${2}/${1}: 16s ID Failure - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			status="FAILED"
 		else
 			printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "FAILED" "nothing found in ${1}_16s_blast_id.txt, Adding to maintenance_To_Do list"
 			report_info=$(echo "${info_l}" | cut -d' ' -f2-)
-
-			# New way to handle this sort of thing???
-			#echo "${2}/${1}: 16s ID Failure - ${report_info}" >> "${src}/maintenance_To_Do.txt"
-
-
+			echo "${2}/${1}: 16s ID Failure - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			status="FAILED"
 		fi
 	else
@@ -1520,12 +1557,7 @@ fi
 echo "---------- ${1} completed as ${status} ----------"
 
 if [ "${status}" = "WARNING" ] || [ "${status}" = "FAILED" ]; then
-	:
-
-	# New way to handle this sort of thing???
-	#echo "${2}/${1}: ${status}" >> "${src}/maintenance_To_Do.txt"
-
-
+	echo "${2}/${1}: ${status}" >> "${shareScript}/maintenance_To_Do.txt"
 fi
 
 

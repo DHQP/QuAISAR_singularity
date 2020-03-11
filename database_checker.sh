@@ -144,10 +144,39 @@ if [[ ! -d "${local_DBs}/kraken" ]]; then
 fi
 
 # All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
-	# ANI sketch file / aniDB (150MBs/1.3Gbs)
-	# star (6 Mbs)
-	# custom singularity images (3.6GBs)
-	# individual Files (21 KBs)
+
+# ANI sketch file / aniDB (150MBs/1.3Gbs)
+if [[ ! -d "${local_DBs}/ANI" ]]; then
+	cp -r /container_DBs/ANI ${local_DBs}
+fi
+
+# star (6 Mbs)
+if [[ ! -d "${local_DBs}/star" ]]; then
+	cp -r /container_DBs/star ${local_DBs}
+fi
+
+# custom singularity images (3.6GBs)
+if [[ ! -d "${local_DBs}/custom_singularities" ]]; then
+	cp -r /container_DBs/custom_singularities ${local_DBs}
+fi
+
+if [[ ! -d "${local_DBs}/MMB_Bugs.txt" ]]; then
+	cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
+fi
+
+if [[ ! -d "${local_DBs}/taxes.csv" ]]; then
+	cp -r /container_DBs/taxes.csv ${local_DBs}
+fi
+
+if [[ ! -d "${local_DBs}/phiX.fasta" ]]; then
+	cp -r /container_DBs/phiX.fasta ${local_DBs}
+fi
+
+if [[ ! -d "${local_DBs}/adapters.fasta" ]]; then
+	cp -r /container_DBs/adapters.fasta ${local_DBs}
+fi
+
+# individual Files (21 KBs)
 		#phiX (6 KBs)
 		#Adapters (6KBs)
 		#taxes (3KBs)
