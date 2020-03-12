@@ -106,7 +106,7 @@ unclass_flag=30
 contamination_threshold=25
 # MiniKraken DB (smaller, but effective option)
 kraken_DB_path="${local_DBs}/kraken/minikraken_20171019_4GB"
-kraken_DB=$(echo "${kraken_DB_path}" | rev | cut -d'/' -f2 | rev)
+kraken_DB=$(echo "${kraken_DB_path}" | rev | cut -d'/' -f1 | rev)
 
 
 ##### gottcha #####

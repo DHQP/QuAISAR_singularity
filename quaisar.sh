@@ -659,7 +659,7 @@ for isolate in "${isolate_list[@]}"; do
 			if [ "${ribosome}" = "16S" ]; then
 				# Replace with subsequence once it can handle multi-fastas
 				#make_fasta $1 $2 $contig $cstart $cstop
-				python3 ${src}/get_subsequence.py -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" -s ${cstart} -e ${cstop} -t ${contig} -o "${contig} 16s-${lines}" >> ${SAMPDATADIR}/16s/${isolate_name}_16s_rna_seqs.txt
+				python3 ${src}/get_subsequence.py -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" -s ${cstart} -e ${cstop} -t ${contig} -o "${contig} 16s-${lines}" >> ${SAMPDATADIR}/16s/${isolate_name}_16s_rna_seqs_${lines}.txt
 				found_16s="true"
 			fi
 		fi
@@ -828,6 +828,7 @@ for isolate in "${isolate_list[@]}"; do
 	timeQCcheck=$((end - start))
 	echo "QC Check of Assembly - ${timeQCcheck} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + timeQCcheck))
+	cd "${owd}"
 
 	### Prokka on assembly ###
 	echo "----- Running Prokka on Assembly -----"
