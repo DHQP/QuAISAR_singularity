@@ -137,24 +137,24 @@ fi
 
 ##### Currently down.....and has been a while
 # Check to see if gottcha database is installed
-# if [[ ! -d "${local_DBs}/gottcha" ]]; then
-# 	mkdir -p "${local_DBs}/gottcha"
-# 	wget -p "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
-# 	tar -xvzf "${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
-# fi
+ if [[ ! -d "${local_DBs}/gottcha" ]]; then
+ 	mkdir -p "${local_DBs}/gottcha"
+ 	wget -P "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+ 	tar -xvzf "${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+ fi
 
-# Possible solution to gottchaV1 not working
-if [[ ! -d "${local_DBs}/gottcha2" ]]; then
-	mkdir "${local_DBs}/gottcha2"
-	wget -O ${local_DBs}/gottcha2/taxdump.tar.gz https://edge-dl.lanl.gov/GOTTCHA2/RefSeq-Release90/taxdump.tar.gz
-	wget https://edge-dl.lanl.gov/GOTTCHA2/RefSeq-Release90/RefSeq-r90.cg.BacteriaArchaeaViruses.species.fna.tar
-	tar -xf RefSeq-r90.cg.BacteriaArchaeaViruses.species.fna.tar -C ${local_DBs}/gottcha2
-fi
+# # Possible solution to gottchaV1 not working
+# if [[ ! -d "${local_DBs}/gottcha2" ]]; then
+# 	mkdir "${local_DBs}/gottcha2"
+# 	wget -O ${local_DBs}/gottcha2/taxdump.tar.gz https://edge-dl.lanl.gov/GOTTCHA2/RefSeq-Release90/taxdump.tar.gz
+# 	wget https://edge-dl.lanl.gov/GOTTCHA2/RefSeq-Release90/RefSeq-r90.cg.BacteriaArchaeaViruses.species.fna.tar
+# 	tar -xf RefSeq-r90.cg.BacteriaArchaeaViruses.species.fna.tar -C ${local_DBs}/gottcha2
+# fi
 
 # Check to see if kraken mini database is installed
 if [[ ! -d "${local_DBs}/kraken" ]]; then
 	mkdir -p "${local_DBs}/kraken"
-	wget -p "${local_DBs}/kraken" "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+	wget -P "${local_DBs}/kraken" "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
 	tar -xvf "${local_DBs}/kraken/minikraken_20171019_4GB.tgz"
 fi
 
