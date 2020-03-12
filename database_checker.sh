@@ -132,15 +132,18 @@ if [[ ! -d "${local_DBs}/BUSCO" ]]; then
 	if [[ ! -d "${local_DBs}/actinobacteria_class_odb10.2019-04-24" ]]; then
 		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/actinobacteria_class_odb10.2019-04-24.tar.gz"
 	fi
-	tar -vfx ${local_DBs}/BUSCO/*.tar.gz
+	tar -vzfx ${local_DBs}/BUSCO/*.tar.gz
 fi
 
 ##### Currently down.....and has been a while
 # Check to see if gottcha database is installed
  if [[ ! -d "${local_DBs}/gottcha" ]]; then
  	mkdir -p "${local_DBs}/gottcha"
- 	wget -P "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
- 	tar -xvzf "${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+	# Original LANL hosted address that has been down a good while
+ 	#wget -P "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+	# Temporary mirror until original is fixed
+	wget -O ${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz "${local_DBs}/gottcha" "https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz?download=1"	
+	tar -xvzf "${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
  fi
 
 # # Possible solution to gottchaV1 not working
@@ -155,15 +158,15 @@ fi
 if [[ ! -d "${local_DBs}/kraken" ]]; then
 	mkdir -p "${local_DBs}/kraken"
 	wget -P "${local_DBs}/kraken" "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
-	tar -xvf "${local_DBs}/kraken/minikraken_20171019_4GB.tgz"
+	tar -xzvf "${local_DBs}/kraken/minikraken_20171019_4GB.tgz"
 fi
 
 # All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
 
-# ANI sketch file / aniDB (150MBs/1.3Gbs)
-if [[ ! -d "${local_DBs}/ANI" ]]; then
-	cp -r /container_DBs/ANI ${local_DBs}
-fi
+# # ANI sketch file / aniDB (150MBs/1.3Gbs)
+# if [[ ! -d "${local_DBs}/ANI" ]]; then
+# 	cp -r /container_DBs/ANI ${local_DBs}
+# fi
 
 # star (6 Mbs)
 if [[ ! -d "${local_DBs}/star" ]]; then
