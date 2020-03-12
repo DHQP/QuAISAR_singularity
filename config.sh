@@ -29,8 +29,6 @@ output_dir="/raid5/MiSeqAnalysisFiles"
 src="$(pwd)"
 # Local databases that are necessary for pipeline...ANI, BUSCO, star, adapters, phiX
 local_DBs="/raid5/QuAISAR_databases"
-# Location of custom singularity images
-local_singularities="/raid5/custom_singularities"
 # Number of processors requested by numerous applications within the pipeline
 procs=12 # Number of processors
 
@@ -107,13 +105,14 @@ unclass_flag=30
 # Will throw a warning flag during run summary if percent of 2nd organism is above this value
 contamination_threshold=25
 # MiniKraken DB (smaller, but effective option)
-kraken_DB_path="${local_DBs}/minikraken_20171019_4GB"
+kraken_DB_path="${local_DBs}/kraken/minikraken_20171019_4GB"
 kraken_DB=$(echo "${kraken_DB_path}" | rev | cut -d'/' -f2 | rev)
 
 
 ##### gottcha #####
 # gottcha DB
-gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30__xHUMAN3x.species"
+gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species"
+#gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30__xHUMAN3x.species"
 gottcha_DB=$(echo ${gottcha_DB_path} | rev | cut -d'/' -f1 | rev)
 
 
