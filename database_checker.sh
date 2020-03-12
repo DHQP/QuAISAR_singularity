@@ -132,21 +132,30 @@ if [[ ! -d "${local_DBs}/BUSCO" ]]; then
 	if [[ ! -d "${local_DBs}/actinobacteria_class_odb10.2019-04-24" ]]; then
 		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/actinobacteria_class_odb10.2019-04-24.tar.gz"
 	fi
-	gunzip ${local_DBs}/BUSCO/*.gz
+	tar -vfx ${local_DBs}/BUSCO/*.tar.gz
 fi
 
+##### Currently down.....and has been a while
 # Check to see if gottcha database is installed
-if [[ ! -d "${local_DBs}/gottcha" ]]; then
-	mkdir -p "${local_DBs}/gottcha"
-	wget -p "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
-	tar -xvzf "${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+# if [[ ! -d "${local_DBs}/gottcha" ]]; then
+# 	mkdir -p "${local_DBs}/gottcha"
+# 	wget -p "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+# 	tar -xvzf "${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+# fi
+
+# Possible solution to gottchaV1 not working
+if [[ ! -d "${local_DBs}/gottcha2" ]]; then
+	mkdir "${local_DBs}/gottcha2"
+	wget -O ${local_DBs}/gottcha2/taxdump.tar.gz https://edge-dl.lanl.gov/GOTTCHA2/RefSeq-Release90/taxdump.tar.gz
+	wget https://edge-dl.lanl.gov/GOTTCHA2/RefSeq-Release90/RefSeq-r90.cg.BacteriaArchaeaViruses.species.fna.tar
+	tar -xf RefSeq-r90.cg.BacteriaArchaeaViruses.species.fna.tar -C ${local_DBs}/gottcha2
 fi
 
 # Check to see if kraken mini database is installed
 if [[ ! -d "${local_DBs}/kraken" ]]; then
 	mkdir -p "${local_DBs}/kraken"
 	wget -p "${local_DBs}/kraken" "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
-	tar -xvzf "${local_DBs}/kraken/minikraken_20171019_4GB.tgz"
+	tar -xvf "${local_DBs}/kraken/minikraken_20171019_4GB.tgz"
 fi
 
 # All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
