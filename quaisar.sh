@@ -673,7 +673,7 @@ for isolate in "${isolate_list[@]}"; do
 	# Blasts the NCBI database to find the closest hit to every entry in the 16s fasta list
 	###### MAX_TARGET_SEQS POSSIBLE ERROR
 	line_inc=0
-	while [[ -f ${isolate_name}_16s_rna_seq_${line_inc}.txt ]]; do
+	while [[ -f ${SAMPDATADIR}/16s/${isolate_name}_16s_rna_seq_${line_inc}.txt ]]; do
 		echo "Blasting ${isolate_name}_16s_rna_seq_${line_inc}.txt"
 		singularity exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularities/blast-2.9.0-docker.img blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 1 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seqs.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname"
 		echo "singularity exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularities/blast-2.9.0-docker.img blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 1 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seqs.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN -outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname"
@@ -872,7 +872,7 @@ for isolate in "${isolate_list[@]}"; do
 	cp "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${SAMPDATADIR}/ANI/localANIDB_REFSEQ/sample.fasta"
 
 	#mash dist "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${REFSEQ}" > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
-	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/mash:2.2.2--h3d38be6_1 mash dist SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta /DATABASES/${REFSEQ} > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
+	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/mash:2.2.2--h3d38be6_1 mash dist /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta /DATABASES/${REFSEQ} > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
 
 	sort -k3 -n -o "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash_sorted.dists" "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
 	rm "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
