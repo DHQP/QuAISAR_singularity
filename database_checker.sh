@@ -15,7 +15,7 @@ fi
 #
 # Description: Script checks for all databases used by QuAISAR pipeline and sets up any missing ones
 #
-# Usage ./database_checker.sh
+# Usage ./database_checker.sh -path_to_config_file
 #
 # Output location: ${local_DBs} in config file
 #
@@ -25,6 +25,12 @@ fi
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
+
+if [[ ! -f "${1}" ]]; then
+	echo "No config file...exiting"
+else
+	. "${1}"
+fi
 
 # Check for parent directory
 if [[ ! -d ${local_DBs} ]]; then
