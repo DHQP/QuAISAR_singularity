@@ -651,18 +651,16 @@ for isolate in "${isolate_list[@]}"; do
 	lines=0
 	found_16s="false"
 	while IFS='' read -r line || [ -n "$line" ]; do
-		if [ ${lines} -gt 0 ]; then
-			contig=$(echo ${line} | cut -d' ' -f1)
-			cstart=$(echo ${line} | cut -d' ' -f4)
-			cstop=$(echo ${line} | cut -d' ' -f5)
-			ribosome=$(echo ${line} | cut -d' ' -f9 | cut -d'=' -f3)
-			if [ "${ribosome}" = "16S" ]; then
-				# Replace with subsequence once it can handle multi-fastas
-				#make_fasta $1 $2 $contig $cstart $cstop
-				python3 ${src}/get_subsequence.py -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" -s ${cstart} -e ${cstop} -t ${contig} -o "${contig} 16s-${lines}" >> ${SAMPDATADIR}/16s/${isolate_name}_16s_rna_seqs_${lines}.txt
-				found_16s="true"
-				lines=$((lines + 1))
-			fi
+		contig=$(echo ${line} | cut -d' ' -f1)
+		cstart=$(echo ${line} | cut -d' ' -f4)
+		cstop=$(echo ${line} | cut -d' ' -f5)
+		ribosome=$(echo ${line} | cut -d' ' -f9 | cut -d'=' -f3)
+		if [ "${ribosome}" = "16S" ]; then
+			# Replace with subsequence once it can handle multi-fastas
+			#make_fasta $1 $2 $contig $cstart $cstop
+			python3 ${src}/get_subsequence.py -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" -s ${cstart} -e ${cstop} -t ${contig} -o "${contig} 16s-${lines}" >> ${SAMPDATADIR}/16s/${isolate_name}_16s_rna_seqs_${lines}.txt
+			found_16s="true"
+			lines=$((lines + 1))
 		fi
 	done < "${SAMPDATADIR}/16s/${isolate_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta"
 
@@ -874,7 +872,7 @@ for isolate in "${isolate_list[@]}"; do
 	cp "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${SAMPDATADIR}/ANI/localANIDB_REFSEQ/sample.fasta"
 
 	#mash dist "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${REFSEQ}" > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
-	singularity -s exec -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/mash:2.2.2--h3d38be6_1 mash dist "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" /DATABASES/${REFSEQ} > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
+	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/mash:2.2.2--h3d38be6_1 mash dist SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta /DATABASES/${REFSEQ} > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
 
 	sort -k3 -n -o "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash_sorted.dists" "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
 	rm "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
@@ -940,8 +938,7 @@ for isolate in "${isolate_list[@]}"; do
 		busco_found=0
 		for tax in $species $genus $family $order $class $phylum $kingdom $domain
 		do
-			if [ -d "${local_DBs}/BUSCO/${tax,}_odb10"* ]
-			then
+			if [ -d "${local_DBs}/BUSCO/${tax,}_odb10"* ]; then
 				buscoDB="${tax,}_odb10"
 				busco_found=1
 				break
