@@ -472,14 +472,14 @@ for isolate in "${isolate_list[@]}"; do
 			mkdir -p "${SAMPDATADIR}/kraken/preAssembly"
 		fi
 		# Run kraken
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --paired --db /DATABASES/${kraken_DB}  --preload --fastq-input --threads 4 --output /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken --classified-out /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.classified /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --paired --db /DATABASES/kraken/${kraken_DB}  --preload --fastq-input --threads 4 --output /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken --classified-out /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.classified /SAMPDIR/trimmed/${isolate_name}_R1_001.paired.fq /SAMPDIR/trimmed/${isolate_name}_R2_001.paired.fq
 		echo "kraken:1.0 -- kraken --paired --db ${local_DBs}/${kraken_DB}  --preload --fastq-input --threads 4 --output ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.kraken --classified-out ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.classified ${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq ${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" >> "${log_file}"
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa"
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa"
 		echo "kraken:1.0 -- kraken-mpa-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.kraken > ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa" >> "${log_file}"
 		python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.mpa" -k "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.krona"
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.krona -o /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.html
 		echo "krona:2.7 -- ktImportText ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.krona -o ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.html" >> "${log_file}"
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.list"
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.list"
 		echo "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.kraken > ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.list" >> ${log_file}
 		"${src}/best_hit_from_kraken.sh" "${isolate_name}" "pre" "paired" "${PROJECT}" "kraken"
 		# Get end time of kraken on reads and calculate run time and append to time summary (and sum to total time used)
@@ -493,8 +493,8 @@ for isolate in "${isolate_list[@]}"; do
 		# Get start time of gottcha
 		start=$SECONDS
 		# run gottcha
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DBs ${local_DBs}/singularities/gottcha.simg gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DBs/${gottcha_DB}
-		echo "gottcha:1.0b -- gottcha.pl --mode all --outdir ${SAMPDATADIR}/gottcha/gottcha_S --input ${SAMPDATADIR}/trimmed/${isolate_name}.paired.fq --database ${local_DBs}/${gottcha_DB}" >> ${log_file}
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DBs ${local_DBs}/singularities/gottcha.simg gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DBs/gottcha/${gottcha_DB}
+		echo "gottcha:1.0b -- gottcha.pl --mode all --outdir ${SAMPDATADIR}/gottcha/gottcha_S --input ${SAMPDATADIR}/trimmed/${isolate_name}.paired.fq --database ${local_DBs}/gottcha/${gottcha_DB}" >> ${log_file}
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/gottcha/gottcha_S/${isolate_name}_temp/${isolate_name}.lineage.tsv -o /SAMPDIR/gottcha/${isolate_name}_species.krona.html
 		echo "krona:2.7 -- ktImportText ${SAMPDATADIR}/gottcha/gottcha_S/${isolate_name}_temp/${isolate_name}.lineage.tsv -o ${SAMPDATADIR}/gottcha/${isolate_name}_species.krona.html" >> "${log_file}"
 
@@ -597,25 +597,25 @@ for isolate in "${isolate_list[@]}"; do
 		mkdir -p "${SAMPDATADIR}/kraken/postAssembly"
 	fi
 	# Run kraken on assembly
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/${kraken_DB}  --preload --threads ${procs} --output /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken --classified-out /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.classified /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken --db /DATABASES/kraken/${kraken_DB}  --preload --threads ${procs} --output /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken --classified-out /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.classified /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
 	echo "kraken:1.0 -- kraken --db ${local_DBs}/${kraken_DB}  --preload --threads ${procs} --output ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken --classified-out ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.classified ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"  >> "${log_file}"
 	python3 ${src}/Kraken_Assembly_Converter_2_Exe.py -i "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa
   echo "kraken:1.0 -- kraken-mpa-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa" >> "${log_file}"
 	python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa" -k "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.krona"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list"
 	echo "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list" >> "${log_file}"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted.krona -o /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted_BP_krona.html
 	echo "krona:2.7 -- ktImportText ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.krona -o ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted_BP_krona.html" >> "${log_file}"
 	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled_BP" "${PROJECT}" "kraken"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
 	echo "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/${isolate_name}_assembled.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list" >> "${log_file}"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa"
 	echo "kraken:1.0 -- kraken-mpa-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa" >> "${log_file}"
 	python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa" -k "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.krona"
 	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.krona -o /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.html
 	echo "krona:2.7 -- ktImportText ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.krona -o ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.html" >> "${log_file}"
-	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
+	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
 	echo "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list" >> "${log_file}"
 	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled" "${PROJECT}" "kraken"
 	# Get end time of kraken on assembly and calculate run time and append to time summary (and sum to total time used)
@@ -661,9 +661,9 @@ for isolate in "${isolate_list[@]}"; do
 				#make_fasta $1 $2 $contig $cstart $cstop
 				python3 ${src}/get_subsequence.py -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" -s ${cstart} -e ${cstop} -t ${contig} -o "${contig} 16s-${lines}" >> ${SAMPDATADIR}/16s/${isolate_name}_16s_rna_seqs_${lines}.txt
 				found_16s="true"
+				lines=$((lines + 1))
 			fi
 		fi
-		lines=$((lines + 1))
 	done < "${SAMPDATADIR}/16s/${isolate_name}_scaffolds_trimmed.fasta_rRNA_seqs.fasta"
 
 	# Adds No hits found to output file in the case where no 16s ribosomal sequences were found
@@ -760,49 +760,49 @@ for isolate in "${isolate_list[@]}"; do
 	echo "16S - ${time16s} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + time16s))
 
-	# Get taxonomy from currently available files (Only ANI, has not been run...yet, will change after discussions)
-	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
-	# Capture the anticipated taxonomy of the sample using kraken on assembly output
-	echo "----- Extracting Taxonomy from Taxon Summary -----"
-	# Checks to see if the kraken on assembly completed successfully
-	if [ -s "${SAMPDATADIR}/${isolate_name}.tax" ]; then
-		# Read each line of the kraken summary file and pull out each level  taxonomic unit and store for use later in busco and ANI
-		while IFS= read -r line  || [ -n "$line" ]; do
-			# Grab first letter of line (indicating taxonomic level)
-			first=${line::1}
-			# Assign taxonomic level value from 4th value in line (1st-classification level,2nd-% by kraken, 3rd-true % of total reads, 4th-identifier)
-			if [ "${first}" = "s" ]
-			then
-				species=$(echo "${line}" | awk -F '	' '{print $2}')
-			elif [ "${first}" = "G" ]
-			then
-				genus=$(echo "${line}" | awk -F ' ' '{print $2}')
-			elif [ "${first}" = "F" ]
-			then
-				family=$(echo "${line}" | awk -F ' ' '{print $2}')
-			elif [ "${first}" = "O" ]
-			then
-				order=$(echo "${line}" | awk -F ' ' '{print $2}')
-			elif [ "${first}" = "C" ]
-			then
-				class=$(echo "${line}" | awk -F ' ' '{print $2}')
-			elif [ "${first}" = "P" ]
-			then
-				phylum=$(echo "${line}" | awk -F ' ' '{print $2}')
-			elif [ "${first}" = "K" ]
-			then
-				kingdom=$(echo "${line}" | awk -F ' ' '{print $2}')
-			elif [ "${first}" = "D" ]
-			then
-				domain=$(echo "${line}" | awk -F ' ' '{print $2}')
-			fi
-		done < "${SAMPDATADIR}/${isolate_name}.tax"
-		# Print out taxonomy for confirmation/fun
-		echo "Taxonomy - ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species}"
-		# If no kraken summary file was found
-	else
-		echo "No Taxonomy output available to make best call from, skipped"
-	fi
+	# # Get taxonomy from currently available files (Only ANI, has not been run...yet, will change after discussions)
+	# "${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
+	# # Capture the anticipated taxonomy of the sample using kraken on assembly output
+	# echo "----- Extracting Taxonomy from Taxon Summary -----"
+	# # Checks to see if the kraken on assembly completed successfully
+	# if [ -s "${SAMPDATADIR}/${isolate_name}.tax" ]; then
+	# 	# Read each line of the kraken summary file and pull out each level  taxonomic unit and store for use later in busco and ANI
+	# 	while IFS= read -r line  || [ -n "$line" ]; do
+	# 		# Grab first letter of line (indicating taxonomic level)
+	# 		first=${line::1}
+	# 		# Assign taxonomic level value from 4th value in line (1st-classification level,2nd-% by kraken, 3rd-true % of total reads, 4th-identifier)
+	# 		if [ "${first}" = "s" ]
+	# 		then
+	# 			species=$(echo "${line}" | awk -F '	' '{print $2}')
+	# 		elif [ "${first}" = "G" ]
+	# 		then
+	# 			genus=$(echo "${line}" | awk -F ' ' '{print $2}')
+	# 		elif [ "${first}" = "F" ]
+	# 		then
+	# 			family=$(echo "${line}" | awk -F ' ' '{print $2}')
+	# 		elif [ "${first}" = "O" ]
+	# 		then
+	# 			order=$(echo "${line}" | awk -F ' ' '{print $2}')
+	# 		elif [ "${first}" = "C" ]
+	# 		then
+	# 			class=$(echo "${line}" | awk -F ' ' '{print $2}')
+	# 		elif [ "${first}" = "P" ]
+	# 		then
+	# 			phylum=$(echo "${line}" | awk -F ' ' '{print $2}')
+	# 		elif [ "${first}" = "K" ]
+	# 		then
+	# 			kingdom=$(echo "${line}" | awk -F ' ' '{print $2}')
+	# 		elif [ "${first}" = "D" ]
+	# 		then
+	# 			domain=$(echo "${line}" | awk -F ' ' '{print $2}')
+	# 		fi
+	# 	done < "${SAMPDATADIR}/${isolate_name}.tax"
+	# 	# Print out taxonomy for confirmation/fun
+	# 	echo "Taxonomy - ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species}"
+	# 	# If no kraken summary file was found
+	# else
+	# 	echo "No Taxonomy output available to make best call from, skipped"
+	# fi
 
 	### Check quality of Assembly ###
 	echo "----- Running quality checks on Assembly -----"
@@ -873,8 +873,8 @@ for isolate in "${isolate_list[@]}"; do
 	#Copies the samples assembly contigs to the local ANI db folder
 	cp "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${SAMPDATADIR}/ANI/localANIDB_REFSEQ/sample.fasta"
 
-	mash dist "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${REFSEQ}" > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
-	singularity -s exec docker://quay.io/biocontainers/mash:2.2.2--h3d38be6_1 mash dist "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${REFSEQ}" > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
+	#mash dist "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${REFSEQ}" > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
+	singularity -s exec -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/mash:2.2.2--h3d38be6_1 mash dist "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" /DATABASES/${REFSEQ} > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
 
 	sort -k3 -n -o "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash_sorted.dists" "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
 	rm "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
