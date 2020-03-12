@@ -32,8 +32,8 @@ if [[ ! -d ${local_DBs} ]]; then
 fi
 
 # Check for BUSCO
-if [[ ! -d "${local_DBs}/BUSCO"" ]]; then
-	mkdir -p "${local_DBs}/BUSCO""
+if [[ ! -d "${local_DBs}/BUSCO" ]]; then
+	mkdir -p "${local_DBs}/BUSCO"
 	# Check for top level bacteria database
 	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
 		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/bacteria_odb10.2019-06-26.tar.gz"
