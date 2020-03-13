@@ -41,7 +41,7 @@ fi
 
 # Check for BUSCO
 if [[ ! -d "${local_DBs}/BUSCO" ]]; then
-	mkdir
+	mkdir "${local_DBs}/BUSCO"
 	cd "${local_DBs}/BUSCO"
 	# Check for top level bacteria database
 	if [[ ! -d "${local_DBs}/bacteria_odb10.2019-06-26" ]]; then
