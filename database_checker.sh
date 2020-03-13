@@ -138,6 +138,7 @@ if [[ ! -d "${local_DBs}/BUSCO" ]]; then
 	for file in ${local_DBs}/BUSCO/*.gz; do
 		tar xzf ${file}
 	done
+	rm *tar.gz
 fi
 
 ##### Currently down.....and has been a while
@@ -148,10 +149,10 @@ fi
 	# Original LANL hosted address that has been down a good while
  	#wget -P "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
 	# Temporary mirror until original is fixed
-	wget "https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz?download=1"
-	chmod 777 GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz
-	tar xzf GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz
-	rm GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz
+	wget "https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz"
+	tar xzf gottcha_bac_arc_v1.tar.gz
+	rm gottcha_bac_arc_v1.tar.gz
+	mv gottcha_db gottcha
  fi
 
 # # Possible solution to gottchaV1 not working
@@ -164,9 +165,9 @@ fi
 
 # Check to see if kraken mini database is installed
 if [[ ! -d "${local_DBs}/kraken" ]]; then
-	cd "${local_DBs}"
+	mkdir "${local_DBs}/kraken"
+	cd "${local_DBs}/kraken"
 	wget "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
-	chmod 777 minikraken_20171019_4GB.tgz
 	tar xzf minikraken_20171019_4GB.tgz
 	rm minikraken_20171019_4GB.tgz
 fi
