@@ -34,9 +34,6 @@ fi
 
 echo "${local_DBs}"
 
-exit
-
-
 # Check for parent directory
 if [[ ! -d ${local_DBs} ]]; then
 	mkdir -p ${local_DBs}
