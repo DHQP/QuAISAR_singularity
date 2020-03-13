@@ -136,7 +136,7 @@ if [[ ! -d "${local_DBs}/BUSCO" ]]; then
 		wget "http://busco-data.ezlab.org/v4/data/lineages/actinobacteria_class_odb10.2019-04-24.tar.gz"
 	fi
 	for file in ${local_DBs}/BUSCO/*.gz; do
-		tar ${file}
+		tar xzf ${file}
 	done
 fi
 
