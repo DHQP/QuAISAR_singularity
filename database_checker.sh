@@ -144,15 +144,16 @@ fi
 ##### Currently down.....and has been a while
 # Check to see if gottcha database is installed
  if [[ ! -d "${local_DBs}/gottcha" ]]; then
- 	mkdir -p "${local_DBs}/gottcha"
-	cd "${local_DBs}"
+  cd "${local_DBs}"
 	# Original LANL hosted address that has been down a good while
  	#wget -P "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
 	# Temporary mirror until original is fixed
 	wget "https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz"
 	tar xzf gottcha_bac_arc_v1.tar.gz
 	rm gottcha_bac_arc_v1.tar.gz
-	mv gottcha_db gottcha
+	mv gottcha/gottcha_db ./
+	rm -r gottcha
+	mv gottcha_db gottcha 
  fi
 
 # # Possible solution to gottchaV1 not working
