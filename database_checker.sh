@@ -153,7 +153,8 @@ fi
 	rm gottcha_bac_arc_v1.tar.gz
 	mv gottcha/gottcha_db ./
 	rm -r gottcha
-	mv gottcha_db gottcha 
+	mv gottcha_db gottcha
+	rm gottcha.dbprofile.out
  fi
 
 # # Possible solution to gottchaV1 not working
