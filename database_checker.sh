@@ -135,6 +135,7 @@ if [[ ! -d "${local_DBs}/BUSCO" ]]; then
 		wget -P "${local_DBs}/BUSCO" "http://busco-data.ezlab.org/v4/data/lineages/actinobacteria_class_odb10.2019-04-24.tar.gz"
 	fi
 	chmod 777 ${local_DBs}/BUSCO/*.tar.gz
+	tar xzf ${local_DBs}/BUSCO/*.tar.gz --directory ${local_DBs}/BUSCO
 fi
 
 ##### Currently down.....and has been a while
