@@ -493,7 +493,7 @@ for isolate in "${isolate_list[@]}"; do
 		# Get start time of gottcha
 		start=$SECONDS
 		# run gottcha
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DBs ${local_DBs}/singularities/gottcha.simg gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DBs/gottcha/${gottcha_DB}
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DATABASES ${local_DBs}/singularities/gottcha.simg gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DATABASES/gottcha/${gottcha_DB}
 		echo "gottcha:1.0b -- gottcha.pl --mode all --outdir ${SAMPDATADIR}/gottcha/gottcha_S --input ${SAMPDATADIR}/trimmed/${isolate_name}.paired.fq --database ${local_DBs}/gottcha/${gottcha_DB}" >> ${log_file}
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/gottcha/gottcha_S/${isolate_name}_temp/${isolate_name}.lineage.tsv -o /SAMPDIR/gottcha/${isolate_name}_species.krona.html
 		echo "krona:2.7 -- ktImportText ${SAMPDATADIR}/gottcha/gottcha_S/${isolate_name}_temp/${isolate_name}.lineage.tsv -o ${SAMPDATADIR}/gottcha/${isolate_name}_species.krona.html" >> "${log_file}"
@@ -895,10 +895,13 @@ for isolate in "${isolate_list[@]}"; do
 			echo "Trying - wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/${alpha}/${beta}/${charlie}/${filename}/${filename}_genomic.fna.gz -P ${SAMPDATADIR}/ANI/localANIDB_REFSEQ"
 			wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/${alpha}/${beta}/${charlie}/${filename}/${filename}_genomic.fna.gz -P ${SAMPDATADIR}/ANI/localANIDB_REFSEQ
 			#curl --remote-name --remote-time "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/${alpha}/${beta}/${charlie}/${filename}/${filename}_genomic.fna.gz"
+
 		else
 			break
 		fi
 	done < ${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash_sorted.dists
+
+	mv ${src}/*_genomic.fna.gz "${SAMPDATADIR}/ANI/localANIDB_REFSEQ/"
 
 	"${shareScript}/append_taxonomy_to_ncbi_assembly_filenames.sh" "${SAMPDATADIR}/ANI/localANIDB_REFSEQ"
 	gunzip ${SAMPDATADIR}/ANI/localANIDB_REFSEQ/*.gz
