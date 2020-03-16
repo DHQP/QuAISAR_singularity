@@ -675,8 +675,8 @@ for isolate in "${isolate_list[@]}"; do
 	line_inc=0
 	while [[ -f ${SAMPDATADIR}/16s/${isolate_name}_16s_rna_seq_${line_inc}.txt ]]; do
 		echo "Blasting ${isolate_name}_16s_rna_seq_${line_inc}.txt"
-		singularity exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularities/blast-2.9.0-docker.img blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 1 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seqs.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname"
-		echo "singularity exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularities/blast-2.9.0-docker.img blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 1 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seqs.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN -outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname"
+		singularity exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularities/blast-2.9.0-docker.img blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 1 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seq_${line_inc}.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN_${line_inc} -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname"
+		echo "singularity exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularities/blast-2.9.0-docker.img blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 1 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seq_${line_inc}.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN_${line_inc} -outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname"
 		line_inc=$(( line_inc + 1 ))
 	done
 
@@ -875,7 +875,7 @@ for isolate in "${isolate_list[@]}"; do
 	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/mash:2.2.2--h3d38be6_1 mash dist /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta /DATABASES/ANI/REFSEQ_${REFSEQ_date}.msh > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
 
 	sort -k3 -n -o "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash_sorted.dists" "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
-	rm "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
+	#rm "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
 
 	cutoff=$(head -n${max_ani_samples} "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash_sorted.dists" | tail -n1 | cut -d'	' -f3)
 
@@ -933,7 +933,7 @@ for isolate in "${isolate_list[@]}"; do
 		start=$SECONDS
 		# Set default busco database as bacteria in event that we dont have a database match for sample lineage
 		buscoDB="bacteria_odb10"
-		buscoDB=$(find ${local_DBs}/BUSCO/ -type d -name "bacteria_odb1"*)
+		#buscoDB=$(find ${local_DBs}/BUSCO/ -type d -name "bacteria_odb1"*)
 		# Iterate through taxon levels (species to domain) and test if a match occurs to entry in database. If so, compare against it
 		busco_found=0
 		for tax in $species $genus $family $order $class $phylum $kingdom $domain
