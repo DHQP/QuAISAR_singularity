@@ -901,9 +901,9 @@ for isolate in "${isolate_list[@]}"; do
 		fi
 	done < ${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash_sorted.dists
 
-	mv ${src}/*_genomic.fna.gz "${SAMPDATADIR}/ANI/localANIDB_REFSEQ/"
+	#mv ${src}/*_genomic.fna.gz "${SAMPDATADIR}/ANI/localANIDB_REFSEQ/"
 
-	"${shareScript}/append_taxonomy_to_ncbi_assembly_filenames.sh" "${SAMPDATADIR}/ANI/localANIDB_REFSEQ"
+	"${src}/append_taxonomy_to_ncbi_assembly_filenames.sh" "${SAMPDATADIR}/ANI/localANIDB_REFSEQ"
 	gunzip ${SAMPDATADIR}/ANI/localANIDB_REFSEQ/*.gz
 
 	#Renames all files in the localANIDB_REFSEQ folder by changing extension from fna to fasta (which pyani needs)
