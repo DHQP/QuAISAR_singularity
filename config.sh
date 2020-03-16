@@ -88,7 +88,7 @@ max_ani_samples=20
 ani_coverage_threshold=70
 # Shortcuts used to find newest REFSEQ mash sketch
 REFSEQ=$(find ${local_DBs}/ANI/REFSEQ_*.msh -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-REFSEQ_date=$(echo ${REFSEQ} | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1,2)
+REFSEQ_date=$(echo ${REFSEQ} | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1)
 
 ##### c-SSTAR standard settings #####
 # gapped versus ungapped
