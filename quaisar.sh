@@ -680,8 +680,6 @@ for isolate in "${isolate_list[@]}"; do
 		line_inc=$(( line_inc + 1 ))
 	done
 
-	NODE_48_length_1649_cov_95.915243       gi|1805587796|gb|CP039828.1|    100.000 1062    0       0       1       1062    2308115 2309176 0.0     1916    1062    N/A
-
 	cat ${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN_* > ${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN_all
 
 	# Sorts the list based on sequence match length to find the largest hit
@@ -961,6 +959,10 @@ for isolate in "${isolate_list[@]}"; do
 			mkdir -p "${SAMPDATADIR}/BUSCO"
 		fi
 		mv ${src}/run_${isolate_name}_BUSCO/* ${SAMPDATADIR}/BUSCO/
+		### Different naming than normal pipeline
+		mv ${SAMPDATADIR}/BUSCO/short_summary_1804718_BUSCO.txt ${SAMPDATADIR}/BUSCO/short_summary_1804718.txt
+		mv ${SAMPDATADIR}/BUSCO/full_table_1804718_BUSCO.tsv ${SAMPDATADIR}/BUSCO/full_table_1804718.tsv
+		mv ${SAMPDATADIR}/BUSCO/missing_busco_list_1804718_BUSCO.tsv ${SAMPDATADIR}/BUSCO/missing_busco_list_1804718.tsv
 		rm -r ${src}/run_${isolate_name}_BUSCO
 
 		# Get end time of busco and calculate run time and append to time summary (and sum to total time used
