@@ -675,10 +675,12 @@ for isolate in "${isolate_list[@]}"; do
 	line_inc=0
 	while [[ -f ${SAMPDATADIR}/16s/${isolate_name}_16s_rna_seq_${line_inc}.txt ]]; do
 		echo "Blasting ${isolate_name}_16s_rna_seq_${line_inc}.txt"
-		singularity exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularities/blast-2.9.0-docker.img blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 1 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seq_${line_inc}.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN_${line_inc} -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname"
+		singularity exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularities/blast-2.9.0-docker.img blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 10 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seq_${line_inc}.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN_${line_inc} -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname"
 		echo "singularity exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularities/blast-2.9.0-docker.img blastn -word_size 10 -task blastn -remote -db nt -max_hsps 1 -max_target_seqs 1 -query /SAMPDIR/16s/${isolate_name}_16s_rna_seq_${line_inc}.txt -out /SAMPDIR/16s/${isolate_name}.nt.RemoteBLASTN_${line_inc} -outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen ssciname"
 		line_inc=$(( line_inc + 1 ))
 	done
+
+	NODE_48_length_1649_cov_95.915243       gi|1805587796|gb|CP039828.1|    100.000 1062    0       0       1       1062    2308115 2309176 0.0     1916    1062    N/A
 
 	cat ${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN_* > ${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN_all
 
@@ -691,7 +693,7 @@ for isolate in "${isolate_list[@]}"; do
 		accessions=$(head -n 1 "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN_all")
 		hits=$(echo "${SAMPDATADIR}/16s/${isolate_name}.nt.RemoteBLASTN_all" | wc -l)
 	#	echo ${accessions}
-		gb_acc=$(echo "${accessions}" | cut -d' ' -f2 | cut -d'|' -f4)
+		gb_acc=$(echo "${accessions}" | cut -d'|' -f4)
 		echo ${gb_acc}
 		attempts=0
 		# Will try getting info from entrez up to 5 times, as it has a higher chance of not finishing correctly on the first try
@@ -953,7 +955,7 @@ for isolate in "${isolate_list[@]}"; do
 		echo "buscoDB:${buscoDB}"
 		# Run busco
 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}/BUSCO:/DATABASES docker://quay.io/biocontainers/busco:3.0.2--py35_4 run_BUSCO.py -i /SAMPDIR/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l /DATABASES/${buscoDB} -m prot
-		echo "BUSCO:3.0.2 -- run_BUSCO.py -i ${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l ${local_DBs}/${buscoDB} -m prot" >> "${log_file}"
+		echo "BUSCO:3.0.2 -- run_BUSCO.py -i ${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l ${local_DBs}/BUSCO/${buscoDB} -m prot" >> "${log_file}"
 		if [ ! -d "${SAMPDATADIR}/BUSCO" ]; then  #create outdir if absent
 			echo "Creating ${SAMPDATADIR}/BUSCO"
 			mkdir -p "${SAMPDATADIR}/BUSCO"
