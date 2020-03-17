@@ -20,7 +20,7 @@ fi
 #
 # Modules required: None
 #
-# v1.0.4 (03/12/2020)
+# v1.0.5 (03/17/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -34,7 +34,7 @@ elif [[ -z "${1}" ]]; then
 	exit 1
 elif [[ "${1}" = "-h" ]]; then
 	echo "Usage is ./determine_taxID.sh sample_ID run_ID"
-	echo "Output is saved to ${output_dir}/run_ID/sample_ID/taxonomy.csv"
+	echo "Output is saved to ${processed}/run_ID/sample_ID/taxonomy.csv"
 	exit 0
 elif [[ -z "${2}" ]]; then
 	echo "Empty run_ID supplied to determine_taxID.sh, exiting"
@@ -62,7 +62,7 @@ source_file="Not_assigned"
 Check_source() {
 	start_at="${1}"
 	if [[ "${start_at}" -le 1 ]]; then
-		for f in ${output_dir}/${project}/${sample}/ANI/*; do
+		for f in ${processed}/${project}/${sample}/ANI/*; do
 			if [[ "${f}" = *"best_ANI_hits_ordered"* ]]; then
 				header=$(head -n1 ${f})
 				if [[ ${header} != "No matching ANI database found for"* ]] && [[ ${header} != "0.00%"* ]] ; then
@@ -73,9 +73,9 @@ Check_source() {
 		done
 	fi
 	if [[ "${start_at}" -le 2 ]]; then
-		if [[ -s "${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt" ]]; then
-			best_line=$(head -n1 "${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
-			largest_line=$(tail -n1 "${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
+		if [[ -s "${processed}/${project}/${sample}/16s/${sample}_16s_blast_id.txt" ]]; then
+			best_line=$(head -n1 "${processed}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
+			largest_line=$(tail -n1 "${processed}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
 			IFS='	' read -r -a best_array <<< "$best_line"
 			IFS='	' read -r -a largest_array <<< "$largest_line"
 			best_arr_size="${#best_array[@]}"
@@ -85,14 +85,14 @@ Check_source() {
 			#echo "largest:${largest_species}:"
 			#echo "best:${best_species}:"
 			if [[ "${largest_arr_size}" -ge 3 ]]; then
-				if [[ "${largest_array[2]}" == "Unidentified" ]] || [[ "${largest_array[2]}" == "No_16s_"* ]] || [[ "${largest_array[2]}" == "uncultured" ]]; then
+				if [[ "${largest_array[2]}" == "Unidentified" ]] || [[ "${largest_array[2]}" == "No_16s_"* ]] || [[ "${largest_array[2]}" == "uncultured"* ]]; then
 					:
 				else
 					do_16s "largest"
 					return
 				fi
 			elif [[ "${best_arr_size}" -ge 3 ]] ; then
-				if [[ "${best_array[2]}" == "Unidentified" ]]  || [[ "${best_array[2]}" == "No_16s_"* ]] || [[ "${best_array[2]}" == "uncultured" ]]; then
+				if [[ "${best_array[2]}" == "Unidentified" ]]  || [[ "${best_array[2]}" == "No_16s_"* ]] || [[ "${best_array[2]}" == "uncultured"* ]]; then
 					:
 				else
 					do_16s "best"
@@ -102,13 +102,13 @@ Check_source() {
 		fi
 	fi
 	if [[ "${start_at}" -le 3 ]];then
-		if [[ -s "${output_dir}/${project}/${sample}/gottcha/${sample}_gottcha_species_summary.txt" ]]; then
+		if [[ -s "${processed}/${project}/${sample}/gottcha/${sample}_gottcha_species_summary.txt" ]]; then
 			do_GOTTCHA
 			return
 		fi
 	fi
 	if [[ "${start_at}" -le 4 ]]; then
-		if [[ -s "${output_dir}/${project}/${sample}/kraken/postAssembly/${sample}_kraken_summary_assembled_BP.txt" ]]; then
+		if [[ -s "${processed}/${project}/${sample}/kraken/postAssembly/${sample}_kraken_summary_assembled_BP.txt" ]]; then
 			do_Kraken
 		return
 		fi
@@ -120,36 +120,43 @@ Check_source() {
 do_ANI() {
 	source="ANI"
 	#echo "${source}"
-	if [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_All).txt" ]]; then
-		source_file="${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_All).txt"
+	if [[ -f "${processed}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_${REFSEQ_date}).txt" ]]; then
+		source_file="${processed}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_${REFSEQ_date}).txt"
+	elif [[ -f "${processed}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_OSII).txt" ]]; then
+		source_file="${processed}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_OSII).txt"
 	else
-		source_file=$(ls -t "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered"* | head -n 1)
+		for file in "${processed}/${project}/${sample}/ANI/*"; do
+			# Not being very specific here due to lack of interest in files that are not the ones being found above
+			if [[ "${file}" == "${processed}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_"* ]]; then
+				source_file="${file}"
+			fi
+		done
 	fi
 	header=$(head -n 1 "${source_file}")
-	#echo "${header}"
-	Genus=$(echo "${header}" | cut -d' ' -f1 | cut -d'-' -f2)
-	species=$(echo "${header}" | cut -d' ' -f2 | cut -d'(' -f1)
-	confidence_index=$(echo "${header}" | cut -d' ' -f1 | cut -d'%' -f1)
+	echo "${header}"
+	Genus=$(echo "${header}" | cut -d' ' -f1 | cut -d'-' -f3)
+	species=$(echo "${header}" | cut -d' ' -f2 | cut -d'(' -f1 | sed 's/[][]//g')
+	confidence_index=$(echo "${header}" | cut -d' ' -f1 | cut -d'-' -f1,2)
 	#echo "${Genus}-${species}"
 }
 
 # Function to pull best info from 16s output (largest vs highest bit score)
 do_16s() {
 	if [[ "${1}" = "largest" ]]; then
-		source_file="${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt"
-		line=$(tail -n 1 "${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
+		source_file="${processed}/${project}/${sample}/16s/${sample}_16s_blast_id.txt"
+		line=$(tail -n 1 "${processed}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
 		source="16s_largest"
-		if [[ -f "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN.sorted" ]]; then
-			confidence_index=$(head -n1 "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN.sorted" | cut -d'	' -f3)
+		if [[ -f "${processed}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN.sorted" ]]; then
+			confidence_index=$(head -n1 "${processed}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN.sorted" | cut -d'	' -f3)
 			confidence_index="${confidence_index}"
 		else
 			confidence_index=0
 		fi
 	elif [[ "${1}" = "best" ]]; then
-		line=$(head -n 1 "${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
+		line=$(head -n 1 "${processed}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
 		source="16s_best"
-		if [[ -f "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN.sorted" ]]; then
-			confidence_index=$(head -n1 "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN.sorted" | cut -d'	' -f3)
+		if [[ -f "${processed}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN.sorted" ]]; then
+			confidence_index=$(head -n1 "${processed}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN.sorted" | cut -d'	' -f3)
 			confidence_index="${confidence_index}"
 		else
 			confidence_index=0
@@ -164,7 +171,7 @@ do_16s() {
 # Function to pull info from gottcha output
 do_GOTTCHA() {
 	source="GOTTCHA"
-	source_file="${output_dir}/${project}/${sample}/gottcha/${sample}_gottcha_species_summary.txt"
+	source_file="${processed}/${project}/${sample}/gottcha/${sample}_gottcha_species_summary.txt"
 	#echo "${source}"
 	while IFS= read -r line  || [ -n "$line" ]; do
 		# Grab first letter of line (indicating taxonomic level)
@@ -179,26 +186,26 @@ do_GOTTCHA() {
 		fi
 		confidence_index=$(tail -n1 "${source_file}" | cut -d' ' -f2)
 		confidence_index="${confidence_index}"
-	done < "${output_dir}/${project}/${sample}/gottcha/${sample}_gottcha_species_summary.txt"
+	done < "${processed}/${project}/${sample}/gottcha/${sample}_gottcha_species_summary.txt"
 }
 
 # Function to pull info from kraken output based on assembly
 do_Kraken() {
 	source="Kraken"
-	source_file="${output_dir}/${project}/${sample}/kraken/postAssembly/${sample}_kraken_summary_assembled_BP.txt"
+	source_file="${processed}/${project}/${sample}/kraken/postAssembly/${sample}_kraken_summary_assembled_BP.txt"
 	#echo "${source}"
 	while IFS= read -r line  || [ -n "$line" ]; do
 		# Grab first letter of line (indicating taxonomic level)
 		first=${line::1}
 		# Assign taxonomic level value from 4th value in line (1st-classification level,2nd-% by kraken, 3rd-true % of total reads, 4th-identifier)
-		if [ "${first}" = "s" ]
+		if [ "${first}" = "S" ]
 		then
 			species=$(echo "${line}" | awk -F ' ' '{print $4}')
 		elif [ "${first}" = "G" ]
 		then
 			Genus=$(echo "${line}" | awk -F ' ' '{print $4}')
 		fi
-	done < "${output_dir}/${project}/${sample}/kraken/postAssembly/${sample}_kraken_summary_assembled_BP.txt"
+	done < "${processed}/${project}/${sample}/kraken/postAssembly/${sample}_kraken_summary_assembled_BP.txt"
 	confidence_index=$(tail -n1 "${source_file}" | cut -d' ' -f2)
 	confidence_index="${confidence_index}"
 }
@@ -237,4 +244,4 @@ while IFS= read -r line  || [ -n "$line" ]; do
 done < "${local_DBs}/taxes.csv"
 
 # Print output to tax file for sample
-echo -e "(${source})-${confidence_index}%-${source_file}\nD:	${Domain}\nP:	${Phylum}\nC:	${Class}\nO:	${Order}\nF:	${Family}\nG:	${Genus}\ns:	${species}\n" > "${output_dir}/${project}/${sample}/${sample}.tax"
+echo -e "(${source})-${confidence_index}%-${source_file}\nD:	${Domain}\nP:	${Phylum}\nC:	${Class}\nO:	${Order}\nF:	${Family}\nG:	${Genus}\ns:	${species}\n" > "${processed}/${project}/${sample}/${sample}.tax"
