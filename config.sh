@@ -112,6 +112,7 @@ kraken_DB=$(echo "${kraken_DB_path}" | rev | cut -d'/' -f1 | rev)
 ##### gottcha #####
 # gottcha DB
 gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species"
+
 #gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30__xHUMAN3x.species"
 gottcha_DB=$(echo ${gottcha_DB_path} | rev | cut -d'/' -f1 | rev)
 

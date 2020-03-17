@@ -696,7 +696,7 @@ for isolate in "${isolate_list[@]}"; do
 		attempts=0
 		# Will try getting info from entrez up to 5 times, as it has a higher chance of not finishing correctly on the first try
 		while [[ ${attempts} -lt 5 ]]; do
-			blast_id=$(python ${shareScript}/entrez_get_taxon_from_accession.py -a "${gb_acc}" -e "${me}@cdc.gov")
+			blast_id=$(python ${src}/entrez_get_taxon_from_accession.py -a "${gb_acc}" -e "${me}@cdc.gov")
 			if [[ ! -z ${blast_id} ]]; then
 				break
 			else
@@ -757,50 +757,6 @@ for isolate in "${isolate_list[@]}"; do
 	time16s=$((end - start))
 	echo "16S - ${time16s} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + time16s))
-
-	# # Get taxonomy from currently available files (Only ANI, has not been run...yet, will change after discussions)
-	# "${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
-	# # Capture the anticipated taxonomy of the sample using kraken on assembly output
-	# echo "----- Extracting Taxonomy from Taxon Summary -----"
-	# # Checks to see if the kraken on assembly completed successfully
-	# if [ -s "${SAMPDATADIR}/${isolate_name}.tax" ]; then
-	# 	# Read each line of the kraken summary file and pull out each level  taxonomic unit and store for use later in busco and ANI
-	# 	while IFS= read -r line  || [ -n "$line" ]; do
-	# 		# Grab first letter of line (indicating taxonomic level)
-	# 		first=${line::1}
-	# 		# Assign taxonomic level value from 4th value in line (1st-classification level,2nd-% by kraken, 3rd-true % of total reads, 4th-identifier)
-	# 		if [ "${first}" = "s" ]
-	# 		then
-	# 			species=$(echo "${line}" | awk -F '	' '{print $2}')
-	# 		elif [ "${first}" = "G" ]
-	# 		then
-	# 			genus=$(echo "${line}" | awk -F ' ' '{print $2}')
-	# 		elif [ "${first}" = "F" ]
-	# 		then
-	# 			family=$(echo "${line}" | awk -F ' ' '{print $2}')
-	# 		elif [ "${first}" = "O" ]
-	# 		then
-	# 			order=$(echo "${line}" | awk -F ' ' '{print $2}')
-	# 		elif [ "${first}" = "C" ]
-	# 		then
-	# 			class=$(echo "${line}" | awk -F ' ' '{print $2}')
-	# 		elif [ "${first}" = "P" ]
-	# 		then
-	# 			phylum=$(echo "${line}" | awk -F ' ' '{print $2}')
-	# 		elif [ "${first}" = "K" ]
-	# 		then
-	# 			kingdom=$(echo "${line}" | awk -F ' ' '{print $2}')
-	# 		elif [ "${first}" = "D" ]
-	# 		then
-	# 			domain=$(echo "${line}" | awk -F ' ' '{print $2}')
-	# 		fi
-	# 	done < "${SAMPDATADIR}/${isolate_name}.tax"
-	# 	# Print out taxonomy for confirmation/fun
-	# 	echo "Taxonomy - ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species}"
-	# 	# If no kraken summary file was found
-	# else
-	# 	echo "No Taxonomy output available to make best call from, skipped"
-	# fi
 
 	### Check quality of Assembly ###
 	echo "----- Running quality checks on Assembly -----"
@@ -919,14 +875,143 @@ for isolate in "${isolate_list[@]}"; do
 		rm -r "${SAMPDATADIR}/ANI/aniM_REFSEQ"
 	fi
 
+	#Calls pyani on local db folder
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/pyani:0.2.7--py35_0 average_nucleotide_identity.py -i /SAMPDIR/ANI/localANIDB_REFSEQ -o /SAMPDIR/ANI/aniM_REFSEQ
+	echo "pyani:0.2.7 -- average_nucleotide_identity.py -i ${SAMPDATADIR}/ANI/localANIDB_REFSEQ -o ${SAMPDATADIR}/ANI/aniM_REFSEQ" >> "${log_file}"
+
+
+
+	#Extracts the query sample info line for percentage identity from the percent identity file
+	while IFS='' read -r line; do
+	#	echo "!-${line}"
+		if [[ ${line:0:6} = "sample" ]]; then
+			sample_identity_line=${line}
+	#		echo "found it-"$sample_identity_line
+			break
+		fi
+	done < "${SAMPDATADIR}/ANI/aniM_REFSEQ/ANIm_percentage_identity.tab"
+
+	#Extracts the query sample info line for percentage identity from the percent identity file
+	while IFS='' read -r line; do
+	#	echo "!-${line}"
+		if [[ ${line:0:6} = "sample" ]]; then
+			sample_coverage_line=${line}
+	#		echo "found it-"$sample_identity_line
+			break
+		fi
+	done < "${SAMPDATADIR}/ANI/aniM_REFSEQ/ANIm_alignment_coverage.tab"
+
+	#Extracts the top line from the %id file to get all the sample names used in analysis (they are tab separated along the top row)
+	if [[ -s "${SAMPDATADIR}/ANI/aniM_REFSEQ/ANIm_percentage_identity.tab" ]]; then
+		header_line=$(head -n 1 "${SAMPDATADIR}/ANI/aniM_REFSEQ/ANIm_percentage_identity.tab")
+	else
+		echo "No ${SAMPDATADIR}/ANI/aniM_REFSEQ/ANIm_percentage_identity.tab file, exiting"
+		exit 1
+	fi
+
+	#Arrays to read sample names and the %ids for the query sample against those other samples
+	IFS="	" read -r -a samples <<< "${header_line}"
+	IFS="	" read -r -a percents <<< "${sample_identity_line}"
+	IFS="	" read -r -a coverages <<< "${sample_coverage_line}"
+
+	#How many samples were compared
+	n=${#samples[@]}
+
+	#Extracts all %id against the query sample (excluding itself) and writes them to file
+	for (( i=0; i<n; i++ ));
+	do
+	#	echo ${i}-${samples[i]}
+		if [[ ${samples[i]:0:6} = "sample" ]];
+		then
+	#		echo "Skipping ${i}"
+			continue
+		fi
+		definition=$(head -1 "${SAMPDATADIR}/ANI/localANIDB_REFSEQ/${samples[i]}.fasta")
+		# Prints all matching samples to file (Except the self comparison) by line as percent_match  sample_name  fasta_header
+		echo "${percents[i+1]}	${coverages[i+1]}	${samples[i]}	${definition}" >> "${SAMPDATADIR}/ANI/best_hits.txt"
+	done
+
+	#Sorts the list in the file based on %id (best to worst)
+	sort -nr -t' ' -k1 -o "${SAMPDATADIR}/ANI/best_hits_ordered.txt" "${SAMPDATADIR}/ANI/best_hits.txt"
+	#Extracts the first line of the file (best hit)
+	best=$(head -n 1 "${SAMPDATADIR}/ANI/best_hits_ordered.txt")
+	#Creates an array from the best hit
+	IFS='	' read -r -a def_array <<< "${best}"
+	#echo -${def_array[@]}+
+	#Captures the assembly file name that the best hit came from
+	best_file=${def_array[2]}
+	#Formats the %id to standard percentage (xx.xx%)
+	best_percent=$(awk -v per="${def_array[0]}" 'BEGIN{printf "%.2f", per * 100}')
+	best_coverage=$(awk -v per="${def_array[1]}" 'BEGIN{printf "%.2f", per * 100}')
+	#echo "${best_file}"
+
+	# Pulling taxonomy from filename which was looked up. Can possibly be out of date. REFSEQ file will ALWAYS be current though
+	best_genus=$(echo "${best_file}" | cut -d'_' -f1)
+	best_species=$(echo "${best_file}" | cut -d'_' -f2)
+	best_organism_guess="${best_genus} ${best_species}"
+
+	#Creates a line at the top of the file to show the best match in an easily readable format that matches the style on the MMB_Seq log
+	echo -e "${best_percent}%ID-${best_coverage}%COV-${best_organism_guess}(${best_file}.fna)\\n$(cat "${SAMPDATADIR}/ANI/best_hits_ordered.txt")" > "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_${REFSEQ_date}).txt"
+
+	#Removes the transient hit files
+	if [ -s "${OUTDATADIR}/ANI/best_hits.txt" ]; then
+		rm "${OUTDATADIR}/ANI/best_hits.txt"
+	#	echo "1"
+	fi
+	if [ -s "${OUTDATADIR}/ANI/best_hits_ordered.txt" ]; then
+		rm "${OUTDATADIR}/ANI/best_hits_ordered.txt"
+	#	echo "2"
+	fi
+
 	# Get end time of ANI and calculate run time and append to time summary (and sum to total time used
 	end=$SECONDS
 	timeANI=$((end - start))
 	echo "autoANI - ${timeANI} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + timeANI))
 
-	# Get taxonomy from currently available files
+	# Get taxonomy from currently available files (Only ANI, has not been run...yet, will change after discussions)
 	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
+	# Capture the anticipated taxonomy of the sample using kraken on assembly output
+	echo "----- Extracting Taxonomy from Taxon Summary -----"
+	# Checks to see if the kraken on assembly completed successfully
+	if [ -s "${SAMPDATADIR}/${isolate_name}.tax" ]; then
+		# Read each line of the kraken summary file and pull out each level  taxonomic unit and store for use later in busco and ANI
+		while IFS= read -r line; do
+			# Grab first letter of line (indicating taxonomic level)
+			first=${line::1}
+			# Assign taxonomic level value from 4th value in line (1st-classification level,2nd-% by kraken, 3rd-true % of total reads, 4th-identifier)
+			if [ "${first}" = "s" ]
+			then
+				species=$(echo "${line}" | awk -F '	' '{print $2}')
+			elif [ "${first}" = "G" ]
+			then
+				genus=$(echo "${line}" | awk -F ' ' '{print $2}')
+			elif [ "${first}" = "F" ]
+			then
+				family=$(echo "${line}" | awk -F ' ' '{print $2}')
+			elif [ "${first}" = "O" ]
+			then
+				order=$(echo "${line}" | awk -F ' ' '{print $2}')
+			elif [ "${first}" = "C" ]
+			then
+				class=$(echo "${line}" | awk -F ' ' '{print $2}')
+			elif [ "${first}" = "P" ]
+			then
+				phylum=$(echo "${line}" | awk -F ' ' '{print $2}')
+			elif [ "${first}" = "K" ]
+			then
+				kingdom=$(echo "${line}" | awk -F ' ' '{print $2}')
+			elif [ "${first}" = "D" ]
+			then
+				domain=$(echo "${line}" | awk -F ' ' '{print $2}')
+			fi
+		done < "${SAMPDATADIR}/${isolate_name}.tax"
+		# Print out taxonomy for confirmation/fun
+		echo "Taxonomy - ${domain} ${kingdom} ${phylum} ${class} ${order} ${family} ${genus} ${species}"
+		# If no kraken summary file was found
+	else
+		echo "No Taxonomy output available to make best call from, skipped"
+	fi
 
 	### BUSCO on prokka output ###
 	echo "----- Running BUSCO on Assembly -----"
