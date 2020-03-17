@@ -859,15 +859,27 @@ for isolate in "${isolate_list[@]}"; do
 
 	#mv ${src}/*_genomic.fna.gz "${SAMPDATADIR}/ANI/localANIDB_REFSEQ/"
 
-	"${src}/append_taxonomy_to_ncbi_assembly_filenames.sh" "${SAMPDATADIR}/ANI/localANIDB_REFSEQ"
-	gunzip ${SAMPDATADIR}/ANI/localANIDB_REFSEQ/*.gz
+	#"${src}/append_taxonomy_to_ncbi_assembly_filenames.sh" "${SAMPDATADIR}/ANI/localANIDB_REFSEQ"
 
-	#Renames all files in the localANIDB_REFSEQ folder by changing extension from fna to fasta (which pyani needs)
-	for file in ${SAMPDATADIR}/ANI/localANIDB_REFSEQ/*.fna;
-	do
-		fasta_name=$(basename "${file}" .fna)".fasta"
-		mv "${file}" "${SAMPDATADIR}/ANI/localANIDB_REFSEQ/${fasta_name}"
-	done
+
+
+	for i in ${SAMPDATADIR}/ANI/localANIDB_REFSEQ/*.gz; do
+		old_name=$(basename ${i} | rev | cut -d'.' -f2- | rev)
+		new_name=$(echo ${old_name} | tr -d '[],')
+		dir_name=$(dirname ${i})
+		gunzip ${i}
+		tax_genus=$(head -n1 "${dir_name}/${old_name}" | cut -d' ' -f2 | tr -d '[],')
+		tax_species=$(head -n1 "${dir_name}/${old_name}" | cut -d' ' -f3 | tr -d '[],')
+		echo "Taxes: ${tax_genus}:${tax_species}"
+		mv ${dir_name}/${old_name}.fna ${dir_name}/${tax_genus}_${tax_species}_${new_name}.fasta
+	done < "${1}"
+
+	# #Renames all files in the localANIDB_REFSEQ folder by changing extension from fna to fasta (which pyani needs)
+	# for file in ${SAMPDATADIR}/ANI/localANIDB_REFSEQ/*.fna;
+	# do
+	# 	fasta_name=$(basename "${file}" .fna)".fasta"
+	# 	mv "${file}" "${SAMPDATADIR}/ANI/localANIDB_REFSEQ/${fasta_name}"
+	# done
 
 	# Checks for a previous copy of the aniM folder, removes it if found
 	if [ -d "${SAMPDATADIR}/ANI/aniM_REFSEQ" ]; then
@@ -951,7 +963,7 @@ for isolate in "${isolate_list[@]}"; do
 	best_organism_guess="${best_genus} ${best_species}"
 
 	#Creates a line at the top of the file to show the best match in an easily readable format that matches the style on the MMB_Seq log
-	echo -e "${best_percent}%ID-${best_coverage}%COV-${best_organism_guess}(${best_file}.fna)\\n$(cat "${SAMPDATADIR}/ANI/best_hits_ordered.txt")" > "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_${REFSEQ_date}).txt"
+	echo -e "${best_percent}%ID-${best_coverage}%COV-${best_organism_guess}(${best_file}.fna)\\n$(cat "${SAMPDATADIR}/ANI/best_hits_ordered.txt")" > "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_REFSEQ_${REFSEQ_date}).txt"
 
 	#Removes the transient hit files
 	if [ -s "${OUTDATADIR}/ANI/best_hits.txt" ]; then
@@ -1048,9 +1060,9 @@ for isolate in "${isolate_list[@]}"; do
 		fi
 		mv ${src}/run_${isolate_name}_BUSCO/* ${SAMPDATADIR}/BUSCO/
 		### Different naming than normal pipeline
-		mv ${SAMPDATADIR}/BUSCO/short_summary_1804718_BUSCO.txt ${SAMPDATADIR}/BUSCO/short_summary_1804718.txt
-		mv ${SAMPDATADIR}/BUSCO/full_table_1804718_BUSCO.tsv ${SAMPDATADIR}/BUSCO/full_table_1804718.tsv
-		mv ${SAMPDATADIR}/BUSCO/missing_busco_list_1804718_BUSCO.tsv ${SAMPDATADIR}/BUSCO/missing_busco_list_1804718.tsv
+		mv ${SAMPDATADIR}/BUSCO/short_summary_${isolate_name}_BUSCO.txt ${SAMPDATADIR}/BUSCO/short_summary_${isolate_name}.txt
+		mv ${SAMPDATADIR}/BUSCO/full_table_${isolate_name}_BUSCO.tsv ${SAMPDATADIR}/BUSCO/full_table_${isolate_name}.tsv
+		mv ${SAMPDATADIR}/BUSCO/missing_busco_list_${isolate_name}_BUSCO.tsv ${SAMPDATADIR}/BUSCO/missing_busco_list_${isolate_name}.tsv
 		rm -r ${src}/run_${isolate_name}_BUSCO
 
 		# Get end time of busco and calculate run time and append to time summary (and sum to total time used
@@ -1737,13 +1749,10 @@ while IFS= read -r var || [ -n "$var" ]; do
 	ani_info="No ANI performed"
 	# Count the number of matching format files for the current sample
 	file_count=$(find "${SAMPDATADIR}/ANI/" -name *"${isolate_name}"*"_vs_"*".txt" | wc -l)
-	# Rename files in old formating convention
-	if [[ -s "${SAMPDATADIR}/ANI/best_hits_ordered.txt" ]]; then
-		mv "${SAMPDATADIR}/ANI/best_hits_ordered.txt" "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_${genus}).txt"
-	fi
+	
 	# If 1 and only 1 file exists pull the first line as the best hit information
-	if [[ -s "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_All.txt" ]]; then
-		ani_info=$(head -n 1 "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_All).txt")
+	if [[ -s "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_REFSEQ_${REFSEQ_date}.txt" ]]; then
+		ani_info=$(head -n 1 "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_REFSEQ_${REFSEQ_date}).txt")
 	elif [[ -s "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_${dec_genus}).txt" ]]; then
 		ani_info=$(head -n 1 "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_${dec_genus}).txt")
 	# Report that more than one file exists
