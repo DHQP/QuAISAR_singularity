@@ -1591,7 +1591,7 @@ for isolate in "${isolate_list[@]}"; do
 
 		end=$SECONDS
 		timeplasflow=$((end - start))
-		echo "plasmidFlow - ${timeplasflow} seconds" >> "${time_summary_redo}"
+		echo "plasFlow - ${timeplasflow} seconds" >> "${time_summary}"
 		totaltime=$((totaltime + timeplasflow))
 	fi
 
