@@ -150,7 +150,7 @@ if [[ -d "${OUTDATADIR}/removedAdapters" ]]; then
 		remAdapt_length_R2=$(tail -n1 "${OUTDATADIR}/removedAdapters/no_PhiX_total_lengths.txt" | cut -d'	' -f2 )
 		R1_diff=$(( raw_length_R1 - remAdapt_length_R1 ))
 		R2_diff=$(( raw_length_R2 - remAdapt_length_R2 ))
-		echo "${raw_length_R1}-${remAdapt_length_R1} ${raw_length_R2}-${remAdapt_length_R2}"
+		#echo "${raw_length_R1}-${remAdapt_length_R1} ${raw_length_R2}-${remAdapt_length_R2}"
 		if [[ "${remAdapt_length_R1}" -lt 0 ]]; then
 			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "WARNING" "No R1 size found"
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
@@ -421,32 +421,7 @@ else
 	status="FAILED"
 fi
 
-# #Check plasFlow plasmid assembly
-plasmidsFoundviaplasFlow=0
-if [[ -d "${OUTDATADIR}/plasFlow" ]]; then
-	if [[ -s "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly.fasta" ]]; then
-		# Count the number of '>' in the assembly file before trimming
-		plas_scaffolds=">"
-		plas_scaffolds=$(grep -c ${plas_scaffolds} "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly.fasta")
-		if [ -z ${plas_scaffolds} ]; then
-			plas_scaffolds=0
-		fi
-		if [[ "${plas_scaffolds}" -gt 0 ]]; then
-			printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "SUCCESS" "${plas_scaffolds} scaffolds found via plasFlow"
-			plasmidsFoundviaplasFlow=1
-		else
-			printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "ALERT" "No plasmid scaffold found?"
-			if [[ "${status}" == "SUCCESS" ]]; then
-				status="WARNING"
-			fi
-		fi
-	else
-		printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "SUCCESS" "No plasmid scaffold found using plasFlow"
-	fi
-elif [[ "${dec_family}" == "Enterobacteriaceae" ]]; then
-	printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "FAILED" "/plasFlow not found"
-	status="FAILED"
-fi
+
 
 #Check short scaffolds reduction script
 if [[ -s "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta" ]]; then
@@ -470,31 +445,6 @@ if [[ -s "${OUTDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta" ]]; then
 else
 	printf "%-20s: %-8s : %s\\n" "Contig Trim" "FAILED" "/Assembly/${1}_scaffolds_trimmed.fasta not found"
 	status="FAILED"
-fi
-
-#Check short scaffolds reduction script for plasmid assembly
-#echo "${plasmidsFoundviaplasFlow}-Found?"
-if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
-	if [[ -s "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta" ]]; then
-		# Count the number of '>' still remaining after trimming the contig file
-		plas_longies=">"
-		plas_longies=$(grep -c ${plas_longies} "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta")
-		# Calculate the number of lost (short) scaffolds
-		plas_shorties=$(( plas_scaffolds - plas_longies ))
-		if [ -z ${plas_shorties} ]; then
-			plas_shorties=0
-		fi
-		if [[ "${plas_longies}" -gt 0 ]]; then
-			printf "%-20s: %-8s : %s\\n" "Plasmids contig Trim" "SUCCESS" "${plas_longies} scaffolds remain. ${plas_shorties} were removed due to shortness"
-		else
-			printf "%-20s: %-8s : %s\\n" "Plasmids contig Trim" "SUCCESS" "No plasmid scaffold found"
-		fi
-	elif [[ -f "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta" ]]; then
-		printf "%-20s: %-8s : %s\\n" "Plasmids contig Trim" "SUCCESS" "No plasmid scaffolds found"
-	else
-		printf "%-20s: %-8s : %s\\n" "Plasmids contig Trim" "FAILED" "plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta not found"
-		status="FAILED"
-	fi
 fi
 
 #Check kraken on assembly
@@ -690,21 +640,6 @@ if [[ -s "${OUTDATADIR}/Assembly_Stats/${1}_report.tsv" ]]; then
 else
 	printf "%-20s: %-8s : %s\\n" "QUAST" "FAILED" "/Assembly_Stats/report.tsv does not exist"
 	status="FAILED"
-fi
-
-#Check QUAST on plasmid Assembly
-if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
-	if [[ -s "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv" ]]; then
-		# Extract the useful bits and report (to compare to Toms)
-		contig_num_plas=$(sed -n '14p' "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv"| sed -r 's/[\t]+/ /g' | cut -d' ' -f3 )
-		ass_length_plas=$(sed -n '16p' "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
-		N50_plas=$(sed -n '18p' "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv"  | sed -r 's/[\t]+/ /g'| cut -d' ' -f2)
-		GC_con_plas=$(sed -n '17p' "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
-		printf "%-20s: %-8s : %s\\n" "QUAST_plasFlow" "SUCCESS" "#-${contig_num_plas} length-${ass_length_plas} n50-${N50_plas} %GC-${GC_con_plas}"
-	else
-		printf "%-20s: %-8s : %s\\n" "QUAST_plasFlow" "FAILED" "/Assembly_Stats_plasFlow/report.tsv does not exist"
-		status="FAILED"
-	fi
 fi
 
 # Get determinde taxonomy
@@ -975,61 +910,7 @@ else
 	status="FAILED"
 fi
 
-# #Check c-SSTAR on plasmid Assembly
-if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
-	#Check c-SSTAR
-	if [[ -d "${OUTDATADIR}/c-sstar_plasFlow/" ]]; then
-		if [[ ! -z "${3}" ]]; then
-			gapping="${3}"
-		else
-			gapping="gapped"
-		fi
-		if [[ ! -z "${4}" ]]; then
-			sim="${4}"
-		else
-			sim="40"
-		fi
-		csstar_plasFlow_file=$(find ${OUTDATADIR}/c-sstar_plasFlow/${1}.ResGANNCBI*.${gapping}_${sim}_sstar_summary.txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-		if [[ -z "${csstar_plasFlow_file}" ]]; then
-			printf "%-20s: %-8s : %s\\n" "c-SSTAR_plasFlow" "FAILED" "/c-sstar_plasFlow/ does not have an sstar_summary file"
-			echo "Looking for ${OUTDATADIR}/c-sstar_plasFlow/${1}.ResGANNCBI.${gapping}_${sim}_sstar_summary.txt"
-			status="FAILED"
-		else
-			header=$(head -n1 "${csstar_plasFlow_file}")
-			ResGANNCBI_DB=$(echo "${csstar_plasFlow_file}" | rev | cut -d'.' -f3 | rev)
-			if [[ ${header} = *"No anti-microbial genes were found"* ]]; then
-				if [[ "${ResGANNCBI_DB}" = "${ResGANNCBI_srst2_filename}" ]]; then
-					printf "%-20s: %-8s : %s\\n" "c-SSTAR_plasFlow" "ALERT" "Completed, but NO KNOWN AMR genes present from ${ResGANNCBI_DB} (DB up to date, as of ${today})"
-					if [[ "${status}" == "SUCCESS" ]]; then
-						status="ALERT"
-					fi
-				else
-					printf "%-20s: %-8s : %s\\n" "c-SSTAR_plasFlow" "ALERT" "Completed, but NO KNOWN AMR genes present from ${ResGANNCBI_DB} (DB NOT up to date! Most current DB: ${ResGANNCBI_srst2_filename})"
-					if [[ "${status}" == "SUCCESS" ]]; then
-						status="ALERT"
-					fi
-				fi
-			else
-				amr_genes_found=$(wc -l "${csstar_plasFlow_file}" | cut -d' ' -f1)
-				# Prints out the counts of AR gene hits
-				if [[ "${ResGANNCBI_DB}" = "${ResGANNCBI_srst2_filename}" ]]; then
-					printf "%-20s: %-8s : %s\\n" "c-SSTAR_plasFlow" "SUCCESS" "${amr_genes_found} genes found in ${ResGANNCBI_DB} (%ID defaults to 40) (DB up to date, as of ${today})"
-				else
-					printf "%-20s: %-8s : %s\\n" "c-SSTAR_plasFlow" "ALERT" "${amr_genes_found} genes found in ${ResGANNCBI_DB} (%ID defaults to 40) (DB NOT up to date! Most current DB: ${ResGANNCBI_srst2_filename})"
-					if [[ "${status}" == "SUCCESS" ]]; then
-						status="ALERT"
-					fi
-				fi
-			fi
-		fi
-	else
-		printf "%-20s: %-8s : %s\\n" "c-sstar_plasFlow" "FAILED" "/c-sstar_plasFlow/ does not exist - BOOYA"
-		status="FAILED"
-	# Signals that the current sample is completed with verification
-	fi
-fi
-
-#Check c-SSTAR
+#Check GAMA
 if [[ -d "${OUTDATADIR}/GAMA/" ]]; then
 	GAMA_file=$(find ${OUTDATADIR}/GAMA -maxdepth 1 -type f -name "${1}.ResGANNCBI*.GAMA"   -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 	if [[ -z "${GAMA_file}" ]]; then
@@ -1058,40 +939,6 @@ if [[ -d "${OUTDATADIR}/GAMA/" ]]; then
 else
 	printf "%-20s: %-8s : %s\\n" "GAMA" "FAILED" "/GAMA/ does not exist"
 	status="FAILED"
-fi
-
-# #Check c-SSTAR on plasmid Assembly
-if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
-	if [[ -d  "${OUTDATADIR}/GAMA_plasFlow" ]]; then
-		#Check c-SSTAR
-		GAMA_plasFlow_file=$(find ${OUTDATADIR}/GAMA_plasFlow -maxdepth 1 -type f -name "${1}.ResGANNCBI*.GAMA"   -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-		if [[ -z "${GAMA_plasFlow_file}" ]]; then
-			printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "FAILED" "/GAMA_plasFlow/ does not have a .GAMA file"
-			status="FAILED"
-		else
-			ResGANNCBI_DB=$(echo "${GAMA_plasFlow_file}" | rev | cut -d'.' -f2 | rev)
-			#echo "${ResGANNCBI_DB} = ${ResGANNCBI_srst2_filename} ?"
-			plasmid_amr_genes_found=$(wc -l "${GAMA_plasFlow_file}" | cut -d' ' -f1)
-			plasmid_amr_genes_found=$(( plasmid_amr_genes_found - 1))
-			if [[ ${plasmid_amr_genes_found} -le 0 ]]; then
-				if [[ "${ResGANNCBI_DB}" = "${ResGANNCBI_srst2_filename}" ]]; then
-					printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "ALERT" "Completed, but NO KNOWN AMR genes were found in ${ResGANNCBI_DB} (DB up to date, as of ${today})"
-				else
-					printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "ALERT" "Completed, but NO KNOWN AMR genes were found in ${ResGANNCBI_DB} (DB NOT up to date! Most current DB: ${ResGANNCBI_srst2_filename})"
-				fi
-			else
-				# Prints out the counts of AR gene hits
-				if [[ "${ResGANNCBI_DB}" = "${ResGANNCBI_srst2_filename}" ]]; then
-					printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "SUCCESS" "${plasmid_amr_genes_found} genes found in ${ResGANNCBI_DB} (DB up to date, as of ${today})"
-				else
-					printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "ALERT" "${plasmid_amr_genes_found} genes found in ${ResGANNCBI_DB} (DB NOT up to date, Most current DB: ${ResGANNCBI_srst2_filename})"
-				fi
-			fi
-		fi
-	else
-		printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "FAILED" "/GAMA_plasFlow/ does not exist"
-		status="FAILED"
-	fi
 fi
 
 # check SRST2 output
@@ -1458,8 +1305,155 @@ else
 	status="FAILED"
 fi
 
-# # check plasmids (on plasmidAssembly)
-if [[ "plasmidsFoundviaplasFlow" -eq 1 ]]; then
+#
+# #Check plasFlow plasmid assembly
+plasmidsFoundviaplasFlow=0
+if [[ -d "${OUTDATADIR}/plasFlow" ]]; then
+	if [[ -s "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly.fasta" ]]; then
+		# Count the number of '>' in the assembly file before trimming
+		plas_scaffolds=">"
+		plas_scaffolds=$(grep -c ${plas_scaffolds} "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_original.fasta")
+		if [ -z ${plas_scaffolds} ]; then
+			plas_scaffolds=0
+		fi
+		if [[ "${plas_scaffolds}" -gt 0 ]]; then
+			printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "SUCCESS" "${plas_scaffolds} scaffolds found via plasFlow"
+			plasmidsFoundviaplasFlow=1
+		else
+			printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "ALERT" "No plasmid scaffold found?"
+			if [[ "${status}" == "SUCCESS" ]]; then
+				status="WARNING"
+			fi
+		fi
+	else
+		printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "SUCCESS" "No plasmid scaffold found using plasFlow"
+	fi
+elif [[ "${dec_family}" == "Enterobacteriaceae" ]]; then
+	printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "FAILED" "/plasFlow not found, but is in proper Taxa"
+	status="FAILED"
+else
+	printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "SUCCESS" "Not correct TAXA for plasFlow analysis"
+fi
+
+#Check short scaffolds reduction script for plasmid assembly
+#echo "${plasmidsFoundviaplasFlow}-Found?"
+if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
+	if [[ -s "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta" ]]; then
+		# Count the number of '>' still remaining after trimming the contig file
+		plas_longies=">"
+		plas_longies=$(grep -c ${plas_longies} "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta")
+		# Calculate the number of lost (short) scaffolds
+		plas_shorties=$(( plas_scaffolds - plas_longies ))
+		if [ -z ${plas_shorties} ]; then
+			plas_shorties=0
+		fi
+		if [[ "${plas_longies}" -gt 0 ]]; then
+			printf "%-20s: %-8s : %s\\n" "Plasmid contig Trim" "SUCCESS" "${plas_longies} scaffolds remain. ${plas_shorties} were removed due to shortness"
+		else
+			printf "%-20s: %-8s : %s\\n" "Plasmid contig Trim" "SUCCESS" "No plasmid scaffold found"
+		fi
+	elif [[ -f "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta" ]]; then
+		printf "%-20s: %-8s : %s\\n" "Plasmid contig Trim" "SUCCESS" "No plasmid scaffolds found"
+	else
+		printf "%-20s: %-8s : %s\\n" "Plasmid contig Trim" "FAILED" "plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta not found"
+		status="FAILED"
+	fi
+
+	# Check quality of plasmid Assembly
+	if [[ -s "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv" ]]; then
+		# Extract the useful bits and report (to compare to Toms)
+		contig_num_plas=$(sed -n '14p' "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv"| sed -r 's/[\t]+/ /g' | cut -d' ' -f3 )
+		ass_length_plas=$(sed -n '16p' "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
+		N50_plas=$(sed -n '18p' "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv"  | sed -r 's/[\t]+/ /g'| cut -d' ' -f2)
+		GC_con_plas=$(sed -n '17p' "${OUTDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
+		printf "%-20s: %-8s : %s\\n" "QUAST_plasFlow" "SUCCESS" "#-${contig_num_plas} length-${ass_length_plas} n50-${N50_plas} %GC-${GC_con_plas}"
+	else
+		printf "%-20s: %-8s : %s\\n" "QUAST_plasFlow" "FAILED" "/Assembly_Stats_plasFlow/report.tsv does not exist"
+		status="FAILED"
+	fi
+
+	#Check c-SSTAR of plasmid assembly
+	if [[ -d "${OUTDATADIR}/c-sstar_plasFlow/" ]]; then
+		if [[ ! -z "${3}" ]]; then
+			gapping="${3}"
+		else
+			gapping="gapped"
+		fi
+		if [[ ! -z "${4}" ]]; then
+			sim="${4}"
+		else
+			sim="40"
+		fi
+		csstar_plasFlow_file=$(find ${OUTDATADIR}/c-sstar_plasFlow/${1}.ResGANNCBI*.${gapping}_${sim}_sstar_summary.txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+		if [[ -z "${csstar_plasFlow_file}" ]]; then
+			printf "%-20s: %-8s : %s\\n" "c-SSTAR_plasFlow" "FAILED" "/c-sstar_plasFlow/ does not have an sstar_summary file"
+			echo "Looking for ${OUTDATADIR}/c-sstar_plasFlow/${1}.ResGANNCBI.${gapping}_${sim}_sstar_summary.txt"
+			status="FAILED"
+		else
+			header=$(head -n1 "${csstar_plasFlow_file}")
+			ResGANNCBI_DB=$(echo "${csstar_plasFlow_file}" | rev | cut -d'.' -f3 | rev)
+			if [[ ${header} = *"No anti-microbial genes were found"* ]]; then
+				if [[ "${ResGANNCBI_DB}" = "${ResGANNCBI_srst2_filename}" ]]; then
+					printf "%-20s: %-8s : %s\\n" "c-SSTAR_plasFlow" "ALERT" "Completed, but NO KNOWN AMR genes present from ${ResGANNCBI_DB} (DB up to date, as of ${today})"
+					if [[ "${status}" == "SUCCESS" ]]; then
+						status="ALERT"
+					fi
+				else
+					printf "%-20s: %-8s : %s\\n" "c-SSTAR_plasFlow" "ALERT" "Completed, but NO KNOWN AMR genes present from ${ResGANNCBI_DB} (DB NOT up to date! Most current DB: ${ResGANNCBI_srst2_filename})"
+					if [[ "${status}" == "SUCCESS" ]]; then
+						status="ALERT"
+					fi
+				fi
+			else
+				amr_genes_found=$(wc -l "${csstar_plasFlow_file}" | cut -d' ' -f1)
+				# Prints out the counts of AR gene hits
+				if [[ "${ResGANNCBI_DB}" = "${ResGANNCBI_srst2_filename}" ]]; then
+					printf "%-20s: %-8s : %s\\n" "c-SSTAR_plasFlow" "SUCCESS" "${amr_genes_found} genes found in ${ResGANNCBI_DB} (%ID defaults to 40) (DB up to date, as of ${today})"
+				else
+					printf "%-20s: %-8s : %s\\n" "c-SSTAR_plasFlow" "ALERT" "${amr_genes_found} genes found in ${ResGANNCBI_DB} (%ID defaults to 40) (DB NOT up to date! Most current DB: ${ResGANNCBI_srst2_filename})"
+					if [[ "${status}" == "SUCCESS" ]]; then
+						status="ALERT"
+					fi
+				fi
+			fi
+		fi
+	else
+		printf "%-20s: %-8s : %s\\n" "c-sstar_plasFlow" "FAILED" "/c-sstar_plasFlow/ does not exist"
+		status="FAILED"
+	fi
+
+	if [[ -d  "${OUTDATADIR}/GAMA_plasFlow" ]]; then
+		#Check c-SSTAR
+		GAMA_plasFlow_file=$(find ${OUTDATADIR}/GAMA_plasFlow -maxdepth 1 -type f -name "${1}.ResGANNCBI*.GAMA"   -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+		if [[ -z "${GAMA_plasFlow_file}" ]]; then
+			printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "FAILED" "/GAMA_plasFlow/ does not have a .GAMA file"
+			status="FAILED"
+		else
+			ResGANNCBI_DB=$(echo "${GAMA_plasFlow_file}" | rev | cut -d'.' -f2 | rev)
+			#echo "${ResGANNCBI_DB} = ${ResGANNCBI_srst2_filename} ?"
+			plasmid_amr_genes_found=$(wc -l "${GAMA_plasFlow_file}" | cut -d' ' -f1)
+			plasmid_amr_genes_found=$(( plasmid_amr_genes_found - 1))
+			if [[ ${plasmid_amr_genes_found} -le 0 ]]; then
+				if [[ "${ResGANNCBI_DB}" = "${ResGANNCBI_srst2_filename}" ]]; then
+					printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "ALERT" "Completed, but NO KNOWN AMR genes were found in ${ResGANNCBI_DB} (DB up to date, as of ${today})"
+				else
+					printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "ALERT" "Completed, but NO KNOWN AMR genes were found in ${ResGANNCBI_DB} (DB NOT up to date! Most current DB: ${ResGANNCBI_srst2_filename})"
+				fi
+			else
+				# Prints out the counts of AR gene hits
+				if [[ "${ResGANNCBI_DB}" = "${ResGANNCBI_srst2_filename}" ]]; then
+					printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "SUCCESS" "${plasmid_amr_genes_found} genes found in ${ResGANNCBI_DB} (DB up to date, as of ${today})"
+				else
+					printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "ALERT" "${plasmid_amr_genes_found} genes found in ${ResGANNCBI_DB} (DB NOT up to date, Most current DB: ${ResGANNCBI_srst2_filename})"
+				fi
+			fi
+		fi
+	else
+		printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "FAILED" "/GAMA_plasFlow/ does not exist"
+		status="FAILED"
+	fi
+
+	# check plasmids (on plasmidAssembly)
 	if [[ -d "${OUTDATADIR}/plasmidFinder_on_plasFlow/" ]]; then
 		if [[ -s "${OUTDATADIR}/plasmidFinder_on_plasFlow/${1}_results_table_summary.txt" ]]; then
 			number_of_plasmids=0
@@ -1482,6 +1476,7 @@ if [[ "plasmidsFoundviaplasFlow" -eq 1 ]]; then
 		status="FAILED"
 	fi
 fi
+
 echo "---------- ${1} completed as ${status} ----------"
 
 
