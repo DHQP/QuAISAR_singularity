@@ -15,9 +15,9 @@ fi
 #
 # Description: Checking to see if all standard reported sections of a sample have completed successfully
 #
-# Usage: ./validate_piprun.sh   sample_name   miseq run id [gapping (gapped|ungapped)] [sim (40|80|95|998|99|100)]
+# Usage: ./validate_piprun.sh   1   miseq run id [gapping (gapped|ungapped)] [sim (40|80|95|998|99|100)]
 #
-# Output location: default_config.sh_output_location/run_ID/sample_name/
+# Output location: default_config.sh_output_location/run_ID/1/
 #
 # Modules required: None
 #
@@ -34,7 +34,7 @@ elif [[ -z "${1}" ]]; then
 	echo "Empty sample name supplied to validate_piperun.sh, exiting"
 	exit 1
 elif [[ "${1}" = "-h" ]]; then
-	echo "Usage is ./validate_piperun.sh   sample_name   miseq_run_ID [gapping (gapped|ungapped)] [sim (40|80|95|998|99|100)]"
+	echo "Usage is ./validate_piperun.sh   1   miseq_run_ID [gapping (gapped|ungapped)] [sim (40|80|95|998|99|100)]"
 	echo "Output is only printed to screen, Pipe to file if desired"
 	exit 0
 elif [ -z "$2" ]; then
@@ -65,34 +65,34 @@ fi
 raw_length_R1=0
 raw_length_R2=0
 if [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq" ]] && [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
-	raw_length_R1=$(cat ${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	raw_length_R2=$(cat ${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R1=$(cat ${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R2=$(cat ${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "SUCCESS" "Unzipped - R1: ${raw_length_R1}bps R2: ${raw_length_R2}bps"
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq" ]]; then
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "WARNING" "Only R1 found"
-	raw_length_R1=$(cat ${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R1=$(cat ${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "WARNING" "Only R2 found"
-	raw_length_R2=$(cat ${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R2=$(cat ${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq.gz" ]] && [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq.gz" ]]; then
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "SUCCESS" "Zipped"
-	raw_length_R1=$(zcat ${OUTDATADIR}/FASTQs/${sample_name}_R1_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	raw_length_R2=$(zcat ${OUTDATADIR}/FASTQs/${sample_name}_R2_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R1=$(zcat ${OUTDATADIR}/FASTQs/${1}_R1_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R2=$(zcat ${OUTDATADIR}/FASTQs/${1}_R2_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq" ]]; then
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "WARNING" "Zipped, but only R1 found"
-	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "WARNING" "Zipped, but only R2 found"
-	raw_length_R2=$(zcat ${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R2=$(zcat ${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
@@ -889,7 +889,7 @@ if [[ -f "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_${REFSEQ_date}).txt" ]
 		#status="FAILED"
 	else
 		if [[ "${percent_match}" -ge 95 ]] && [[ "${coverage_match}" -ge ${ani_coverage_threshold} ]]; then
-			printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "SUCCESS" "${ani_info} against ${REFSEQ_date}"
+			printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "SUCCESS" "${ani_info} against REFSEQ_${REFSEQ_date}"
 		else
 			if [[ "${percent_match}" -lt 95 ]]; then
 				printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "${percent_match}% identity is too low, ${ani_info}"
