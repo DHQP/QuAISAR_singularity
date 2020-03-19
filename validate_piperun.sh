@@ -82,8 +82,8 @@ elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
 	fi
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq.gz" ]] && [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq.gz" ]]; then
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "SUCCESS" "Zipped"
-	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	raw_length_R2=$(zcat ${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R1=$(zcat ${OUTDATADIR}/FASTQs/${sample_name}_R1_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R2=$(zcat ${OUTDATADIR}/FASTQs/${sample_name}_R2_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq" ]]; then
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "WARNING" "Zipped, but only R1 found"
 	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
@@ -876,67 +876,6 @@ else
 fi
 #Check ANI
 ani_found=false
-# Goes through each file in the ANI folder to find if any match the proper format of the ANI output (this keeps old version and formats from sneaking in, pretty much uselss at this point)
-if [[ -s "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_${dec_genus,}).txt" ]]; then
-	mv "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_${dec_genus,}).txt" "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_${dec_genus^}).txt"
-		 #"${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_${dec_genus^}).txt"
-fi
-if [[ -f "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_All).txt" ]]; then
-	#echo "ALL"
-	ani_info=$(head -n 1 "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_All).txt")
-	ani_found=true
-elif [[ -f "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_${dec_genus^}).txt" ]]; then
-	ani_info=$(head -n 1 "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_${dec_genus^}).txt")
-	ani_found=true
-else
-	for file in "${OUTDATADIR}/ANI/"*
-	do
-		if [[ "${file}" == *"best_ANI_hits_ordered(${1}_vs_"* ]]; then
-			filename=${file}
-			#echo "${OUTDATADIR}"
-			#echo "${file}"
-			#echo "${dec_genus^}"
-			ani_info=$(head -n 1 "${file}")
-			ani_found=true
-			break
-		fi
-	done
-fi
-# Checks to see if the match boolean was toggled, if so it extracts the best match info and database from the string
-if [[ "${ani_found}" = true ]]; then
-	genusDB=$(echo "${ani_info}" | cut -d'-' -f3 | cut -d' ' -f1)
-	percent_match=$(echo "${ani_info}" | cut -d'.' -f1)
-	coverage_match=$(echo "${ani_info}" | cut -d'-' -f2 | cut -d'.' -f1)
-	#echo "${coverage_match}"
-	#echo "${percent_match}"
-	if [[ "${percent_match}" = "0." ]]; then
-		printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "No assembly file to work with"
-		status="FAILED"
-	else
-		if [[ "${percent_match}" -ge 95 ]] && [[ "${coverage_match}" -ge ${ani_coverage_threshold} ]]; then
-			printf "%-20s: %-8s : %s\\n" "ANI" "SUCCESS" "${ani_info} against ${genusDB}"
-		else
-			if [[ "${percent_match}" -lt 95 ]]; then
-				printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "${percent_match}% identity is too low, ${ani_info}"
-			elif [[ "${coverage_match}" -lt ${ani_coverage_threshold} ]]; then
-				printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "${coverage_match}% coverage is too low, ${ani_info}"
-			fi
-			status="FAILED"
-		fi
-	fi
-else
-	if [[ "${dec_genus}" == "" ]]; then
-		printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "Determine_TAXID did not discover a genus. Try run_ANI_REFSEQ.sh or run_ANI_OSII.sh"
-		status="FAILED"
-	elif [[ ! -d "${OUTDATADIR}/ANI/" ]]; then
-		printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "/ANI/ does not exist"
-		status="FAILED"
-	else
-		printf "%-20s: %-8s : %s\\n" "ANI" "FAILED" "Attempted to compare to ${dec_genus} but /ANI/ does not have a best_ANI_hits file"
-		status="FAILED"
-	fi
-fi
-
 #Check ANI REFSEQ. Not fully implemented yet, so not causing a failure in reporting
 if [[ -f "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_${REFSEQ_date}).txt" ]]; then
 	#echo "ALL"
@@ -990,37 +929,6 @@ else
 		#status="FAILED"
 	fi
 fi
-
-#Check ANI of OSII
-if [[ -f "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_OSII).txt" ]]; then
-	#echo "ALL"
-	ani_info=$(head -n 1 "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_OSII).txt")
-	percent_match=$(echo "${ani_info}" | cut -d'.' -f1)
-	coverage_match=$(echo "${ani_info}" | cut -d'-' -f2 | cut -d'.' -f1)
-	#echo "${percent_match--}"
-	if [[ "${percent_match}" = "0." ]]; then
-		printf "%-20s: %-8s : %s\\n" "ANI_OSII" "FAILED" "No assembly file to work with"
-		#status="FAILED"
-	else
-		if [[ "${percent_match}" -ge 95 ]] && [[ "${coverage_match}" -ge ${ani_coverage_threshold} ]]; then
-			printf "%-20s: %-8s : %s\\n" "ANI_OSII" "SUCCESS" "${ani_info} against OSII"
-		else
-			if [[ "${percent_match}" -lt 95 ]]; then
-				printf "%-20s: %-8s : %s\\n" "ANI_OSII" "FAILED" "${percent_match}% identity is too low, ${ani_info}"
-			elif [[ "${coverage_match}" -lt ${ani_coverage_threshold} ]]; then
-				printf "%-20s: %-8s : %s\\n" "ANI_OSII" "FAILED" "${coverage_match}% coverage is too low, ${ani_info}"
-			fi
-			#status="FAILED"
-		fi
-	fi
-elif [[ ! -d "${OUTDATADIR}/ANI/" ]]; then
-	printf "%-20s: %-8s : %s\\n" "ANI_OSII" "FAILED" "/ANI/ does not exist"
-	#status="FAILED"
-else
-	printf "%-20s: %-8s : %s\\n" "ANI_OSII" "FAILED" "No OSII ANI best_hits file"
-	#status="FAILED"
-fi
-
 
 #Check c-SSTAR
 if [[ -d "${OUTDATADIR}/c-sstar/" ]]; then
