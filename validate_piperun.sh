@@ -1294,14 +1294,14 @@ if [[ -d "${OUTDATADIR}/plasmidFinder/" ]]; then
 				number_of_plasmids=$(( number_of_plasmids + 1 ))
 			fi
 		done < "${OUTDATADIR}/plasmidFinder/${1}_results_table_summary.txt"
-		printf "%-20s: %-8s : %s\\n" "plasmid" "SUCCESS" "${number_of_plasmids} replicons were found in the full scaffold"
+		printf "%-20s: %-8s : %s\\n" "plasmidFinder" "SUCCESS" "${number_of_plasmids} replicons were found in the full scaffold"
 	else
-		printf "%-20s: %-8s : %s\\n" "plasmid" "FAILED" "results_table_summary.txt does not exist"
+		printf "%-20s: %-8s : %s\\n" "plasmidFinder" "FAILED" "results_table_summary.txt does not exist"
 		status="FAILED"
 	fi
 # No plasmid folder exists
 else
-	printf "%-20s: %-8s : %s\\n" "plasmid" "FAILED" "/plasmidFinder/ does not exist"
+	printf "%-20s: %-8s : %s\\n" "plasmidFinder" "FAILED" "/plasmidFinder/ does not exist"
 	status="FAILED"
 fi
 
@@ -1317,22 +1317,22 @@ if [[ -d "${OUTDATADIR}/plasFlow" ]]; then
 			plas_scaffolds=0
 		fi
 		if [[ "${plas_scaffolds}" -gt 0 ]]; then
-			printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "SUCCESS" "${plas_scaffolds} scaffolds found via plasFlow"
+			printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "SUCCESS" "${plas_scaffolds} scaffolds found via plasFlow"
 			plasmidsFoundviaplasFlow=1
 		else
-			printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "ALERT" "No plasmid scaffold found?"
+			printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "ALERT" "No plasmid scaffold found?"
 			if [[ "${status}" == "SUCCESS" ]]; then
 				status="WARNING"
 			fi
 		fi
 	else
-		printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "SUCCESS" "No plasmid scaffold found using plasFlow"
+		printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "SUCCESS" "No plasmid scaffold found using plasFlow"
 	fi
 elif [[ "${dec_family}" == "Enterobacteriaceae" ]]; then
-	printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "FAILED" "/plasFlow not found, but is in proper Taxa"
+	printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "FAILED" "/plasFlow not found, but is in proper Taxa"
 	status="FAILED"
 else
-	printf "%-20s: %-8s : %s\\n" "plasmid Assembly" "SUCCESS" "Not correct TAXA for plasFlow analysis"
+	printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "SUCCESS" "Not correct TAXA for plasFlow analysis"
 fi
 
 #Check short scaffolds reduction script for plasmid assembly
@@ -1348,14 +1348,14 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 			plas_shorties=0
 		fi
 		if [[ "${plas_longies}" -gt 0 ]]; then
-			printf "%-20s: %-8s : %s\\n" "Plasmid contig Trim" "SUCCESS" "${plas_longies} scaffolds remain. ${plas_shorties} were removed due to shortness"
+			printf "%-20s: %-8s : %s\\n" "plasFlow contig Trim" "SUCCESS" "${plas_longies} scaffolds remain. ${plas_shorties} were removed due to shortness"
 		else
-			printf "%-20s: %-8s : %s\\n" "Plasmid contig Trim" "SUCCESS" "No plasmid scaffold found"
+			printf "%-20s: %-8s : %s\\n" "plasFlow contig Trim" "SUCCESS" "No plasmid scaffold found"
 		fi
 	elif [[ -f "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta" ]]; then
-		printf "%-20s: %-8s : %s\\n" "Plasmid contig Trim" "SUCCESS" "No plasmid scaffolds found"
+		printf "%-20s: %-8s : %s\\n" "plasFlow contig Trim" "SUCCESS" "No plasmid scaffolds found"
 	else
-		printf "%-20s: %-8s : %s\\n" "Plasmid contig Trim" "FAILED" "plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta not found"
+		printf "%-20s: %-8s : %s\\n" "plasFlow contig Trim" "FAILED" "plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta not found"
 		status="FAILED"
 	fi
 
@@ -1465,14 +1465,14 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 					number_of_plasmids=$(( number_of_plasmids + 1 ))
 				fi
 			done < "${OUTDATADIR}/plasmidFinder/${1}_results_table_summary.txt"
-			printf "%-20s: %-8s : %s\\n" "plasmid-plasmidAsmb" "SUCCESS" "${number_of_plasmids} replicons were found in the plasmid scaffold"
+			printf "%-20s: %-8s : %s\\n" "plasmidFndr-plasFlow" "SUCCESS" "${number_of_plasmids} replicons were found in the plasmid scaffold"
 		else
-			printf "%-20s: %-8s : %s\\n" "plasmid-plasmidAsmb" "FAILED" "results_table_summary.txt does not exist"
+			printf "%-20s: %-8s : %s\\n" "plasmidFndr-plasFlow" "FAILED" "results_table_summary.txt does not exist"
 			status="FAILED"
 		fi
 	# No plasmid folder exists
 	else
-		printf "%-20s: %-8s : %s\\n" "plasmid-plasmidAsmb" "FAILED" "/plasmidFinder_on_plasFlow/ does not exist"
+		printf "%-20s: %-8s : %s\\n" "plasmidFndr-plasFlow" "FAILED" "/plasmidFinder_on_plasFlow/ does not exist"
 		status="FAILED"
 	fi
 fi

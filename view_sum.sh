@@ -170,7 +170,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 			else
 				notes="${notes}OLD ResGANNCBI DB used in c-sstar"
 			fi
-		elif [[ "${tool}" == "c-SSTAR_plasmid" ]] || [[ "${tool}" == "c-sstar_plasmid" ]]; then
+		elif [[ "${tool}" == "c-SSTAR_plasFlow" ]] || [[ "${tool}" == "c-sstar_plasFlow" ]]; then
 			if [[ "${tool_details}" = *"NO KNOWN AMR genes"* ]]; then
 				if [[ "${notes}" != "" ]]; then
 					notes="${notes},"
@@ -181,7 +181,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 					notes="${notes}No plasmid AMR found"
 				fi
 			else
-				notes="${notes}OLD ResGANNCBI DB used in c-sstar plasmid"
+				notes="${notes}OLD ResGANNCBI DB used in c-sstar plasFlow"
 			fi
 		elif [[ "${tool}" == "srst2" ]]; then
 			if [[ "${notes}" != "" ]]; then
@@ -474,7 +474,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 		elif [[ "${tool}" == "16s" ]]; then
 			failure_flags="${failure_flags}-NO_16s"
 			failures=$(( failures + 1 ))
-		elif [[ "${tool}" == "plasmid" ]]; then
+		elif [[ "${tool}" == "plasmidFinder" ]]; then
 			if [[ -d "${output_dir}/${1}/${sample_name}/plasmidFinder/" ]]; then
 				failure_flags="${failure_flags}-NO_plasmidFinder_summary_file"
 				failures=$(( failures + 1 ))
@@ -482,10 +482,10 @@ while IFS= read -r var || [ -n "$var" ]; do
 				failure_flags="${failure_flags}-NO_plasmidFinder_directory_for_plasmid_assembly"
 				failures=$(( failures + 1 ))
 			fi
-		elif [[ "${tool}" == "plasmidscontigTrim" ]]; then
+		elif [[ "${tool}" == "plasFlowcontigTrim" ]]; then
 			failure_flags="${failure_flags}-NO_trimmed_plasmid_assembly_file"
 			failures=$(( failures + 1 ))
-		elif [[ "${tool}" == "plasmid-plasmidAsmb" ]]; then
+		elif [[ "${tool}" == "plasmidFndr-plasFlow" ]]; then
 			if [[ -d "${output_dir}/${1}/${sample_name}/plasmidFinder_on_plasFlow/" ]]; then
 				failure_flags="${failure_flags}-NO_plasmidFinder_summary_file"
 				failures=$(( failures + 1 ))
@@ -493,7 +493,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 				failure_flags="${failure_flags}-NO_plasmidFinder_directory_for_plasmid_assembly"
 				failures=$(( failures + 1 ))
 			fi
-		elif [[ "${tool}" == "c-sstar_plasmid" ]]; then
+		elif [[ "${tool}" == "c-sstar_plasFlow" ]]; then
 			failure_flags="${failure_flags}-NO_c-sstar_output_on_plasmid_assembly"
 			failures=$(( failures + 1 ))
 		elif [[ "${tool}" == "Rawcoverage" ]]; then
