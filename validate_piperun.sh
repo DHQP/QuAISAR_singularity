@@ -1322,17 +1322,21 @@ if [[ -d "${OUTDATADIR}/plasFlow" ]]; then
 		else
 			printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "ALERT" "No plasmid scaffold found?"
 			if [[ "${status}" == "SUCCESS" ]]; then
-				status="WARNING"
+				status="ALERT"
 			fi
 		fi
+	# Needs a better catch of if it ran and failed vs ran and succeeded but with nothing to find
 	else
-		printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "SUCCESS" "No plasmid scaffold found using plasFlow"
+		printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "WARNING" "No plasmid scaffold found using plasFlow"
+		if [[ "${status}" == "SUCCESS" ]] || [[ "${status}" == "ALERT" ]]; then
+			status="Warning"
+		fi
 	fi
 elif [[ "${dec_family}" == "Enterobacteriaceae" ]]; then
-	printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "FAILED" "/plasFlow not found, but is in proper Taxa"
+	printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "FAILED" "/plasFlow not found"
 	status="FAILED"
 else
-	printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "SUCCESS" "Not correct TAXA for plasFlow analysis"
+	printf "%-20s: %-8s : %s\\n" "plasFlow" "SUCCESS" "Not correct TAXA for plasFlow analysis"
 fi
 
 #Check short scaffolds reduction script for plasmid assembly

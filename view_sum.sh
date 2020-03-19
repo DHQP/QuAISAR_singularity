@@ -201,6 +201,11 @@ while IFS= read -r var || [ -n "$var" ]; do
 				notes="${notes},"
 			fi
 			notes="${notes}<>1 Species found in kraken list file above ${contamination_threshold}"
+		elif [[ "${tool}" == "plasFlowAssembly" ]]; then
+			if [[ "${notes}" != "" ]]; then
+				notes="${notes},"
+			fi
+			notes="${notes}plasFlow ran but no Assembly file found"
 		fi
 	elif [[ "${tool_status}" == "WARNING" ]]; then
 		#echo "Found warning"
@@ -292,6 +297,9 @@ while IFS= read -r var || [ -n "$var" ]; do
 			warnings=$(( warnings + 1 ))
 		elif [[ "${tool}" == "Taxa" ]]; then
 			warning_flags="${warning_flags}-NO_species_was_determined"
+			warnings=$(( warnings + 1 ))
+		elif [[ "${tool}" == "plasFlowAssembly" ]]; then
+			warning_flags="${warning_flags}-plasFlow assembly not found, but folder exists"
 			warnings=$(( warnings + 1 ))
 		fi
 	elif [[ "${tool_status}" == "FAILED" ]]; then
@@ -506,8 +514,11 @@ while IFS= read -r var || [ -n "$var" ]; do
 			failure_flags="${failure_flags}-NO_srst2_output"
 			failures=$(( failures + 1 ))
 		elif [[ "${tool}" == "Taxa" ]]; then
-			warning_flags="${warning_flags}-NO_taxonomy_was_determined"
-			warnings=$(( warnings + 1 ))
+			failure_flags="${warning_flags}-NO_taxonomy_was_determined"
+			failures=$(( warnings + 1 ))
+		elif [[ "${tool}" == "plasFlowAssembly" ]]; then
+			failure_flags="${warning_flags}-No_plasFlow_folder_found "
+			failures=$(( warnings + 1 ))
 		fi
 	fi
 done < "${sum_file}"
