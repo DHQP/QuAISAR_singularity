@@ -150,6 +150,7 @@ if [[ -d "${OUTDATADIR}/removedAdapters" ]]; then
 		remAdapt_length_R2=$(tail -n1 "${OUTDATADIR}/removedAdapters/no_PhiX_total_lengths.txt" | cut -d'	' -f2 )
 		R1_diff=$(( raw_length_R1 - remAdapt_length_R1 ))
 		R2_diff=$(( raw_length_R2 - remAdapt_length_R2 ))
+		echo "${raw_length_R1}-${remAdapt_length_R1} ${raw_length_R2}-${remAdapt_length_R2}"
 		if [[ "${remAdapt_length_R1}" -lt 0 ]]; then
 			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "WARNING" "No R1 size found"
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
@@ -1158,9 +1159,8 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 				printf "%-20s: %-8s : %s\\n" "MLST" "FAILED" "no scheme found, check upstream as no genus has been assigned"
 			fi
 		elif [ "${mlstype}" = "-" ] || [ "${mlstype}" = "SUB" ]; then
-			printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
+			printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no type found, possibly new type?"
 			report_info=$(echo "${info}" | cut -d' ' -f2-)
-			echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 				status="WARNING"
 			fi
@@ -1185,9 +1185,8 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 			#echo "'${mlstdb}:${mlstype}'"
 			if [ "${mlstdb}" = "abaumannii" ]; then
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-					printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
+					printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no type found, possibly new type?"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
-					echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
 					fi
@@ -1210,9 +1209,8 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 			#echo "'${mlstdb}:${mlstype}'"
 			if [ "${mlstdb}" = "ecoli" ]; then
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-					printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
+					printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no type found, possibly new type?"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
-					echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
 					fi
@@ -1244,9 +1242,8 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 		mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 		mlstdb=$(echo "${srst_mlst}" | rev | cut -d'-' -f1 | cut -d'.' -f2 | rev )
 		if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-			printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
+			printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type?"
 			report_info=$(echo "${info}" | cut -d' ' -f2-)
-			echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 				status="WARNING"
 			fi
@@ -1263,9 +1260,8 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 				mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 				mlstdb="abaumannii(Oxford)"
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
+					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type?"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
-					echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
 					fi
@@ -1281,9 +1277,8 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 				mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 				mlstdb="abaumannii_2(Pasteur)"
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
+					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type?"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
-					echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
 					fi
@@ -1300,9 +1295,8 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 				mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 				mlstdb="ecoli(Achtman)"
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
+					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type?"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
-					echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
 					fi
@@ -1318,9 +1312,8 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 				mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 				mlstdb="ecoli_2(Pasteur)"
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type? Adding to maintenance_To_Do list"
+					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type?"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
-					echo "${2}/${1}: Possible new MLST type - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
 					fi
@@ -1377,23 +1370,19 @@ if [[ -d "${OUTDATADIR}/16s/" ]]; then
 				printf "%-20s: %-8s : %s\\n" "16s_best_hit" "FAILED" "16s sequences were found but were not able to be classified"
 				status="FAILED"
 			else
-				printf "%-20s: %-8s : %s\\n" "16s_best_hit" "Warning" "Genus=${genus_b}, but no species found, Adding to maintenance_To_Do list"
+				printf "%-20s: %-8s : %s\\n" "16s_best_hit" "Warning" "Genus=${genus_b}, but no species found,"
 				if [ "$status" = "SUCCESS" ]; then
 					status="Warning"
 				fi
 			fi
-			#report_info=$(echo "${info_b}" | cut -d' ' -f2-)
-			#echo "${2}/${1}: 16s ID Warning - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 
 		elif [ -z "${genus_b}" ]; then
-			printf "%-20s: %-8s : %s\\n" "16s_best_hit" "FAILED" "No genus found, Adding to maintenance_To_Do list"
+			printf "%-20s: %-8s : %s\\n" "16s_best_hit" "FAILED" "No genus found,"
 			report_info=$(echo "${info_b}" | cut -d' ' -f2-)
-			echo "${2}/${1}: 16s ID Failure - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			status="FAILED"
 		else
-			printf "%-20s: %-8s : %s\\n" "16s_best_hit" "FAILED" "Nothing found in ${1}_16s_blast_id.txt, Adding to maintenance_To_Do list"
+			printf "%-20s: %-8s : %s\\n" "16s_best_hit" "FAILED" "Nothing found in ${1}_16s_blast_id.txt,"
 			report_info=$(echo "${info_l}" | cut -d' ' -f2-)
-			echo "${2}/${1}: 16s ID Failure - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			status="FAILED"
 		fi
 		info_l=$(tail -n 1 "${OUTDATADIR}/16s/${1}_16s_blast_id.txt")
@@ -1422,23 +1411,18 @@ if [[ -d "${OUTDATADIR}/16s/" ]]; then
 				printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "FAILED" "16s sequences were found but were not able to be classified"
 				status="FAILED"
 			else
-				printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "Warning" "Genus=${genus_l}, but no species found, Adding to maintenance_To_Do list"
+				printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "Warning" "Genus=${genus_l}, but no species found,"
 				if [ "$status" = "SUCCESS" ]; then
 					status="Warning"
 				fi
-			#printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "Warning" "Genus=${genus_l}, but no species found, Adding to maintenance_To_Do list"
-			#report_info=$(echo "${info_l}" | cut -d' ' -f2-)
-			#echo "${2}/${1}: 16s ID Warning - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			fi
 		elif [ -z "${genus_l}" ]; then
-			printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "FAILED" "no genus found, Adding to maintenance_To_Do list"
+			printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "FAILED" "no genus found,"
 			report_info=$(echo "${info_l}" | cut -d' ' -f2-)
-			echo "${2}/${1}: 16s ID Failure - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			status="FAILED"
 		else
-			printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "FAILED" "nothing found in ${1}_16s_blast_id.txt, Adding to maintenance_To_Do list"
+			printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "FAILED" "nothing found in ${1}_16s_blast_id.txt,"
 			report_info=$(echo "${info_l}" | cut -d' ' -f2-)
-			echo "${2}/${1}: 16s ID Failure - ${report_info}" >> "${shareScript}/maintenance_To_Do.txt"
 			status="FAILED"
 		fi
 	else
@@ -1499,10 +1483,6 @@ if [[ "plasmidsFoundviaplasFlow" -eq 1 ]]; then
 	fi
 fi
 echo "---------- ${1} completed as ${status} ----------"
-
-if [ "${status}" = "WARNING" ] || [ "${status}" = "FAILED" ]; then
-	echo "${2}/${1}: ${status}" >> "${shareScript}/maintenance_To_Do.txt"
-fi
 
 
 
