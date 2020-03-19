@@ -82,8 +82,8 @@ elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
 	fi
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq.gz" ]] && [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq.gz" ]]; then
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "SUCCESS" "Zipped"
-	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	raw_length_R2=$(zcat ${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R2=$(zcat ${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq" ]]; then
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "WARNING" "Zipped, but only R1 found"
 	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
@@ -147,7 +147,7 @@ if [[ -d "${OUTDATADIR}/removedAdapters" ]]; then
 	remAdapt_length_R2=-1
 	if [[ -s "${OUTDATADIR}/removedAdapters/no_PhiX_total_lengths.txt" ]]; then
 		remAdapt_length_R1=$(head -n1 "${OUTDATADIR}/removedAdapters/no_PhiX_total_lengths.txt" | cut -d'	' -f2 )
-		remAdapt_length_R1=$(tail -n1 "${OUTDATADIR}/removedAdapters/no_PhiX_total_lengths.txt" | cut -d'	' -f2 )
+		remAdapt_length_R2=$(tail -n1 "${OUTDATADIR}/removedAdapters/no_PhiX_total_lengths.txt" | cut -d'	' -f2 )
 		R1_diff=$(( raw_length_R1 - remAdapt_length_R1 ))
 		R2_diff=$(( raw_length_R2 - remAdapt_length_R2 ))
 		if [[ "${remAdapt_length_R1}" -lt 0 ]]; then
