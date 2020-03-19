@@ -81,9 +81,9 @@ elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
 		status="WARNING"
 	fi
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq.gz" ]] && [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq.gz" ]]; then
-	printf "%-20s: %-8s : %s\\n" "FASTQs" "SUCCESS" "Zipped"
 	raw_length_R1=$(zcat ${OUTDATADIR}/FASTQs/${1}_R1_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	raw_length_R2=$(zcat ${OUTDATADIR}/FASTQs/${1}_R2_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	printf "%-20s: %-8s : %s\\n" "FASTQs" "SUCCESS" "Zipped - R1: ${raw_length_R1}bps R2: ${raw_length_R2}bps"
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq" ]]; then
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "WARNING" "Zipped, but only R1 found"
 	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
