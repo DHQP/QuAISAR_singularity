@@ -127,6 +127,3 @@ plasmidFinder_length=60
 # Shortcuts used to reference NEWEST AR database
 ResGANNCBI_srst2=$(find ${local_DBs}/star/ResGANNCBI_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
-
-run_tasks=10
-tasks_per_isolate=29

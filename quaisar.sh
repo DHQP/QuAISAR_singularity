@@ -1,4 +1,4 @@
-#!/bin/bash -l
+task_number=run_task_id=#!/bin/bash -l
 
 #$ -o quaisar_X.out
 #$ -e quaisar_X.err
@@ -130,7 +130,7 @@ if [ -f "${PROJDATADIR}/${PROJECT}_list.txt" ]; then
 fi
 
 # Task: Copies reads/assemblies from source location to working directory and creates a list of IDs
-# Task No: A
+run_task_id=1
 if [[ "${assemblies}" == "true" ]]; then
 	# Goes through given Assemblies folder
 	echo "${INDATADIR}"
@@ -285,13 +285,13 @@ else
 fi
 
 # Task: Invert list so that the important isolates (for us at least) get run first
-# Task#: B
+run_task_id=2
 if [[ -f "${PROJDATADIR}/${PROJECT}_list.txt" ]]; then
 	sort -k2,2 -t'/' -r "${PROJDATADIR}/${PROJECT}_list.txt" -o "${PROJDATADIR}/${PROJECT}_list.txt"
 fi
 
 # Task: Loops through list file to create an array of all isolates to run through pipeline
-# Task#: C
+run_task_id=3
 declare -a isolate_list=()
 while IFS= read -r file || [ -n "$file" ]; do
 	echo "Found: ${file}"
@@ -300,7 +300,7 @@ while IFS= read -r file || [ -n "$file" ]; do
 done < "${list_path}"
 
 # Task: Displays number and names of files found to analyze
-# Task#: D
+run_task_id=4
 if [[ ${#isolate_list[@]} -gt 1 ]]; then
 	echo "Will analyze these ${#isolate_list[@]} files: ${isolate_list[*]}"
 elif [[ ${#isolate_list[@]} -eq 1 ]]; then
@@ -318,7 +318,7 @@ command_log_file="${PROJDATADIR}/${PROJECT}_on_${run_start_time}_command.log"
 echo -e "Below tools and version number of all singularity calls are printed with the exact command used to run analysis:\n" > "${command_log_file}"
 
 # Task: Get the time the run started to use as the identifier
-# Task#: E
+run_task_id=5
 outarray=()
 echo "Run started at ${run_start_time}; Log saved to ${log_file}"
 echo "Run started at ${run_start_time}" > "${log_file}"
@@ -352,7 +352,7 @@ for isolate in "${isolate_list[@]}"; do
 	echo "Starting processing of ${PROJECT}/${isolate_name}"
 	if [[ "${assemblies}" == "false" ]]; then
 		# Task: Checks and prepares FASTQ folder exists for current sample
-		# Task#: 1
+		task_number=1
 		if [[ -d "${SAMPDATADIR}/FASTQs" ]]; then
 			# Checks if FASTQ folder contains any files then continue
 			if [[ "$(ls -A "${SAMPDATADIR}/FASTQs")" ]]; then
@@ -398,7 +398,7 @@ for isolate in "${isolate_list[@]}"; do
 		### Count the number of Q20, Q30, bases and reads within a pair of FASTQ files
 		echo "----- Counting read quality -----"
 		# Task: Checks for and creates the specified output folder for the QC counts
-		# Task#: 2
+		task_number=2
 		if [ ! -d "${SAMPDATADIR}/preQCcounts" ]; then
 			echo "Creating ${SAMPDATADIR}/preQCcounts"
 			mkdir -p "${SAMPDATADIR}/preQCcounts"
@@ -415,7 +415,7 @@ for isolate in "${isolate_list[@]}"; do
 		totaltime=$((totaltime + timeQCcount))
 
 		# Task: Trimming and Quality Control
-		# Task#: 3
+		task_number=3
 		echo "----- Running BBDUK on reads -----"
 		# Gets start time for bbduk
 		start=$SECONDS
@@ -444,7 +444,7 @@ for isolate in "${isolate_list[@]}"; do
 
 
 		# Task: Quality and Adapter Trimming using trimmomatic
-		# Task#: 4
+		task_number=4
 		echo "----- Running Trimmomatic on reads -----"
 		# Get start time of trimmomatic
 		start=$SECONDS
@@ -465,7 +465,7 @@ for isolate in "${isolate_list[@]}"; do
 		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq"
 
 		# Task: Check differences after QC and trimming (also for gottcha proper read count for assessing unclassified reads)
-		# Task#: 5
+		task_number=5
 		# Get start time for qc check on trimmed reads
 		start=$SECONDS
 		### Count the number of Q20, Q30, bases and reads within the trimmed pair of FASTQ files
@@ -484,7 +484,7 @@ for isolate in "${isolate_list[@]}"; do
 		totaltime=$((totaltime + timeQCcount))
 
 		# Task: Run Kraken on cleaned reads  ######
-		# Task#: 6
+		task_number=6
 		echo "----- Running Kraken on cleaned reads -----"
 		# Get start time of kraken on reads
 		start=$SECONDS
@@ -510,7 +510,7 @@ for isolate in "${isolate_list[@]}"; do
 		totaltime=$((totaltime + timeKrak))
 
 		# Task: Run gottcha(v1) on cleaned reads
-		# Task#: 7
+		task_number=7
 		echo "----- Running gottcha on cleaned reads -----"
 		# Get start time of gottcha
 		start=$SECONDS
@@ -529,7 +529,7 @@ for isolate in "${isolate_list[@]}"; do
 		totaltime=$((totaltime + timeGott))
 
 		# Task: Check reads using SRST2
-		# Task#: 8
+		task_number=8
 		echo "----- Running SRST2 -----"
 		start=$SECONDS
 
@@ -565,7 +565,7 @@ for isolate in "${isolate_list[@]}"; do
 		totaltime=$((totaltime + timesrst2))
 
 		# Task: Assembling Using SPAdes
-		# Task# 9
+		task_number=9
 		echo "----- Assembling Using SPAdes -----"
 		# Get start time of SPAdes
 		start=$SECONDS
@@ -600,7 +600,7 @@ for isolate in "${isolate_list[@]}"; do
 		totaltime=$((totaltime + timeSPAdes))
 
 		# Task: Removing Short Contigs
-		# Task#: 10
+		task_number=10
 		echo "----- Removing Short Contigs -----"
 		python3 "${src}/removeShortContigs.py" -i "${SAMPDATADIR}/Assembly/scaffolds.fasta" -t 500 -s "normal_SPAdes"
 		mv "${SAMPDATADIR}/Assembly/scaffolds.fasta.TRIMMED.fasta" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
@@ -614,7 +614,7 @@ for isolate in "${isolate_list[@]}"; do
 	fi
 
 	# Task: ReKraken on Assembly
-	# Task#: 11
+	task_number=11
 	echo "----- Running Kraken on Assembly -----"
 	# Get start time of kraken on assembly
 	start=$SECONDS
@@ -651,7 +651,7 @@ for isolate in "${isolate_list[@]}"; do
 	totaltime=$((totaltime + timeKrakAss))
 
 	# Task:  Get ID fom 16s
-	# Task#: 12
+	task_number=12
 	echo "----- Identifying via 16s blast -----"
 	start=$SECONDS
 
@@ -786,7 +786,7 @@ for isolate in "${isolate_list[@]}"; do
 	totaltime=$((totaltime + time16s))
 
 	# Task: Check quality of Assembly
-	# Task#: 13
+	task_number=13
 	echo "----- Running quality checks on Assembly -----"
 	# Get start time of QC assembly check
 	start=$SECONDS
@@ -813,7 +813,7 @@ for isolate in "${isolate_list[@]}"; do
 	cd "${owd}"
 
 	# Task: Prokka on assembly
-	# Task#: 14
+	task_number=14
 	echo "----- Running Prokka on Assembly -----"
 	# Get start time for prokka
 	start=$SECONDS
@@ -834,12 +834,12 @@ for isolate in "${isolate_list[@]}"; do
 	totaltime=$((totaltime + timeProk))
 
 	# Task:  Rename contigs to something helpful (Had to wait until after prokka runs due to the strict naming requirements
-	# Task#: 15
+	task_number=15
 	mv "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed_original.fasta"
 	python3 "${src}/fasta_headers.py" -i "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed_original.fasta" -o "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
 
 	# Task: Average Nucleotide Identity
-	# Task#: 16
+	task_number=16
 	echo "----- Running ANI for Species confirmation -----"
 	# ANI uses assembly and sample would have exited already if assembly did not complete, so no need to check
 	# Get start time of ANI
@@ -1012,7 +1012,7 @@ for isolate in "${isolate_list[@]}"; do
 	totaltime=$((totaltime + timeANI))
 
 	# Task: Get taxonomy from currently available files (Only ANI, has not been run...yet, will change after discussions)
-	# Task#: 17
+	task_number=17
 	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
 	# Capture the anticipated taxonomy of the sample using kraken on assembly output
 	echo "----- Extracting Taxonomy from Taxon Summary -----"
@@ -1057,7 +1057,7 @@ for isolate in "${isolate_list[@]}"; do
 	fi
 
 	# Task: BUSCO on prokka output
-	# Task#: 18
+	task_number=18
 	echo "----- Running BUSCO on Assembly -----"
 	# Check to see if prokka finished successfully
 	if [ -s "${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.gbf" ] || [ -s "${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.gff" ]; then
@@ -1108,7 +1108,7 @@ for isolate in "${isolate_list[@]}"; do
 	fi
 
 	# Task: c-SSTAR for finding AR Genes
-	# Task#: 19
+	task_number=19
 	echo "----- Running c-SSTAR for AR Gene identification -----"
 	# c-SSTAR uses assembly and sample would have exited already if assembly did not complete, so no need to check
 	# Get start time of ccstar
@@ -1199,7 +1199,7 @@ for isolate in "${isolate_list[@]}"; do
 	totaltime=$((totaltime + timestar))
 
 	# Task: Run GAMA on assembly
-	# Task#: 20
+	task_number=20
 	echo "----- Running GAMA -----"
 	start=$SECONDS
 	if [ ! -d "${SAMPDATADIR}/GAMA" ]; then  #create outdir if absent
@@ -1215,7 +1215,7 @@ for isolate in "${isolate_list[@]}"; do
 	totaltime=$((totaltime + timeGAMA))
 
 	# Task: Get MLST profile
-	# Task#: 21
+	task_number=21
 	echo "----- Running MLST -----"
 	if [ ! -d "${SAMPDATADIR}/MLST" ]; then  #create outdir if absent
 		echo "Creating ${SAMPDATADIR}/MLST"
@@ -1409,7 +1409,7 @@ for isolate in "${isolate_list[@]}"; do
 	totaltime=$((totaltime + timeMLST))
 
 	# Task: Try to find any plasmids
-	# Task#: 22
+	task_number=22
 	echo "----- Identifying plasmid replicons using plasmidFinder -----"
 	start=$SECONDS
 	if [[ ! -d "${SAMPDATADIR}/plasmidFinder" ]]; then
@@ -1434,7 +1434,7 @@ for isolate in "${isolate_list[@]}"; do
 			mkdir "${SAMPDATADIR}/plasFlow"
 		fi
 		# Task: Run all tools associated with reconsructing plasmids using plasFlow
-		# Task# 23
+		task_number=23
 		if [[ -s "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" ]]; then
 			# Trim contigs a little to 2000 and larger and put through plasflow.
 			python3 "${src}/removeShortContigs.py" -i "${SAMPDATADIR}/Assembly/scaffolds.fasta" -t 2000 -s "normal_SPAdes"
@@ -1470,7 +1470,7 @@ for isolate in "${isolate_list[@]}"; do
 		fi
 
 		# Check quality of plasFlow/Unicycler assembly
-		# Task#: 24
+		task_number=24
 		if [[ -s "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta" ]]; then
 			if [ ! -d "${SAMPDATADIR}/Assembly_Stats_plasFlow" ]; then
 				echo "Creating ${SAMPDATADIR}/Assembly_Stats_plasFlow"
@@ -1485,7 +1485,7 @@ for isolate in "${isolate_list[@]}"; do
 		fi
 
 		# Task: Run c-SSTAR on plasFlow Assembly
-		# Task#: 25
+		task_number=25
 		# Creates the output c-sstar folder if it does not exist yet
 		if [ ! -d "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}" ]; then  #create outdir if absent
 			echo "Creating ${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
@@ -1570,7 +1570,7 @@ for isolate in "${isolate_list[@]}"; do
 
 
 		# Task: Try to find any plasmid replicons on plasFlow assembly
-		# Task#: 26
+		task_number=26
 		echo "----- Identifying plasmids using plasmidFinder -----"
 		if [[ ! -d "${SAMPDATADIR}/plasmidFinder_on_plasFlow" ]]; then
 			mkdir "${SAMPDATADIR}/plasmidFinder_on_plasFlow"
@@ -1580,7 +1580,7 @@ for isolate in "${isolate_list[@]}"; do
 		python "${src}/json_plasmidFinder_converter.py" -i "${SAMPDATADIR}/plasmidFinder_on_plasFlow/data.json" -o "${SAMPDATADIR}/plasmidFinder_on_plasFlow/${isolate_name}_results_table_summary.txt"
 
 		# Task: Use GAMA to find any AR genes in plasFlow assembly_length
-		# Task#: 27
+		task_number=27
 		echo "----- Identifying AR genes with GAMA -----"
 		if [ ! -d "${SAMPDATADIR}/GAMA_plasFlow" ]; then  #create outdir if absent
 			echo "Creating ${SAMPDATADIR}/GAMA_plasFlow"
@@ -1596,11 +1596,11 @@ for isolate in "${isolate_list[@]}"; do
 	fi
 
 	# Task: Create stats file
-	# Task#: 28
+	task_number=28
 	"${src}/validate_piperun.sh" "${isolate_name}" "${PROJECT}" > "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt"
 
 	# Task: Clean sample folder
-	# Task#: 29
+	task_number=29
 	"${src}/sample_cleaner.sh" "${isolate_name}" "${PROJECT}"
 
 	rm -r "${src}/tmp"
@@ -1630,7 +1630,7 @@ for isolate in "${isolate_list[@]}"; do
 done
 
 # Task: Concatenates lists if this run was an addition to an already processed folder
-# Task#: F
+run_task_id=6
 if [[ -f "${PROJDATADIR}/${PROJECT}_list_original.txt" ]]; then
 	cat "${PROJDATADIR}/${PROJECT}_list.txt" >> "${PROJDATADIR}/${PROJECT}_list_original.txt"
 	rm "${PROJDATADIR}/${PROJECT}_list.txt"
@@ -1638,7 +1638,7 @@ if [[ -f "${PROJDATADIR}/${PROJECT}_list_original.txt" ]]; then
 fi
 
 # Task: Run the Seqlog creator on the proper file
-# Task#: G
+run_task_id=7
 declare -A mmb_bugs
 while IFS= read -r bug_lines  || [ -n "$bug_lines" ]; do
 	bug_genus=$(echo "${bug_lines}" | cut -d'	' -f1)
@@ -1654,7 +1654,7 @@ done < ${local_DBs}/MMB_Bugs.txt
 #> "${PROJDATADIR}/Seqlog_output.txt"
 
 # Task: Create Seqlog info
-# Task#: H
+run_task_id=8
 
 # Create header for file
 echo "KRAKEN ID Raw Reads	KRAKEN ID Assembly	16S BLAST ID	Q20_Total_[bp]	Q30_Total_[bp]	Q20_R1_[bp]	Q20_R2_[bp]	Q20_R1_[%]	Q20_R2_[%]	Q30_R1_[bp]	Q30_R2_[bp]	Q30_R1_[%]	Q30_R2_[%]	Total_Sequenced_[bp]	Total_Sequenced_[reads]	Estimated coverage	Contigs	Cumulative_Length_Assembly (bp)	Assembly_Ratio	BUSCO	ANI" > "${PROJDATADIR}/Seqlog_output.txt"
@@ -1757,19 +1757,18 @@ while IFS= read -r var || [ -n "$var" ]; do
 				num_contigs=$(sed -n '14p' "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv"| sed -r 's/[\t]+/ /g' | cut -d' ' -f3 )
 			elif [ ${counter} -eq 1 ]
 			then
-				ass_length=$(sed -n '16p' "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
+				assembly_length=$(sed -n '16p' "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
 				#Check Assembly ratio against expected size to see if it is missing a large portion or if there is contamination/double genome
 				dec_genus_initial="${dec_genus:0:1}"
 				if [[ "${dec_genus_initial}" = "[" ]] || [[ "${dec_genus_initial}" = "(" ]]; then
 					dec_genus_initial="${dec_genus:1:1}"
 				fi
-				ass_ID="${dec_genus_initial}.${dec_species}"
-				echo "About to check mmb_bugs[${ass_ID}]"
-				if [[ ! -z "${mmb_bugs[${ass_ID}]}" ]]; then
-					#echo "Found Bug in DB: ${ass_ID}-${mmb_bugs[${ass_ID}]}"
-					ass_ratio=$(awk -v p="${ass_length}" -v q="${mmb_bugs[${ass_ID}]}" 'BEGIN{printf("%.2f",p/q)}')
+				assembly_ID="${dec_genus_initial}.${dec_species}"
+				echo "About to check mmb_bugs[${assembly_ID}]"
+				if [[ ! -z "${mmb_bugs[${assembly_ID}]}" ]]; then
+					assembly_ratio=$(awk -v p="${assembly_length}" -v q="${mmb_bugs[${assembly_ID}]}" 'BEGIN{printf("%.2f",p/q)}')
 				else
-					ass_ratio="Not_in_DB"
+					assembly_ratio="Not_in_DB"
 				fi
 			elif [ ${counter} -eq 3 ]
 			then
@@ -1777,7 +1776,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 			fi
 			counter=$((counter+1))
 		done < ${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv
-		contig_info=$(echo -e "${num_contigs}\\t${ass_length}\\t${ass_ratio}")
+		contig_info=$(echo -e "${num_contigs}\\t${assembly_length}\\t${assembly_ratio}")
 	fi
 
 	# Pulls busco info from summary file
@@ -1824,8 +1823,8 @@ while IFS= read -r var || [ -n "$var" ]; do
 	# Extract q30 reads from qcCounts to calculate average coverage as q30_reads/assembly_length
 	q30_reads=$(echo "${read_qc_info}" | awk -F ' ' '{print $2}')
 	# Change later to AWK as this wont work on ASPEN, but consolidate won't likely be run on cluster
-	if [[ ${ass_length} -gt 0 ]]; then
-		avg_coverage=$(bc <<<"scale=2 ; ${q30_reads} / ${ass_length}")
+	if [[ ${assembly_length} -gt 0 ]]; then
+		avg_coverage=$(bc <<<"scale=2 ; ${q30_reads} / ${assembly_length}")
 	else
 		avg_coverage="N/A"
 	fi
@@ -1840,14 +1839,16 @@ while IFS= read -r var || [ -n "$var" ]; do
 done < ${list_path}
 
 # Task: Create run summary
-# Task#: I
+run_task_id=9
 runsumdate=$(date "+%m_%d_%Y_at_%Hh_%Mm")
 ${src}/run_sum.sh ${PROJECT}
 
-# Task: Copy config file to run folder to show vconfiguration used in the run
-# Task# J
+# Task: Copy config file to run folder to show configuration used in the run
+run_task_id=10
 echo "Moving config file(${config_file}) to log directory ($log_dir)"
 cp "${config_file}" "${log_dir}/config_${PROJECT}.sh"
+
+rm
 
 end_date=$(date "+%m_%d_%Y_at_%Hh_%Mm")
 echo "Run ended at ${end_date}" >> "${log_file}"
