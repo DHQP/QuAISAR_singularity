@@ -176,11 +176,12 @@ if [[ -d "${OUTDATADIR}/removedAdapters" ]]; then
 			R2_percent_loss=$(( remAdapt_length_R2 * 100 / ${raw_length_R2} ))
 			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "SUCCESS" "R2: ${remAdapt_length_R2} (${R2_percent_loss}% removed)"
 		fi
-	else [[ -s "${OUTDATADIR}/removedAdapters/${1}-noPhiX-R2.fsq" ]]; then
+	else
 		printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX" "WARNING" "No total lengths found...did it run?"
 		if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 			status="WARNING"
 		fi
+	fi
 else
 	printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX" "FAILED" "/removedAdapters does not exist"
 	status="FAILED"
