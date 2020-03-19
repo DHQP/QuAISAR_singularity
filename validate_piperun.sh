@@ -1479,12 +1479,5 @@ fi
 
 echo "---------- ${1} completed as ${status} ----------"
 
-
-
-
-
-
-
-
 #Script exited gracefully (unless something else inside failed)
 exit 0
