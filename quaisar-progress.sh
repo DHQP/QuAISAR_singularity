@@ -13,24 +13,40 @@ fi
 . ./config.sh
 
 #
-# Description: Wrapper for the main quaisar script to allow easy forwarding for log output and to attemp a progress bar
+# Description: Helper for the main quaisar script to allow easy visualization of progress of run
 #
-# Usage ./quaisar-pro.sh
+# Usage ./quaisar-progress.sh full_path_to_run_ID
 #
-# Output loction: default_config.sh_output_location/run_ID/
+# Output loction: screen
 #
 # Modules required: None
 #
-# v1.0 (03/17/2019)
+# v1.0 (03/19/2019)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
-# Checking for proper number of arguments from command line
-if [[ $# -lt 1  || $# -gt 9 ]]; then
-	echo "If reads are in default location set in config file then"
-  echo "Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-a|r]"
-	echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
-  echo "You have used $# args"
-  exit 3
+# Checks for proper argumentation
+if [[ $# -eq 0 ]]; then
+	echo "No argument supplied to $0, exiting"
+	exit 1
+elif [[ -z "${1}" ]]; then
+	echo "Empty run_ID supplied to quaisar-progress.sh, exiting"
+	exit 1
+elif [[ "${1}" = "-h" ]]; then
+	echo "Usage is ./run_sum.sh path_to_run_folder"
+	echo "Output is saved to ${output_dir}/miseq_run_ID"
+	exit 0
 fi
+
+run_to_check=${1}
+pro_run_task_id=$(head -n1 ${run_to_check}/progress.txt | cut -d':' -f2)
+pro_Isolate_count=$(head -n2 ${run_to_check}/progress.txt | tail -n1 | cut -d':' -f2)
+current_Isolate_number=$(head -n3 ${run_to_check}/progress.txt | tail -n1 | cut -d':' -f2)
+pro_Isolate_task_number=$(tail -n1 ${run_to_check}/progress.txt | cut -d':' -f2)
+total_jobs=$(( run_tasks + pro_Isolate_count * tasks_per_isolate ))
+current_Isolate_progress=$(( 100 * pro_Isolate_task_number / tasks_per_isolate ))
+jobs_completed=$(( current_Isolate_number * tasks_per_isolate - tasks_per_isolate + pro_run_task_id))
+total_progress=$(( 100 * jobs_completed / total_jobs ))
+echo "${current_Isolate_progress}"
+echo "${total_progress}"
