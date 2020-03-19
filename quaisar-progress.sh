@@ -48,5 +48,6 @@ total_jobs=$(( run_tasks + pro_Isolate_count * tasks_per_isolate ))
 current_Isolate_progress=$(( 100 * pro_Isolate_task_number / tasks_per_isolate ))
 jobs_completed=$(( current_Isolate_number * tasks_per_isolate - tasks_per_isolate + pro_run_task_id))
 total_progress=$(( 100 * jobs_completed / total_jobs ))
+echo "${pro_run_task_id}	${pro_Isolate_count}	${current_Isolate_number}	${pro_Isolate_task_number}	${total_jobs}	${jobs_completed}\n\n\n"
 echo "${current_Isolate_progress}"
 echo "${total_progress}"
