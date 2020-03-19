@@ -140,7 +140,7 @@ else
 fi
 
 ## This folder is now deleted afterwards and therefore is no longer checked
-Checking BBDUK output folder
+# Checking BBDUK output folder
 if [[ -d "${OUTDATADIR}/removedAdapters" ]]; then
 	#printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX" "SUCCESS" "Found"
 	remAdapt_length_R1=-1
