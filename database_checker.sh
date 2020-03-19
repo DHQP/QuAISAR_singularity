@@ -155,6 +155,7 @@ fi
 	rm -r gottcha
 	mv gottcha_db gottcha
 	rm gottcha.dbprofile.out
+	# Need to find sa place to host genus_Lookup.tar.gz
  fi
 
 # # Possible solution to gottchaV1 not working
@@ -191,20 +192,24 @@ if [[ ! -d "${local_DBs}/custom_singularities" ]]; then
 	cp -r /container_DBs/custom_singularities ${local_DBs}
 fi
 
-if [[ ! -d "${local_DBs}/MMB_Bugs.txt" ]]; then
+if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
 	cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
 fi
 
-if [[ ! -d "${local_DBs}/taxes.csv" ]]; then
+if [[ ! -f "${local_DBs}/taxes.csv" ]]; then
 	cp -r /container_DBs/taxes.csv ${local_DBs}
 fi
 
-if [[ ! -d "${local_DBs}/phiX.fasta" ]]; then
+if [[ ! -f "${local_DBs}/phiX.fasta" ]]; then
 	cp -r /container_DBs/phiX.fasta ${local_DBs}
 fi
 
-if [[ ! -d "${local_DBs}/adapters.fasta" ]]; then
+if [[ ! -f "${local_DBs}/adapters.fasta" ]]; then
 	cp -r /container_DBs/adapters.fasta ${local_DBs}
+fi
+
+if [[ ! -d "${local_DBs}/pubMLSTs" ]]; then
+	cp -r /container_DBs/pubMLSTs ${local_DBs}
 fi
 
 # individual Files (21 KBs)

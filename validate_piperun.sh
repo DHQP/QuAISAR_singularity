@@ -94,12 +94,12 @@ else
 fi
 #Checking QC counts
 if [[ -s "${OUTDATADIR}/preQCcounts/${1}_counts.txt" ]]; then
-	reads_pre=$(head -n 1 "${OUTDATADIR}/preQCcounts/${1}_counts.txt" | cut -d'	' -f13)
+	reads_pre=$(tail -n1 "${OUTDATADIR}/preQCcounts/${1}_counts.txt" | cut -d'	' -f13)
 	pairs_pre=$((reads_pre/2))
-	Q30_R1=$(head -n 1 "${OUTDATADIR}/preQCcounts/${1}_counts.txt" | cut -d'	' -f10)
+	Q30_R1=$(tail -n1 "${OUTDATADIR}/preQCcounts/${1}_counts.txt" | cut -d'	' -f10)
 	Q30_R1_rounded=$(echo "${Q30_R1}"  | cut -d'.' -f2)
 	Q30_R1_rounded=$(echo "${Q30_R1_rounded::2}")
-	Q30_R2=$(head -n 1 "${OUTDATADIR}/preQCcounts/${1}_counts.txt" | cut -d'	' -f11)
+	Q30_R2=$(tail -n1 "${OUTDATADIR}/preQCcounts/${1}_counts.txt" | cut -d'	' -f11)
 	Q30_R2_rounded=$(echo "${Q30_R2}"  | cut -d'.' -f2)
 	Q30_R2_rounded=$(echo "${Q30_R2_rounded::2}")
 	if [[ "${reads_pre}" -le 1000000 ]]; then
@@ -184,7 +184,7 @@ else
 fi
 #Checking QC counts after trimming
 if [[ -s "${OUTDATADIR}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
-	reads_post=$(head -n 1 "${OUTDATADIR}/preQCcounts/${1}_trimmed_counts.txt" | cut -d'	' -f13)
+	reads_post=$(tail -n1 "${OUTDATADIR}/preQCcounts/${1}_trimmed_counts.txt" | cut -d'	' -f13)
 	pairs_post=$((reads_post/2))
 	loss=$(echo "scale=2; 100*(${reads_pre} - ${reads_post}) / ${reads_pre}" | bc )
 	if [[ "${reads_post}" -le 500000 ]]; then
@@ -737,7 +737,7 @@ fi
 
 # check coverage
 if [[ -s "${OUTDATADIR}/preQCcounts/${1}_counts.txt" ]]; then
-	line=$(head -n 1 "${OUTDATADIR}/preQCcounts/${1}_counts.txt")
+	line=$(tail -n1 "${OUTDATADIR}/preQCcounts/${1}_counts.txt")
 	IFS='	' read -r -a qcs <<< "${line}"
 	read_qc_info=${qcs[@]:1}
 	# Extract q30 reads from qcCounts to calculate average coverage as q30_reads/assembly_length
@@ -764,7 +764,7 @@ if [[ -s "${OUTDATADIR}/preQCcounts/${1}_counts.txt" ]]; then
 	fi
 fi
 if [[ -s "${OUTDATADIR}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
-	line=$(head -n 1 "${OUTDATADIR}/preQCcounts/${1}_trimmed_counts.txt")
+	line=$(tail -n1 "${OUTDATADIR}/preQCcounts/${1}_trimmed_counts.txt")
 	IFS='	' read -r -a qcs <<< "${line}"
 	read_qc_info=${qcs[@]:1}
 	# Extract q30 reads from qcCounts to calculate average coverage as q30_reads/assembly_length
