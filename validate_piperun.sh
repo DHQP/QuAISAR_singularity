@@ -1309,7 +1309,7 @@ fi
 # #Check plasFlow plasmid assembly
 plasmidsFoundviaplasFlow=0
 if [[ -d "${OUTDATADIR}/plasFlow" ]]; then
-	if [[ -s "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly.fasta" ]]; then
+	if [[ -s "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_original.fasta" ]]; then
 		# Count the number of '>' in the assembly file before trimming
 		plas_scaffolds=">"
 		plas_scaffolds=$(grep -c ${plas_scaffolds} "${OUTDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_original.fasta")
