@@ -42,12 +42,12 @@ elif [ -z "$2" ]; then
 	exit 1
 fi
 
-OUTDATADIR=${processed}/${2}/${1}
+OUTDATADIR=${output_dir}/${2}/${1}
 
 # Creates and prints header info for the sample being processed
 today=$(date)
 echo "----------Checking ${2}/${1} for successful completion on ----------"
-echo "Sample output folder starts at: " "${processed}/${2}/${1}"
+echo "Sample output folder starts at: " "${OUTDATADIR}/${2}/${1}"
 status="SUCCESS"
 # Checks to see if the sample has a time summary file associated with it
 if [[ -s "${OUTDATADIR}/time_summary.txt" ]]; then
