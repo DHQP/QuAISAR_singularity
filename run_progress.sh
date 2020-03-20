@@ -78,7 +78,7 @@ while true; do
 	run_progress="${total_completed_string}${total_incomplete_string}"
 	echo -e "${current_Isolate_progress}+${isolate_incomplete_percent}=100?"
 	echo -e "${total_progress}+${total_incomplete_percent}=100?"
-	echo -e "\nProgress for run $1\n[${isolate_progress}]\t${current_Isolate_progress}%-${current_Isolate_name}-${iso_AA[${pro_Isolate_task_number}]}\n[${run_progress}]\t${total_progress}%-${run_AA[${pro_run_task_id}]}\n"
+	echo -en "\rProgress for run $1\n[${isolate_progress}]\t${current_Isolate_progress}%-${current_Isolate_name}-${iso_AA[${pro_Isolate_task_number}]}\n[${run_progress}]\t${total_progress}%-${run_AA[${pro_run_task_id}]}\n"
 
 	#echo -ne "\r${BAR:0:$current_Isolate_progress}(${current_Isolate_progress}%-${current_Isolate_name}-${iso_AA[${pro_Isolate_task_number}]})"
 	#	echo -ne "\r${BAR:0:$total_progress}(${total_progress}%-${run_AA[${pro_run_task_id}]})"
