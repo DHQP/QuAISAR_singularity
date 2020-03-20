@@ -38,7 +38,7 @@ isolate_count=0
 # 4 - isolate number (out of however many on the list)
 # 5 - isolate task number
 function write_Progress() {
-	echo -e "${run_task_id}\n${isolate_count}\n${isolate_number}\n${task_number}\n" > ${PROJDATADIR}/progress.txt
+	echo -e "run_task_ID:${run_task_id}\nTotal_isolates:${isolate_count}\nCurrent_isolate:${isolate_number}\nCurrent_isolate_task_number:${task_number}\n" > ${PROJDATADIR}/progress.txt
 }
 
 # Checking for proper number of arguments from command line
