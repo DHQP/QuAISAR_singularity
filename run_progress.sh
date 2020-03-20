@@ -30,8 +30,8 @@ run_tasks=11
 tasks_per_isolate=29
 
 #Change window size to match progress bars (assuming this will be running for status only)
-printf '\e[8;6;150t'
-printf '\e[2t' && sleep 2 && printf '\e[1t'
+printf '\e[8;6;140t'
+printf '\e[2t' && sleep 1 && printf '\e[1t'
 
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
