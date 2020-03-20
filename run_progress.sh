@@ -53,7 +53,7 @@ declare -a run_AA=('Copying Reads/Assemblies to project directory' 'Inverting li
 # isolate task AA
 declare -a iso_AA=('Prepping FASTQ folder' 'Raw Read Quality count' 'BBDUK PhiX' 'Trimmomatic' 'Trimmed Read Quality Count' 'Kraken on reads' 'GOTTCHA' 'SRST2 AR' 'SPAdes Assembling' 'Trimming Assemmbly' 'Kraken on Assembly' '16s Identification' 'Assembly QC' 'PROKKA' 'Rename Contig Headers' 'ANI' 'Taxon classification' 'BUSCO' 'c-SSTAR' 'GAMA' 'MLST' 'plasmidFinder' 'plasFlow' 'Check plasFlow assembly' 'c-SSTAR on plasFlow' 'plasmidFinder on PlasFlow' 'GAMA on plasFlow' 'Summarize isolate' 'Cleaning isolate')
 
-#while 1; do
+while 1; do
 	pro_run_task_id=$(head -n1 ${run_to_check}/progress.txt | cut -d':' -f2)
 	pro_Isolate_count=$(head -n2 ${run_to_check}/progress.txt | tail -n1 | cut -d':' -f2)
 	current_Isolate_number=$(head -n3 ${run_to_check}/progress.txt | tail -n1 | cut -d':' -f2)
@@ -86,4 +86,4 @@ declare -a iso_AA=('Prepping FASTQ folder' 'Raw Read Quality count' 'BBDUK PhiX'
 		echo "Run is complete!!!"
 		exit
 	fi
-#done
+done
