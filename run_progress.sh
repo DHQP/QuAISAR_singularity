@@ -46,7 +46,7 @@ run_to_check=${1}
 run_name=$(basename ${run_to_check})
 BAR_length=100
 BAR_character='#'
-BAR=$(printf "%${BAR_length}s" | tr ' ' $BAR_character)
+BAR=$(printf "[%${BAR_length}s]" | tr ' ' $BAR_character)
 
 # run_task AA
 declare -A run_AA=( [1]="Copying Reads/Assemblies to project directory" [2]="Inverting list" [3]="Listing all isolates" [4]="Displaying isolates" [5]="Creating unique run Identifier" [6]="Catting list" [7]="running isolates" [8]="Creating bug array "[9]="Creating Seqlog" [10]="Creating run summary" [11]="Copying config and closing out run")
