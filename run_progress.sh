@@ -51,7 +51,7 @@ BAR=$(printf "[%${BAR_length}s]" | tr ' ' $BAR_character)
 # run_task AA
 declare -A run_AA=( "Copying Reads/Assemblies to project directory" "Inverting list" "Listing all isolates" "Displaying isolates" "Creating unique run Identifier" "Catting list" "running isolates" "Creating bug array" "Creating Seqlog" "Creating run summary" "Copying config and closing out run")
 # isolate task AA
-declare -A iso_AA=( [1]="Prepping FASTQ folder" [2]="Raw Read Quality count" [3]="BBDUK PhiX" [4]="Trimmomatic" [5]="Trimmed Read Quality Count" [6]="Kraken on reads" [7]="GOTTCHA" [8]="SRST2 AR" [9]="SPAdes Assembling" [10]="Trimming Assemmbly" [11]="Kraken on Assembly" [12]="16s Identification" [13]="Assembly QC" [14]="PROKKA" [15]="Rename Contig Headers" [16]="ANI" [17]="Taxon classification" [18]="BUSCO" [19]="c-SSTAR" [20]="GAMA" [21]="MLST" [22]="plasmidFinder" [23]="plasFlow" [24]="Check plasFlow assembly" [25]="c-SSTAR on plasFlow" [26]="plasmidFinder on PlasFlow" [27]="GAMA on plasFlow" [28]="Summarize isolate" [29]="Cleaning isolate")
+declare -A iso_AA=( "Prepping FASTQ folder" "Raw Read Quality count" "BBDUK PhiX" "Trimmomatic" "Trimmed Read Quality Count" "Kraken on reads" "GOTTCHA" "SRST2 AR" "SPAdes Assembling" "Trimming Assemmbly" "Kraken on Assembly" "16s Identification" "Assembly QC" "PROKKA" "Rename Contig Headers" "ANI" "Taxon classification" "BUSCO" "c-SSTAR" "GAMA" "MLST" "plasmidFinder" "plasFlow" "Check plasFlow assembly" "c-SSTAR on plasFlow" "plasmidFinder on PlasFlow" "GAMA on plasFlow" "Summarize isolate" "Cleaning isolate")
 
 #while 1; do
 	pro_run_task_id=$(head -n1 ${run_to_check}/progress.txt | cut -d':' -f2)
