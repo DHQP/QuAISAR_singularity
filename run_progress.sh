@@ -49,7 +49,7 @@ BAR_character='#'
 BAR=$(printf "[%${BAR_length}s]" | tr ' ' $BAR_character)
 
 # run_task AA
-declare -A run_AA=( [1]="Copying Reads/Assemblies to project directory" [2]="Inverting list" [3]="Listing all isolates" [4]="Displaying isolates" [5]="Creating unique run Identifier" [6]="Catting list" [7]="running isolates" [8]="Creating bug array "[9]="Creating Seqlog" [10]="Creating run summary" [11]="Copying config and closing out run")
+declare -A run_AA=( "Copying Reads/Assemblies to project directory" "Inverting list" "Listing all isolates" "Displaying isolates" "Creating unique run Identifier" "Catting list" "running isolates" "Creating bug array" "Creating Seqlog" "Creating run summary" "Copying config and closing out run")
 # isolate task AA
 declare -A iso_AA=( [1]="Prepping FASTQ folder" [2]="Raw Read Quality count" [3]="BBDUK PhiX" [4]="Trimmomatic" [5]="Trimmed Read Quality Count" [6]="Kraken on reads" [7]="GOTTCHA" [8]="SRST2 AR" [9]="SPAdes Assembling" [10]="Trimming Assemmbly" [11]="Kraken on Assembly" [12]="16s Identification" [13]="Assembly QC" [14]="PROKKA" [15]="Rename Contig Headers" [16]="ANI" [17]="Taxon classification" [18]="BUSCO" [19]="c-SSTAR" [20]="GAMA" [21]="MLST" [22]="plasmidFinder" [23]="plasFlow" [24]="Check plasFlow assembly" [25]="c-SSTAR on plasFlow" [26]="plasmidFinder on PlasFlow" [27]="GAMA on plasFlow" [28]="Summarize isolate" [29]="Cleaning isolate")
 
@@ -58,7 +58,7 @@ declare -A iso_AA=( [1]="Prepping FASTQ folder" [2]="Raw Read Quality count" [3]
 	pro_Isolate_count=$(head -n2 ${run_to_check}/progress.txt | tail -n1 | cut -d':' -f2)
 	current_Isolate_number=$(head -n3 ${run_to_check}/progress.txt | tail -n1 | cut -d':' -f2)
 	isolate_index=$((current_Isolate_number + 1))
-	current_Isolate_name=$(head -n${isolate_index} ${run_to_check}/${run_ID}_list.txt)
+	current_Isolate_name=$(head -n${isolate_index} ${run_to_check}/${run_ID}_list.txt | tail -n1)
 	pro_Isolate_task_number=$(tail -n1 ${run_to_check}/progress.txt | cut -d':' -f2)
 	total_jobs=$(( run_tasks + pro_Isolate_count * tasks_per_isolate ))
 	current_Isolate_progress=$(( 100 * pro_Isolate_task_number / tasks_per_isolate ))
