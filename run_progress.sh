@@ -69,10 +69,10 @@ declare -A iso_AA=( [1]="Prepping FASTQ folder" [2]="Raw Read Quality count" [3]
 	#echo "${total_progress}"
 	isolate_incomplete_percent=$(( 100 - current_Isolate_progress ))
 	total_incomplete_percent=$(( 100 - total_progress ))
-	isolate_completed_string=$(printf "%0=s." $(seq 1 ${current_Isolate_progress})) # Fill $variable with $n periods
-	isolate_incomplete_string=$(printf "%0 s." $(seq 1 ${isolate_incomplete_percent})) # Fill $variable with $n periods
-	total_completed_string=$(printf "%0=s." $(seq 1 ${total_progress})) # Fill $variable with $n periods
-	total_incomplete_string=$(printf "%0=s." $(seq 1 ${total_incomplete_percent}))
+	isolate_completed_string=$(printf "%0.s=" $(seq 1 ${current_Isolate_progress})) # Fill $variable with $n periods
+	isolate_incomplete_string=$(printf "%0.s " $(seq 1 ${isolate_incomplete_percent})) # Fill $variable with $n periods
+	total_completed_string=$(printf "%0.s=" $(seq 1 ${total_progress})) # Fill $variable with $n periods
+	total_incomplete_string=$(printf "%0.s " $(seq 1 ${total_incomplete_percent}))
 	isolate_progress="${isolate_completed_string}${isolate_incomplete_string}"
 	run_progress="${total_completed_string}${total_incomplete_string}"
 	clear
