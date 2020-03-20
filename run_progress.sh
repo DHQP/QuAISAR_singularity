@@ -61,13 +61,13 @@ while true; do
 	current_Isolate_name=$(head -n${isolate_index} ${run_to_check}/${run_name}_list.txt | tail -n1 | cut -d'/' -f2)
 	pro_Isolate_task_number=$(tail -n1 ${run_to_check}/progress.txt | cut -d':' -f2)
 	total_jobs=$(( run_tasks + pro_Isolate_count * tasks_per_isolate ))
-	echo -e "${pro_Isolate_task_number}	${tasks_per_isolate}\n\n\n"
+	#echo -e "${pro_Isolate_task_number}	${tasks_per_isolate}\n\n\n"
 	current_Isolate_progress=$(( 100 * pro_Isolate_task_number / tasks_per_isolate ))
 	jobs_completed=$(( current_Isolate_number * tasks_per_isolate + pro_run_task_id + pro_Isolate_task_number))
 	total_progress=$(( 100 * jobs_completed / total_jobs ))
-	echo -e "${pro_run_task_id}	${pro_Isolate_count}	${current_Isolate_number}	${pro_Isolate_task_number}	${total_jobs}	${jobs_completed}\n\n\n"
-	echo "${current_Isolate_progress}"
-	echo "${total_progress}"
+	#echo -e "${pro_run_task_id}	${pro_Isolate_count}	${current_Isolate_number}	${pro_Isolate_task_number}	${total_jobs}	${jobs_completed}\n\n\n"
+	#echo "${current_Isolate_progress}"
+	#echo "${total_progress}"
 	isolate_incomplete_percent=$(( 100 - current_Isolate_progress ))
 	total_incomplete_percent=$(( 100 - total_progress ))
 	isolate_completed_string=$(printf "%0.s=" $(seq 1 ${current_Isolate_progress})) # Fill $variable with $n periods
@@ -76,8 +76,9 @@ while true; do
 	total_incomplete_string=$(printf "%0.s " $(seq 1 ${total_incomplete_percent}))
 	isolate_progress="${isolate_completed_string}${isolate_incomplete_string}"
 	run_progress="${total_completed_string}${total_incomplete_string}"
-	echo -e "${current_Isolate_progress}+${isolate_incomplete_percent}=100?"
-	echo -e "${total_progress}+${total_incomplete_percent}=100?"
+	#echo -e "${current_Isolate_progress}+${isolate_incomplete_percent}=100?"
+	#echo -e "${total_progress}+${total_incomplete_percent}=100?"
+	clear
 	echo -en "\rProgress for run $1\n[${isolate_progress}]\t${current_Isolate_progress}%-${current_Isolate_name}-${iso_AA[${pro_Isolate_task_number}]}\n[${run_progress}]\t${total_progress}%-${run_AA[${pro_run_task_id}]}\n"
 
 	#echo -ne "\r${BAR:0:$current_Isolate_progress}(${current_Isolate_progress}%-${current_Isolate_name}-${iso_AA[${pro_Isolate_task_number}]})"
