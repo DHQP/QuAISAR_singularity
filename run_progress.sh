@@ -88,7 +88,7 @@ while true; do
 	#echo -ne "\r${BAR:0:$current_Isolate_progress}(${current_Isolate_progress}%-${current_Isolate_name}-${iso_AA[${pro_Isolate_task_number}]})"
 	#	echo -ne "\r${BAR:0:$total_progress}(${total_progress}%-${run_AA[${pro_run_task_id}]})"
 	sleep 1
-	if [[ "${total_progress}" -eq 100 ]]; then
+	if [[ "${total_progress}" -eq 100 ]] || [[ ${pro_run_task_id} -eq 12 ]]; then
 		echo "Run is complete!!!"
 		exit
 	fi
