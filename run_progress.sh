@@ -58,7 +58,7 @@ while true; do
 	pro_Isolate_count=$(head -n2 ${run_to_check}/progress.txt | tail -n1 | cut -d':' -f2)
 	current_Isolate_number=$(head -n3 ${run_to_check}/progress.txt | tail -n1 | cut -d':' -f2)
 	isolate_index=$((current_Isolate_number + 1))
-	current_Isolate_name=$(head -n${isolate_index} ${run_to_check}/${run_name}_list.txt | tail -n1)
+	current_Isolate_name=$(head -n${isolate_index} ${run_to_check}/${run_name}_list.txt | tail -n1 | cut -d'/' -f2)
 	pro_Isolate_task_number=$(tail -n1 ${run_to_check}/progress.txt | cut -d':' -f2)
 	total_jobs=$(( run_tasks + pro_Isolate_count * tasks_per_isolate ))
 	echo -e "${pro_Isolate_task_number}	${tasks_per_isolate}\n\n\n"
