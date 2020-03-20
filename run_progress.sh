@@ -43,7 +43,11 @@ elif [[ "${1}" = "-h" ]]; then
 fi
 
 run_to_check=${1}
-while 1; do
+BAR_length=100
+BAR_character='#'
+BAR=$(printf "%${BAR_length}s" | tr ' ' $BAR_character)
+
+#while 1; do
 	pro_run_task_id=$(head -n1 ${run_to_check}/progress.txt | cut -d':' -f2)
 	pro_Isolate_count=$(head -n2 ${run_to_check}/progress.txt | tail -n1 | cut -d':' -f2)
 	current_Isolate_number=$(head -n3 ${run_to_check}/progress.txt | tail -n1 | cut -d':' -f2)
@@ -55,9 +59,11 @@ while 1; do
 	echo -e "${pro_run_task_id}	${pro_Isolate_count}	${current_Isolate_number}	${pro_Isolate_task_number}	${total_jobs}	${jobs_completed}\n\n\n"
 	echo "${current_Isolate_progress}"
 	echo "${total_progress}"
+	echo -ne "\r${BAR:0:$current_Isolate_progress}"
+	echo -ne "\r${BAR:0:$total_progress}"
 	sleep 1
 	if [[ "${total_progress}" -eq 100 ]];
 		echo "Run is complete!!!"
 		exit
 	fi
-done
+#done
