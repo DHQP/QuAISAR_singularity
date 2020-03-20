@@ -64,11 +64,22 @@ declare -A iso_AA=( [1]="Prepping FASTQ folder" [2]="Raw Read Quality count" [3]
 	current_Isolate_progress=$(( 100 * pro_Isolate_task_number / tasks_per_isolate ))
 	jobs_completed=$(( current_Isolate_number * tasks_per_isolate - tasks_per_isolate + pro_run_task_id + pro_Isolate_task_number))
 	total_progress=$(( 100 * jobs_completed / total_jobs ))
-	echo -e "${pro_run_task_id}	${pro_Isolate_count}	${current_Isolate_number}	${pro_Isolate_task_number}	${total_jobs}	${jobs_completed}\n\n\n"
-	echo "${current_Isolate_progress}"
-	echo "${total_progress}"
-	echo -ne "\r${BAR:0:$current_Isolate_progress}(${current_Isolate_progress}%-${current_Isolate_name}-${iso_AA[${pro_Isolate_task_number}]})"
-	echo -ne "\r${BAR:0:$total_progress}(${total_progress}%-${run_AA[${pro_run_task_id}]})"
+	#echo -e "${pro_run_task_id}	${pro_Isolate_count}	${current_Isolate_number}	${pro_Isolate_task_number}	${total_jobs}	${jobs_completed}\n\n\n"
+	#echo "${current_Isolate_progress}"
+	#echo "${total_progress}"
+	isolate_incomplete_percent=$(( 100 - current_Isolate_progress ))
+	total_incomplete_percent=$(( 100 - total_progress ))
+	isolate_completed_string=$(printf "%0=s." $(seq 1 ${current_Isolate_progress})) # Fill $variable with $n periods
+	isolate_incomplete_string=$(printf "%0 s." $(seq 1 ${isolate_incomplete_percent})) # Fill $variable with $n periods
+	total_completed_string=$(printf "%0=s." $(seq 1 ${total_progress})) # Fill $variable with $n periods
+	total_incomplete_string=$(printf "%0=s." $(seq 1 ${total_incomplete_percent}))
+	isolate_progress="${isolate_completed_string}${isolate_incomplete_string}"
+	run_progress="${total_completed_string}${total_incomplete_string}"
+	clear
+	echo -e "[${isolate_progress}]\t${current_Isolate_progress}%-${current_Isolate_name}-${iso_AA[${pro_Isolate_task_number}]}\n[${run_progress}]\t${total_progress}%-${run_AA[${pro_run_task_id}]}"
+
+	#echo -ne "\r${BAR:0:$current_Isolate_progress}(${current_Isolate_progress}%-${current_Isolate_name}-${iso_AA[${pro_Isolate_task_number}]})"
+	#	echo -ne "\r${BAR:0:$total_progress}(${total_progress}%-${run_AA[${pro_run_task_id}]})"
 	sleep 1
 	if [[ "${total_progress}" -eq 100 ]]; then
 		echo "Run is complete!!!"
