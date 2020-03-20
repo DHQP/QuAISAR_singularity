@@ -29,6 +29,10 @@ fi
 run_tasks=11
 tasks_per_isolate=29
 
+#Change window size to match progress bars (assuming this will be running for status only)
+printf '\e[8;6;150t'
+printf '\e[2t' && sleep 2 && printf '\e[1t'
+
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
@@ -79,7 +83,7 @@ while true; do
 	#echo -e "${current_Isolate_progress}+${isolate_incomplete_percent}=100?"
 	#echo -e "${total_progress}+${total_incomplete_percent}=100?"
 	clear
-	echo -en "\rProgress for run $1\n[${isolate_progress}]\t${current_Isolate_progress}%-${current_Isolate_name}-${iso_AA[${pro_Isolate_task_number}]}\n[${run_progress}]\t${total_progress}%-${run_AA[${pro_run_task_id}]}\n"
+	echo -en "\n\nProgress for run $1\n[${isolate_progress}]\t${current_Isolate_progress}%-${current_Isolate_name}-${iso_AA[${pro_Isolate_task_number}]}\n[${run_progress}]\t${total_progress}%-${run_AA[${pro_run_task_id}]}\n\n"
 
 	#echo -ne "\r${BAR:0:$current_Isolate_progress}(${current_Isolate_progress}%-${current_Isolate_name}-${iso_AA[${pro_Isolate_task_number}]})"
 	#	echo -ne "\r${BAR:0:$total_progress}(${total_progress}%-${run_AA[${pro_run_task_id}]})"
