@@ -349,7 +349,7 @@ echo "Run started at ${run_start_time}; Log saved to ${log_file}"
 echo "Run started at ${run_start_time}" > "${log_file}"
 outarray+=("${PROJECT} started at ${run_start_time} and saved to ${log_file}")
 
-run_task_id=5
+run_task_id=6
 loop_inc=0
 for isolate in "${isolate_list[@]}"; do
 	write_Progress
