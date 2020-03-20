@@ -49,9 +49,9 @@ BAR_character='#'
 BAR=$(printf "[%${BAR_length}s]" | tr ' ' $BAR_character)
 
 # run_task AA
-run_AA=( "Copying Reads/Assemblies to project directory" "Inverting list" "Listing all isolates" "Displaying isolates" "Creating unique run Identifier" "Catting list" "running isolates" "Creating bug array" "Creating Seqlog" "Creating run summary" "Copying config and closing out run")
+declare -a run_AA=('Copying Reads/Assemblies to project directory' 'Inverting list' 'Listing all isolates' 'Displaying isolates' 'Creating unique run Identifier' 'Catting list' 'running isolates' 'Creating bug array' 'Creating Seqlog' 'Creating run summary' 'Copying config and closing out run')
 # isolate task AA
-iso_AA=( "Prepping FASTQ folder" "Raw Read Quality count" "BBDUK PhiX" "Trimmomatic" "Trimmed Read Quality Count" "Kraken on reads" "GOTTCHA" "SRST2 AR" "SPAdes Assembling" "Trimming Assemmbly" "Kraken on Assembly" "16s Identification" "Assembly QC" "PROKKA" "Rename Contig Headers" "ANI" "Taxon classification" "BUSCO" "c-SSTAR" "GAMA" "MLST" "plasmidFinder" "plasFlow" "Check plasFlow assembly" "c-SSTAR on plasFlow" "plasmidFinder on PlasFlow" "GAMA on plasFlow" "Summarize isolate" "Cleaning isolate")
+declare -a iso_AA=('Prepping FASTQ folder' 'Raw Read Quality count' 'BBDUK PhiX' 'Trimmomatic' 'Trimmed Read Quality Count' 'Kraken on reads' 'GOTTCHA' 'SRST2 AR' 'SPAdes Assembling' 'Trimming Assemmbly' 'Kraken on Assembly' '16s Identification' 'Assembly QC' 'PROKKA' 'Rename Contig Headers' 'ANI' 'Taxon classification' 'BUSCO' 'c-SSTAR' 'GAMA' 'MLST' 'plasmidFinder' 'plasFlow' 'Check plasFlow assembly' 'c-SSTAR on plasFlow' 'plasmidFinder on PlasFlow' 'GAMA on plasFlow' 'Summarize isolate' 'Cleaning isolate')
 
 #while 1; do
 	pro_run_task_id=$(head -n1 ${run_to_check}/progress.txt | cut -d':' -f2)
@@ -64,9 +64,9 @@ iso_AA=( "Prepping FASTQ folder" "Raw Read Quality count" "BBDUK PhiX" "Trimmoma
 	current_Isolate_progress=$(( 100 * pro_Isolate_task_number / tasks_per_isolate ))
 	jobs_completed=$(( current_Isolate_number * tasks_per_isolate - tasks_per_isolate + pro_run_task_id + pro_Isolate_task_number))
 	total_progress=$(( 100 * jobs_completed / total_jobs ))
-	#echo -e "${pro_run_task_id}	${pro_Isolate_count}	${current_Isolate_number}	${pro_Isolate_task_number}	${total_jobs}	${jobs_completed}\n\n\n"
-	#echo "${current_Isolate_progress}"
-	#echo "${total_progress}"
+	echo -e "${pro_run_task_id}	${pro_Isolate_count}	${current_Isolate_number}	${pro_Isolate_task_number}	${total_jobs}	${jobs_completed}\n\n\n"
+	echo "${current_Isolate_progress}"
+	echo "${total_progress}"
 	isolate_incomplete_percent=$(( 100 - current_Isolate_progress ))
 	total_incomplete_percent=$(( 100 - total_progress ))
 	isolate_completed_string=$(printf "%0.s=" $(seq 1 ${current_Isolate_progress})) # Fill $variable with $n periods
