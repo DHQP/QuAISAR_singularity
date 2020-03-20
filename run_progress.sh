@@ -61,6 +61,7 @@ while true; do
 	current_Isolate_name=$(head -n${isolate_index} ${run_to_check}/${run_name}_list.txt | tail -n1)
 	pro_Isolate_task_number=$(tail -n2 ${run_to_check}/progress.txt | cut -d':' -f2)
 	total_jobs=$(( run_tasks + pro_Isolate_count * tasks_per_isolate ))
+	echo -e "${pro_Isolate_task_number}	${tasks_per_isolate}\n\n\n"
 	current_Isolate_progress=$(( 100 * pro_Isolate_task_number / tasks_per_isolate ))
 	jobs_completed=$(( current_Isolate_number * tasks_per_isolate + pro_run_task_id + pro_Isolate_task_number))
 	total_progress=$(( 100 * jobs_completed / total_jobs ))
