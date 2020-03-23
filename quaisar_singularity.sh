@@ -340,8 +340,7 @@ log_dir="${PROJDATADIR}"
 log_file="${PROJDATADIR}/${PROJECT}_on_${run_start_time}.log"
 command_log_file="${PROJDATADIR}/${PROJECT}_on_${run_start_time}_command.log"
 echo -e "Below tools and version number of all singularity calls are printed with the exact command used to run analysis:\n" > "${command_log_file}"
-exec > ${log_file}                                                                      
-exec 2>&1
+exec > >(tee -a ${log_file}) 2>&1
 
 # Task: Get the time the run started to use as the identifier
 write_Progress
