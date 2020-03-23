@@ -1,4 +1,4 @@
-for i in ${SAMPDATADIR}/ANI/localANIDB_REFSEQ/*.gz; do
+for i in /raid5/MiSeqAnalysisFiles/test51_kp/1804718/ANI/localANIDB_REFSEQ/*.gz; do
   old_name=$(basename ${i} | rev | cut -d'.' -f2- | rev)
   new_name=$(echo ${old_name} | tr -d '[],')
   dir_name=$(dirname ${i})
