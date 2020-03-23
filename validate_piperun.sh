@@ -150,7 +150,7 @@ if [[ -d "${OUTDATADIR}/removedAdapters" ]]; then
 		remAdapt_length_R2=$(tail -n1 "${OUTDATADIR}/removedAdapters/no_PhiX_total_lengths.txt" | cut -d'	' -f2 )
 		R1_diff=$(( raw_length_R1 - remAdapt_length_R1 ))
 		R2_diff=$(( raw_length_R2 - remAdapt_length_R2 ))
-		#echo "${raw_length_R1}-${remAdapt_length_R1} ${raw_length_R2}-${remAdapt_length_R2}"
+		echo "${raw_length_R1}-${remAdapt_length_R1} ${raw_length_R2}-${remAdapt_length_R2}"
 		if [[ "${remAdapt_length_R1}" -lt 0 ]]; then
 			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "WARNING" "No R1 size found"
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
