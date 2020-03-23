@@ -1685,7 +1685,7 @@ outarray+=("${PROJECT} started at ${run_start_time} and saved to ${log_file}")
 run_task_id=6
 loop_inc=0
 for isolate in "${isolate_list[@]}"; do
-	quaisar_sample(${loop_inc}) 2>&1  >> ${log_file}
+	quaisar_sample ${loop_inc} 2>&1  >> ${log_file}
 	loop_inc=$(( loop_inc + 1 ))
 done
 
