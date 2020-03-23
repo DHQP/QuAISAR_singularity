@@ -467,7 +467,7 @@ for isolate in "${isolate_list[@]}"; do
 		# Get end time of bbduk and calculate run time and append to time summary (and sum to total time used)
 		remAdapt_length_R1=$(cat ${SAMPDATADIR}/removedAdapters/${isolate_name}-noPhiX-R1.fsq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 		remAdapt_length_R2=$(cat ${SAMPDATADIR}/removedAdapters/${isolate_name}-noPhiX-R2.fsq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-		echo "R1:	${remAdapt_length_R1}\nR2:	${remAdapt_length_R2}" > ${SAMPDATADIR}/removedAdapters/no_PhiX_total_lengths.txt
+		echo -e "R1:	${remAdapt_length_R1}\nR2:	${remAdapt_length_R2}" > ${SAMPDATADIR}/removedAdapters/no_PhiX_total_lengths.txt
 		end=$SECONDS
 		timeAdapt=$((end - start))
 		echo "Removing Adapters - ${timeAdapt} seconds" >> "${time_summary}"
