@@ -1,5 +1,5 @@
 for i in ${1}/*.gz; do
-  old_name=$(basename ${i} | cut -d'.' -f1)
+  old_name=$(basename ${i} | cut -d'.' -f1,2)
   new_name=$(echo ${old_name} | tr -d '[],')
   dir_name=$(dirname ${i})
   echo -e "${i}\n${old_name}.fna\n${new_name}.fasta\n${dir_name}"
