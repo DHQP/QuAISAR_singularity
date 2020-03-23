@@ -3,7 +3,7 @@
 
 
 #
-# Description: Script to consolidate all configuration type settings for quasar pipeline and any tools contained within
+# Description: Script to consolidate all configuration type settings for QuAISAR pipeline and any tools contained within
 # 	Just needs to be sourced within a script to acquire all variables stored within
 #
 # Usage: . ./config.sh

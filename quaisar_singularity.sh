@@ -41,317 +41,7 @@ function write_Progress() {
 	echo -e "run_task_ID:${run_task_id}\nTotal_isolates:${isolate_count}\nCompleted_isolates:${isolate_number}\nCurrent_isolate_task_number:${task_number}" > ${PROJDATADIR}/progress.txt
 }
 
-# Checking for proper number of arguments from command line
-if [[ $# -lt 1  || $# -gt 9 ]]; then
-	echo "If reads are in default location set in config file then"
-  echo "Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-r]"
-	echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz 5: .fasta (Assemblies only)"
-  echo "You have used $# args"
-  exit 3
-fi
-
-# Checks the arguments (more to come)
-nopts=$#
-do_download="false"
-global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
-requestor=$(whoami)
-PROJECT="${requestor}_${global_time}"
-assemblies="false"
-
-for ((i=1 ; i <= nopts ; i++)); do
-	#echo "${1} ${2}"
-	case "${1}" in
-		#Help/Usage section
-		-h | --help)
-			echo -e "\\n\\n\\n"
-			echo -e "Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-a]"
-			echo -e "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
-			echo -e "Additional functions/flags: \n\t -a if source files are all assemblies \n\t -r if you would like to retry the list of samples if they failed during assembly"
-			echo -e "\\n\\n\\n"
-			exit 0
-			;;
-		#Import the config file to set other minor locations to be used within the script
-		-c | --config)
-			config_file="$2"
-			if [ -f "${config_file}" ]; then
-				. "${config_file}"
-				BASEDIR="${output_dir}"
-			else
-				echo "Can not find config file, $2"
-				exit 22
-			fi
-			shift 2
-			;;
-		#Gets name of folder that FASTA files will be in
-		-i | --in-dir)
-			INDATADIR="$2"
-			if [[ -d  ${INDATADIR} ]]; then
-				do_download="true"
-				if [ "${INDATADIR:0:1}" != "/" ] && [ "${INDATADIR:0:1}" != "$" ]; then
-					echo "${INDATADIR}"
-					echo 'ERROR: The full input path was not specified.' >&2
-					exit 1
-				fi
-			else
-					echo "FASTQ folder ${INDATADIR} does not exist...exiting"
-					exit 1
-			fi
-			indir_set="true"
-			postfix_index="$3"
-			if [[ "${postfix}" -eq 5 ]]; then
-				assemblies="true"
-			fi
-			#is_full_run="false"
-			#echo "$INDATADIR $2"
-			shift 3
-			;;
-		#Gets output directory name of folder that all output files will be stored
-		-o | --out-dir)
-			BASEDIR="$2"
-			PROJECT="$3"
-			shift 3
-			# Not needed anymore
-			#echo "output_dir=${BASEDIR}" >> "${src}/config.sh"
-			. ${src}/config.sh
-			echo "${output_dir}"
-			list_path="${BASEDIR}/${PROJECT}/${PROJECT}_list.txt"
-			if [[ ! -d ${BASEDIR} ]]; then
-				mkdir -p ${BASEDIR}
-			fi
-			;;
-		#-a | --assemblies)
-		#	assemblies="true"
-		#	shift
-		#	;;
-		-r | --retry_from_assembly)
-			assemblies="retry"
-			shift
-			;;
-		#Captures any other characters in the args
-		\?)
-			echo "ERROR: ${BOLD}$2${NORM} is not a valid argument" >&2
-			usage
-			exit 1
-			;;
-	esac
-done
-
-# Short print out summary of run settings
-echo -e "Source folder: ${INDATADIR}\\nOutput folder: ${BASEDIR}\\nList based analysis:  ${list_path}"
-
-# Sets folder to where files will be downloaded to
-PROJDATADIR="${output_dir}/${PROJECT}"
-if [ ! -d "${PROJDATADIR}" ]; then
-	echo "Creating $PROJDATADIR"
-	mkdir -p "${PROJDATADIR}"
-fi
-if [ -f "${PROJDATADIR}/${PROJECT}_list.txt" ]; then
-	mv "${PROJDATADIR}/${PROJECT}_list.txt" "${PROJDATADIR}/${PROJECT}_list_original.txt"
-fi
-
-# Task: Copies reads/assemblies from source location to working directory and creates a list of IDs
-write_Progress
-run_task_id=1
-if [[ "${assemblies}" == "true" ]]; then
-	# Goes through given Assemblies folder
-	echo "${INDATADIR}"
-	for file in ${INDATADIR}/*
-	do
-		# Check if file is a recognized assembly format externsion
-		if [[ "${file}" = *.fasta ]] || [[ "${file}" = *.fna ]]; then
-			isolate_name=$(basename -- "$file")
-			extension="${isolate_name##*.}"
-			sample="${isolate_name%.*}"
-
-			mkdir -p ${PROJDATADIR}/${sample}/Assembly
-			cp ${file} ${PROJDATADIR}/${sample}/Assembly/scaffolds.fasta
-			echo -e "${PROJECT}/${sample}" >> "${PROJDATADIR}/${PROJECT}_list.txt"
-		else
-			echo "${file} is not an fna or fasta file, not acting on it"
-		fi
-		# Invert list so that the important isolates (for us at least) get run first
-		if [[ -f "${PROJDATADIR}/${PROJECT}_list.txt" ]]; then
-			sort -k2,2 -t'/' -r "${PROJDATADIR}/${PROJECT}_list.txt" -o "${PROJDATADIR}/${PROJECT}_list.txt"
-		fi
-	done
-else
-	# Goes through given reads folder
-	echo "${INDATADIR}"
-	for file in ${INDATADIR}/*
-	do
-		# Check if file is a zipped reads file
-		if [[ "${file}" = *.gz ]] || [[ "${file}" = *.fastq ]]; then
-			echo "isolate_name: ${file}"
-			# Gets full file name from path
-			full_sample_name=${file##*/}
-			if [[ "${full_sample_name}" = *"_R1_"* ]]; then
-				full_sample_name_pair=${full_sample_name/_R1_/_R2_}
-			elif [[ "${full_sample_name}" = *"_R2_"* ]]; then
-				full_sample_name_pair="${full_sample_name/_R2_/_R1_}"
-			elif [[ "${full_sample_name}" = *"_1.fast"* ]]; then
-				full_sample_name_pair=${full_sample_name/_1.fast/_2.fast}
-			elif [[ "${full_sample_name}" = *"_2.fast"* ]]; then
-				full_sample_name_pair="${full_sample_name/_2.fast/_1.fast}"
-			fi
-			# gets path from file
-			source_path=$(dirname "${file}")
-			# Extracts isolate_name keeping only isolate ID, if it matches standard miseq naming
-			echo "${postfix_index}:${full_sample_name}"
-			if [[ "${postfix_index}" -eq 1 ]]; then
-				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f5- | rev)
-				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2,3 | rev)
-			elif [[ "${postfix_index}" -eq 4 ]]; then
-				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f4- | rev)
-				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2,3 | rev)
-			elif [[ "${postfix_index}" -eq 3 ]]; then
-				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f3- | rev)
-				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2 | rev)
-			elif [[ "${postfix_index}" -eq 2 ]]; then
-				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f2- | rev)
-				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1 | rev)
-			else
-				echo "Magic - should have never gotten here as this number does not match any of the input numbers... 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz , exiting"
-				exit
-			fi
-
-			#long_name=$(echo "${full_sample_name}" | cut -d'_' -f1,2,3)
-			echo "Short: ${short_name}"
-			#echo "Does ${full_sample_name} match *${match}"
-
-			# Skip file if it happens to be undetermined
-	    if [[ "${short_name}" == "Undetermined" ]]; then
-				echo "found undetermined (${file})"
-				continue
-			# If the file matches the postfix given in the arguments proceed with moving and unzipping to the output directory
-			else
-				# Creates output folder
-				if [ ! -d "${PROJDATADIR}/${short_name}" ]; then
-					echo "Creating $PROJDATADIR/${short_name}"
-					mkdir -p "${PROJDATADIR}/${short_name}"
-					echo "Creating $PROJDATADIR/${short_name}/FASTQs"
-					mkdir -p "${PROJDATADIR}/${short_name}/FASTQs"
-				fi
-				# Announces name of file being unzipped and then unzips it to the FASTQs folder for the matching sample name. Files are shortened to just name_R1_001.fastq or name_R2_001.fastq
-				echo "Retrieving ${source_path}/${full_sample_name} and ${full_sample_name_pair}"
-				#if [[ "${match}" -eq 1 ]] || [[ "${match}" -eq 4 ]]; then
-					if [[ "${postfix}" = *"R1_001.fast"* ]] || [[ "${postfix}" = *"R1.fast"* ]] || [[ "${postfix}" = *"1.fast"* ]]; then
-						if [[ "${full_sample_name}" = *".fastq.gz" ]]; then
-							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
-								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]]; then
-									echo "${short_name} already has both zipped FASTQs (Probably done when R2 was found, this is the R1 tester)"
-								else
-									echo "Moving ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-									cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
-									cp "${source_path}/${full_sample_name_pair}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-								fi
-							else
-								echo "No R2 found for ${source_path}/${full_sample_name}"
-								cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
-							fi
-						elif [[ "${full_sample_name}" = *".fastq" ]]; then
-							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
-								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]]; then
-									echo "${short_name} already has both unzipped FASTQs (Probably done when R2 was found, this is the R1 tester)"
-								else
-									echo "Zipping and not clumping ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-									gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
-									gzip -c "${source_path}/${full_sample_name_pair}" > "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-								fi
-							else
-								echo "No R2 found for ${source_path}/${full_sample_name}"
-								gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
-							fi
-						fi
-					fi
-					if [[ "${postfix}" = *"R2_001.fast"* ]] || [[ "${postfix}" = *"R2.fast"* ]] || [[ "${postfix}" = *"2.fast"* ]]; then
-						if [[ "${full_sample_name}" = *".fastq.gz" ]]; then
-							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
-								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]]; then
-									echo "${short_name} already has both zipped FASTQs (Probably done when R1 was found, this is the R2 tester)"
-								else
-									echo "Not Clumping ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-									cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-									cp "${source_path}/${full_sample_name_pair}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
-								fi
-							else
-								echo "No R1 found for ${source_path}/${full_sample_name}"
-								cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-							fi
-						elif [[ "${full_sample_name}" = *".fastq" ]]; then
-							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
-								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]]; then
-									echo "${short_name} already has both zipped FASTQs (Probably done when R1 was found, this is the R2 tester)"
-								else
-									echo "Zipping and not clumping ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-									gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R1_001.fastq.gz"
-									gzip -c "${source_path}/${full_sample_name_pair}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R2_001.fastq.gz"
-								fi
-							else
-								echo "No R1 found for ${source_path}/${full_sample_name}"
-								gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R2_001.fastq.gz"
-							fi
-						fi
-					fi
-					if grep -Fxq "${PROJECT}/${short_name}" "${PROJDATADIR}/${PROJECT}_list.txt"
-					then
-						echo -e "${PROJECT}/${short_name} already on list "${PROJDATADIR}/${PROJECT}_list.txt", not adding again"
-					else
-						echo -e "${PROJECT}/${short_name}" >> "${PROJDATADIR}/${PROJECT}_list.txt"
-					fi
-			fi
-		else
-			echo "${file} is not a FASTQ(.gz) read file, not acting on it"
-		fi
-	done
-fi
-
-# Task: Invert list so that the important isolates (for us at least) get run first
-write_Progress
-run_task_id=2
-if [[ -f "${PROJDATADIR}/${PROJECT}_list.txt" ]]; then
-	sort -k2,2 -t'/' -r "${PROJDATADIR}/${PROJECT}_list.txt" -o "${PROJDATADIR}/${PROJECT}_list.txt"
-fi
-
-# Task: Loops through list file to create an array of all isolates to run through pipeline
-write_Progress
-run_task_id=3
-declare -a isolate_list=()
-while IFS= read -r file || [ -n "$file" ]; do
-	echo "Found: ${file}"
-	file=$(echo "${file}" | tr -d '[:space:]')
-	isolate_list+=("${file}")
-done < "${list_path}"
-
-# Task: Displays number and names of files found to analyze
-write_Progress
-run_task_id=4
-if [[ ${#isolate_list[@]} -gt 1 ]]; then
-	echo "Will analyze these ${#isolate_list[@]} files: ${isolate_list[*]}"
-elif [[ ${#isolate_list[@]} -eq 1 ]]; then
-	echo "Will analyze this file: ${isolate_list[0]}"
-else
-	echo "No files found in ${list_path}"
-fi
-isolate_count=${#isolate_list[@]}
-run_start_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
-
-#Each file in the list is checked individually for successful completion and added then added to the log for the run
-log_dir="${PROJDATADIR}"
-log_file="${PROJDATADIR}/${PROJECT}_on_${run_start_time}.log"
-command_log_file="${PROJDATADIR}/${PROJECT}_on_${run_start_time}_command.log"
-echo -e "Below tools and version number of all singularity calls are printed with the exact command used to run analysis:\n" > "${command_log_file}"
-
-# Task: Get the time the run started to use as the identifier
-write_Progress
-run_task_id=5
-outarray=()
-echo "Run started at ${run_start_time}; Log saved to ${log_file}"
-echo "Run started at ${run_start_time}" > "${log_file}"
-outarray+=("${PROJECT} started at ${run_start_time} and saved to ${log_file}")
-
-run_task_id=6
-loop_inc=0
-for isolate in "${isolate_list[@]}"; do
+function quaisar_sample() {
 	write_Progress
 	isolate_number=${loop_inc}
 	#Time tracker to gauge time used by each step
@@ -434,7 +124,7 @@ for isolate in "${isolate_list[@]}"; do
 			mkdir -p "${SAMPDATADIR}/preQCcounts"
 		fi
 		# Run qc count check on raw reads
-		echo -e "Q20_Total_[bp]	Q30_Total_[bp]	Q20_R1_[bp]	Q20_R2_[bp]	Q20_R1_[%]	Q20_R2_[%]	Q30_R1_[bp]	Q30_R2_[bp]	Q30_R1_[%]	Q30_R2_[%]	Total_Sequenced_[bp]	Total_Sequenced_[reads]" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_counts.txt"
+		echo -e "${SAMPDATADIR}/${isolate_name}	Q20_Total_[bp]	Q30_Total_[bp]	Q20_R1_[bp]	Q20_R2_[bp]	Q20_R1_[%]	Q20_R2_[%]	Q30_R1_[bp]	Q30_R2_[bp]	Q30_R1_[%]	Q30_R2_[%]	Total_Sequenced_[bp]	Total_Sequenced_[reads]" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_counts.txt"
 		python3 "${src}/Fastq_Quality_Printer.py" -1 "${SAMPDATADIR}/FASTQs/${isolate_name}_R1_001.fastq" -2 "${SAMPDATADIR}/FASTQs/${isolate_name}_R2_001.fastq" >> "${SAMPDATADIR}/preQCcounts/${isolate_name}_counts.txt"
 		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
 		raw_length_R1=$(cat ${SAMPDATADIR}/removedAdapters/${isolate_name}-noPhiX-R1.fsq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
@@ -504,8 +194,8 @@ for isolate in "${isolate_list[@]}"; do
 		### Count the number of Q20, Q30, bases and reads within the trimmed pair of FASTQ files
 		echo "----- Counting read quality of trimmed files-----"
 		# Run qc count check on filtered reads
-		echo -e "Q20_Total_[bp]	Q30_Total_[bp]	Q20_R1_[bp]	Q20_R2_[bp]	Q20_R1_[%]	Q20_R2_[%]	Q30_R1_[bp]	Q30_R2_[bp]	Q30_R1_[%]	Q30_R2_[%]	Total_Sequenced_[bp]	Total_Sequenced_[reads]" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_trimmed_counts.txt"
-		python3 "${src}/Fastq_Quality_Printer.py" -1 "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq" -2 "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_trimmed_counts.txt"
+		echo -e "${SAMPDATADIR}/${isolate_name}	Q20_Total_[bp]	Q30_Total_[bp]	Q20_R1_[bp]	Q20_R2_[bp]	Q20_R1_[%]	Q20_R2_[%]	Q30_R1_[bp]	Q30_R2_[bp]	Q30_R1_[%]	Q30_R2_[%]	Total_Sequenced_[bp]	Total_Sequenced_[reads]" > "${SAMPDATADIR}/preQCcounts/${isolate_name}_trimmed_counts.txt"
+		python3 "${src}/Fastq_Quality_Printer.py" -1 "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq" -2 "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" >> "${SAMPDATADIR}/preQCcounts/${isolate_name}_trimmed_counts.txt"
 		# Merge both unpaired fq files into one for GOTTCHA
 		cat "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.unpaired.fq" "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.unpaired.fq" > "${SAMPDATADIR}/trimmed/${isolate_name}.single.fq"
 		cat "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq" "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" > "${SAMPDATADIR}/trimmed/${isolate_name}.paired.fq"
@@ -587,12 +277,12 @@ for isolate in "${isolate_list[@]}"; do
 
 		# Removes the extra ResGANNCBI__ from all files created
 		find ${SAMPDATADIR}/srst2 -type f -name "*ResGANNCBI__*" | while read FILE ; do
-		  dirname=$(dirname $FILE)
+			dirname=$(dirname $FILE)
 			filename=$(basename $FILE)
 			filename="${filename/_ResGANNCBI__/__}"
 			#echo "Found-${FILE}"
 			#echo "${filename}"
-		    mv "${FILE}" "${dirname}/${filename}"
+				mv "${FILE}" "${dirname}/${filename}"
 		done
 
 		end=$SECONDS
@@ -666,7 +356,7 @@ for isolate in "${isolate_list[@]}"; do
 	echo -e "kraken:1.0 -- kraken --db ${local_DBs}/${kraken_DB}  --preload --threads ${procs} --output ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken --classified-out ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.classified ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"  >> "${command_log_file}"
 	python3 ${src}/Kraken_Assembly_Converter_2_Exe.py -i "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa
-  echo -e "kraken:1.0 -- kraken-mpa-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa\n" >> "${command_log_file}"
+	echo -e "kraken:1.0 -- kraken-mpa-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa\n" >> "${command_log_file}"
 	python3 "${src}/Metaphlan2krona.py" -p "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.mpa" -k "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.krona"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list"
 	echo -e "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list\n" >> "${command_log_file}"
@@ -834,7 +524,7 @@ for isolate in "${isolate_list[@]}"; do
 	# Run qc assembly check
 
 	owd="$(pwd)"
- # Checks for output folder existence and creates creates if not
+	# Checks for output folder existence and creates creates if not
 	if [ ! -d "${SAMPDATADIR}/Assembly_Stats" ]; then
 		echo "Creating ${SAMPDATADIR}/Assembly_Stats"
 		mkdir -p "${SAMPDATADIR}/Assembly_Stats"
@@ -1237,7 +927,7 @@ for isolate in "${isolate_list[@]}"; do
 	fi
 
 	# Clean up
-  mv "${src}/${isolate_name}_scaffolds_trimmed"* "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/"
+	mv "${src}/${isolate_name}_scaffolds_trimmed"* "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/"
 	mv "${src}/c-SSTAR_${isolate_name}_scaffolds_trimmed.log" "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/"
 
 	end=$SECONDS
@@ -1524,12 +1214,12 @@ for isolate in "${isolate_list[@]}"; do
 		if [[ -s "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta" ]]; then
 			if [ ! -d "${SAMPDATADIR}/Assembly_Stats_plasFlow" ]; then
 				echo "Creating ${SAMPDATADIR}/Assembly_Stats_plasFlow"
-		 		mkdir -p "${SAMPDATADIR}/Assembly_Stats_plasFlow"
-		 	fi
-		 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularities/QUAST5.simg python3 /quast/quast.py --no-icarus --no-html --no-snps -o /SAMPDIR/Assembly_Stats_plasFlow /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta
+				mkdir -p "${SAMPDATADIR}/Assembly_Stats_plasFlow"
+			fi
+			singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularities/QUAST5.simg python3 /quast/quast.py --no-icarus --no-html --no-snps -o /SAMPDIR/Assembly_Stats_plasFlow /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta
 			echo -e "QUAST:5.0.0 -- python3 /quast/quast.py -o ${SAMPDATADIR}/Assembly_Stats_plasFlow ${SAMPDATADIR}/Assembly/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta\n" >> "${command_log_file}"
 			mv "${SAMPDATADIR}/Assembly_Stats_plasFlow/report.txt" "${SAMPDATADIR}/Assembly_Stats_plasFlow/${isolate_name}_report.txt"
-		 	mv "${SAMPDATADIR}/Assembly_Stats_plasFlow/report.tsv" "${SAMPDATADIR}/Assembly_Stats_plasFlow/${isolate_name}_report.tsv"
+			mv "${SAMPDATADIR}/Assembly_Stats_plasFlow/report.tsv" "${SAMPDATADIR}/Assembly_Stats_plasFlow/${isolate_name}_report.tsv"
 		 else
 			echo "No plasFlow assembly (${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta)"
 		fi
@@ -1682,6 +1372,320 @@ for isolate in "${isolate_list[@]}"; do
 
 	"
 	echo -e "\n\n" >> "${command_log_file}"
+}
+
+# Checking for proper number of arguments from command line
+if [[ $# -lt 1  || $# -gt 9 ]]; then
+	echo "If reads are in default location set in config file then"
+  echo "Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-r]"
+	echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz 5: .fasta (Assemblies only)"
+  echo "You have used $# args"
+  exit 3
+fi
+
+# Checks the arguments (more to come)
+nopts=$#
+do_download="false"
+global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
+requestor=$(whoami)
+PROJECT="${requestor}_${global_time}"
+assemblies="false"
+
+for ((i=1 ; i <= nopts ; i++)); do
+	#echo "${1} ${2}"
+	case "${1}" in
+		#Help/Usage section
+		-h | --help)
+			echo -e "\\n\\n\\n"
+			echo -e "Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-a]"
+			echo -e "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
+			echo -e "Additional functions/flags: \n\t -a if source files are all assemblies \n\t -r if you would like to retry the list of samples if they failed during assembly"
+			echo -e "\\n\\n\\n"
+			exit 0
+			;;
+		#Import the config file to set other minor locations to be used within the script
+		-c | --config)
+			config_file="$2"
+			if [ -f "${config_file}" ]; then
+				. "${config_file}"
+				BASEDIR="${output_dir}"
+			else
+				echo "Can not find config file, $2"
+				exit 22
+			fi
+			shift 2
+			;;
+		#Gets name of folder that FASTA files will be in
+		-i | --in-dir)
+			INDATADIR="$2"
+			if [[ -d  ${INDATADIR} ]]; then
+				do_download="true"
+				if [ "${INDATADIR:0:1}" != "/" ] && [ "${INDATADIR:0:1}" != "$" ]; then
+					echo "${INDATADIR}"
+					echo 'ERROR: The full input path was not specified.' >&2
+					exit 1
+				fi
+			else
+					echo "FASTQ folder ${INDATADIR} does not exist...exiting"
+					exit 1
+			fi
+			indir_set="true"
+			postfix_index="$3"
+			if [[ "${postfix}" -eq 5 ]]; then
+				assemblies="true"
+			fi
+			#is_full_run="false"
+			#echo "$INDATADIR $2"
+			shift 3
+			;;
+		#Gets output directory name of folder that all output files will be stored
+		-o | --out-dir)
+			BASEDIR="$2"
+			PROJECT="$3"
+			shift 3
+			# Not needed anymore
+			#echo "output_dir=${BASEDIR}" >> "${src}/config.sh"
+			. ${src}/config.sh
+			echo "${output_dir}"
+			list_path="${BASEDIR}/${PROJECT}/${PROJECT}_list.txt"
+			if [[ ! -d ${BASEDIR} ]]; then
+				mkdir -p ${BASEDIR}
+			fi
+			;;
+		#-a | --assemblies)
+		#	assemblies="true"
+		#	shift
+		#	;;
+		-r | --retry_from_assembly)
+			assemblies="retry"
+			shift
+			;;
+		#Captures any other characters in the args
+		\?)
+			echo "ERROR: ${BOLD}$2${NORM} is not a valid argument" >&2
+			usage
+			exit 1
+			;;
+	esac
+done
+
+# Short print out summary of run settings
+echo -e "Source folder: ${INDATADIR}\\nOutput folder: ${BASEDIR}\\nList based analysis:  ${list_path}"
+
+# Sets folder to where files will be downloaded to
+PROJDATADIR="${output_dir}/${PROJECT}"
+if [ ! -d "${PROJDATADIR}" ]; then
+	echo "Creating $PROJDATADIR"
+	mkdir -p "${PROJDATADIR}"
+fi
+if [ -f "${PROJDATADIR}/${PROJECT}_list.txt" ]; then
+	mv "${PROJDATADIR}/${PROJECT}_list.txt" "${PROJDATADIR}/${PROJECT}_list_original.txt"
+fi
+
+# Task: Copies reads/assemblies from source location to working directory and creates a list of IDs
+write_Progress
+run_task_id=1
+if [[ "${assemblies}" == "true" ]]; then
+	# Goes through given Assemblies folder
+	echo "${INDATADIR}"
+	for file in ${INDATADIR}/*
+	do
+		# Check if file is a recognized assembly format externsion
+		if [[ "${file}" = *.fasta ]] || [[ "${file}" = *.fna ]]; then
+			isolate_name=$(basename -- "$file")
+			extension="${isolate_name##*.}"
+			sample="${isolate_name%.*}"
+
+			mkdir -p ${PROJDATADIR}/${sample}/Assembly
+			cp ${file} ${PROJDATADIR}/${sample}/Assembly/scaffolds.fasta
+			echo -e "${PROJECT}/${sample}" >> "${PROJDATADIR}/${PROJECT}_list.txt"
+		else
+			echo "${file} is not an fna or fasta file, not acting on it"
+		fi
+		# Invert list so that the important isolates (for us at least) get run first
+		if [[ -f "${PROJDATADIR}/${PROJECT}_list.txt" ]]; then
+			sort -k2,2 -t'/' -r "${PROJDATADIR}/${PROJECT}_list.txt" -o "${PROJDATADIR}/${PROJECT}_list.txt"
+		fi
+	done
+else
+	# Goes through given reads folder
+	echo "${INDATADIR}"
+	for file in ${INDATADIR}/*
+	do
+		# Check if file is a zipped reads file
+		if [[ "${file}" = *.gz ]] || [[ "${file}" = *.fastq ]]; then
+			echo "isolate_name: ${file}"
+			# Gets full file name from path
+			full_sample_name=${file##*/}
+			if [[ "${full_sample_name}" = *"_R1_"* ]]; then
+				full_sample_name_pair=${full_sample_name/_R1_/_R2_}
+			elif [[ "${full_sample_name}" = *"_R2_"* ]]; then
+				full_sample_name_pair="${full_sample_name/_R2_/_R1_}"
+			elif [[ "${full_sample_name}" = *"_1.fast"* ]]; then
+				full_sample_name_pair=${full_sample_name/_1.fast/_2.fast}
+			elif [[ "${full_sample_name}" = *"_2.fast"* ]]; then
+				full_sample_name_pair="${full_sample_name/_2.fast/_1.fast}"
+			fi
+			# gets path from file
+			source_path=$(dirname "${file}")
+			# Extracts isolate_name keeping only isolate ID, if it matches standard miseq naming
+			echo "${postfix_index}:${full_sample_name}"
+			if [[ "${postfix_index}" -eq 1 ]]; then
+				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f5- | rev)
+				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2,3 | rev)
+			elif [[ "${postfix_index}" -eq 4 ]]; then
+				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f4- | rev)
+				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2,3 | rev)
+			elif [[ "${postfix_index}" -eq 3 ]]; then
+				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f3- | rev)
+				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2 | rev)
+			elif [[ "${postfix_index}" -eq 2 ]]; then
+				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f2- | rev)
+				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1 | rev)
+			else
+				echo "Magic - should have never gotten here as this number does not match any of the input numbers... 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz , exiting"
+				exit
+			fi
+
+			#long_name=$(echo "${full_sample_name}" | cut -d'_' -f1,2,3)
+			echo "Short: ${short_name}"
+			#echo "Does ${full_sample_name} match *${match}"
+
+			# Skip file if it happens to be undetermined
+	    if [[ "${short_name}" == "Undetermined" ]]; then
+				echo "found undetermined (${file})"
+				continue
+			# If the file matches the postfix given in the arguments proceed with moving and unzipping to the output directory
+			else
+				# Creates output folder
+				if [ ! -d "${PROJDATADIR}/${short_name}" ]; then
+					echo "Creating $PROJDATADIR/${short_name}"
+					mkdir -p "${PROJDATADIR}/${short_name}"
+					echo "Creating $PROJDATADIR/${short_name}/FASTQs"
+					mkdir -p "${PROJDATADIR}/${short_name}/FASTQs"
+				fi
+				# Announces name of file being unzipped and then unzips it to the FASTQs folder for the matching sample name. Files are shortened to just name_R1_001.fastq or name_R2_001.fastq
+				echo "Retrieving ${source_path}/${full_sample_name} and ${full_sample_name_pair}"
+				#if [[ "${match}" -eq 1 ]] || [[ "${match}" -eq 4 ]]; then
+					if [[ "${postfix}" = *"R1_001.fast"* ]] || [[ "${postfix}" = *"R1.fast"* ]] || [[ "${postfix}" = *"1.fast"* ]]; then
+						if [[ "${full_sample_name}" = *".fastq.gz" ]]; then
+							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
+								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]]; then
+									echo "${short_name} already has both zipped FASTQs (Probably done when R2 was found, this is the R1 tester)"
+								else
+									echo "Moving ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
+									cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
+									cp "${source_path}/${full_sample_name_pair}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
+								fi
+							else
+								echo "No R2 found for ${source_path}/${full_sample_name}"
+								cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
+							fi
+						elif [[ "${full_sample_name}" = *".fastq" ]]; then
+							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
+								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]]; then
+									echo "${short_name} already has both unzipped FASTQs (Probably done when R2 was found, this is the R1 tester)"
+								else
+									echo "Zipping and not clumping ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
+									gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
+									gzip -c "${source_path}/${full_sample_name_pair}" > "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
+								fi
+							else
+								echo "No R2 found for ${source_path}/${full_sample_name}"
+								gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
+							fi
+						fi
+					fi
+					if [[ "${postfix}" = *"R2_001.fast"* ]] || [[ "${postfix}" = *"R2.fast"* ]] || [[ "${postfix}" = *"2.fast"* ]]; then
+						if [[ "${full_sample_name}" = *".fastq.gz" ]]; then
+							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
+								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]]; then
+									echo "${short_name} already has both zipped FASTQs (Probably done when R1 was found, this is the R2 tester)"
+								else
+									echo "Not Clumping ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
+									cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
+									cp "${source_path}/${full_sample_name_pair}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
+								fi
+							else
+								echo "No R1 found for ${source_path}/${full_sample_name}"
+								cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
+							fi
+						elif [[ "${full_sample_name}" = *".fastq" ]]; then
+							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
+								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]]; then
+									echo "${short_name} already has both zipped FASTQs (Probably done when R1 was found, this is the R2 tester)"
+								else
+									echo "Zipping and not clumping ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
+									gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R1_001.fastq.gz"
+									gzip -c "${source_path}/${full_sample_name_pair}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R2_001.fastq.gz"
+								fi
+							else
+								echo "No R1 found for ${source_path}/${full_sample_name}"
+								gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R2_001.fastq.gz"
+							fi
+						fi
+					fi
+					if grep -Fxq "${PROJECT}/${short_name}" "${PROJDATADIR}/${PROJECT}_list.txt"
+					then
+						echo -e "${PROJECT}/${short_name} already on list "${PROJDATADIR}/${PROJECT}_list.txt", not adding again"
+					else
+						echo -e "${PROJECT}/${short_name}" >> "${PROJDATADIR}/${PROJECT}_list.txt"
+					fi
+			fi
+		else
+			echo "${file} is not a FASTQ(.gz) read file, not acting on it"
+		fi
+	done
+fi
+
+# Task: Invert list so that the important isolates (for us at least) get run first
+write_Progress
+run_task_id=2
+if [[ -f "${PROJDATADIR}/${PROJECT}_list.txt" ]]; then
+	sort -k2,2 -t'/' -r "${PROJDATADIR}/${PROJECT}_list.txt" -o "${PROJDATADIR}/${PROJECT}_list.txt"
+fi
+
+# Task: Loops through list file to create an array of all isolates to run through pipeline
+write_Progress
+run_task_id=3
+declare -a isolate_list=()
+while IFS= read -r file || [ -n "$file" ]; do
+	echo "Found: ${file}"
+	file=$(echo "${file}" | tr -d '[:space:]')
+	isolate_list+=("${file}")
+done < "${list_path}"
+
+# Task: Displays number and names of files found to analyze
+write_Progress
+run_task_id=4
+if [[ ${#isolate_list[@]} -gt 1 ]]; then
+	echo "Will analyze these ${#isolate_list[@]} files: ${isolate_list[*]}"
+elif [[ ${#isolate_list[@]} -eq 1 ]]; then
+	echo "Will analyze this file: ${isolate_list[0]}"
+else
+	echo "No files found in ${list_path}"
+fi
+isolate_count=${#isolate_list[@]}
+run_start_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
+
+#Each file in the list is checked individually for successful completion and added then added to the log for the run
+log_dir="${PROJDATADIR}"
+log_file="${PROJDATADIR}/${PROJECT}_on_${run_start_time}.log"
+command_log_file="${PROJDATADIR}/${PROJECT}_on_${run_start_time}_command.log"
+echo -e "Below tools and version number of all singularity calls are printed with the exact command used to run analysis:\n" > "${command_log_file}"
+
+# Task: Get the time the run started to use as the identifier
+write_Progress
+run_task_id=5
+outarray=()
+echo "Run started at ${run_start_time}; Log saved to ${log_file}"
+echo "Run started at ${run_start_time}" > "${log_file}"
+outarray+=("${PROJECT} started at ${run_start_time} and saved to ${log_file}")
+
+run_task_id=6
+loop_inc=0
+for isolate in "${isolate_list[@]}"; do
+	quaisar_sample(${loop_inc}) 2>&1 ${log_file}
 	loop_inc=$(( loop_inc + 1 ))
 done
 
@@ -1717,7 +1721,6 @@ run_task_id=9
 
 # Create header for file
 echo "KRAKEN ID Raw Reads	KRAKEN ID Assembly	16S BLAST ID	Q20_Total_[bp]	Q30_Total_[bp]	Q20_R1_[bp]	Q20_R2_[bp]	Q20_R1_[%]	Q20_R2_[%]	Q30_R1_[bp]	Q30_R2_[bp]	Q30_R1_[%]	Q30_R2_[%]	Total_Sequenced_[bp]	Total_Sequenced_[reads]	Estimated coverage	Contigs	Cumulative_Length_Assembly (bp)	Assembly_Ratio	BUSCO	ANI" > "${PROJDATADIR}/Seqlog_output.txt"
-
 while IFS= read -r var || [ -n "$var" ]; do
 	# Current (12/17/18) order of expected run output
 	#  kraken - QC - estimated coverage - #contigs - cumulative length assembly - BUSCO - ANI

@@ -82,6 +82,7 @@ echo "Cleaning Assembly Folder"
 if [ -d "${sample_folder}/Assembly" ]; then
 	echo "Using Gulviks SPAdes cleaner on Assembly"
 	${src}/gulvic_SPAdes_cleaner.sh "${sample_folder}/Assembly"
+	rm "${sample_folder}/Assembly/${sample_name}_scaffolds_trimmed_original.fasta"
 fi
 
 # Cleaning Assembly Stats folder of extra unused files made by QUAST
@@ -92,6 +93,7 @@ if [ -d "${sample_folder}/Assembly_Stats" ]; then
 	rm "${sample_folder}/Assembly_Stats/transposed_report.t"*
 	rm "${sample_folder}/Assembly_Stats/icarus.html"
 	rm -r "${sample_folder}/Assembly_Stats/icarus_viewers"
+	rm -r "${sample_folder}/Assembly_Stats/basic_stats"
 fi
 
 # Cleaning Assembly Stats plasFlow folder of extra unused files made by QUAST
@@ -102,6 +104,7 @@ if [ -d "${sample_folder}/Assembly_Stats_plasFlow" ]; then
 	rm "${sample_folder}/Assembly_Stats_plasFlow/transposed_report.t"*
 	rm "${sample_folder}/Assembly_Stats_plasFlow/icarus.html"
 	rm -r "${sample_folder}/Assembly_Stats_plasFlow/icarus_viewers"
+	rm -r "${sample_folder}/Assembly_Stats_plasFlow/basic_stats"
 fi
 
 # Clean kraken folder (only for reads as it is MUCH larger)
