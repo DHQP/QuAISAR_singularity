@@ -1909,6 +1909,7 @@ run_task_id=11
 echo "Moving config file(${config_file}) to log directory ($log_dir)"
 cp "${config_file}" "${log_dir}/config_${PROJECT}.sh"
 
+write_Progress
 run_task_id=12
 end_date=$(date "+%m_%d_%Y_at_%Hh_%Mm")
 echo "Run ended at ${end_date}" #>> "${log_file}"

@@ -238,7 +238,7 @@ elif [[ -s "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq.gz" ]] && [[ -s "${OUTDA
 	remAdapt_R2_diff=$(( nophi_length_R2 - remAdapt_length_R2 ))
 	R1_adapt_percent_loss=$(( remAdapt_R1_diff * 100 / ${nophi_length_R1} ))
 	R2_adapt_percent_loss=$(( remAdapt_R2_diff * 100 / ${nophi_length_R2} ))
-	#echo "${raw_length_R1}-${nophi_length_R1}-${remAdapt_length_R1} ${raw_length_R2}-${nophi_length_R2}-${remAdapt_length_R2}"
+	echo "${raw_length_R1}-${nophi_length_R1}-${remAdapt_length_R1} ${raw_length_R2}-${nophi_length_R2}-${remAdapt_length_R2}"
 	printf "%-20s: %-8s : %s\\n" "Trimming" "SUCCESS" "Zipped - R1: ${remAdapt_length_R1}bps (${R1_adapt_percent_loss}% loss)  R2: ${remAdapt_length_R2}bps (${R2_adapt_percent_loss}% loss)"
 elif [[ -s "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq" ]]; then
 	remAdapt_length_R1=$(cat ${OUTDATADIR}/FASTQs/${1}_R1_001.paired.fq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
