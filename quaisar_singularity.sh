@@ -936,8 +936,6 @@ for isolate in "${isolate_list[@]}"; do
 
 	#"${src}/append_taxonomy_to_ncbi_assembly_filenames.sh" "${SAMPDATADIR}/ANI/localANIDB_REFSEQ"
 
-
-
 	for i in ${SAMPDATADIR}/ANI/localANIDB_REFSEQ/*.gz; do
 		old_name=$(basename ${i} | cut -d'.' -f1,2)
 		new_name=$(echo ${old_name} | tr -d '[],')
@@ -947,7 +945,7 @@ for isolate in "${isolate_list[@]}"; do
 		tax_species=$(head -n1 "${dir_name}/${old_name}.fna" | cut -d' ' -f3 | tr -d '[],')
 		echo "Taxes: ${tax_genus}:${tax_species}"
 		mv ${dir_name}/${old_name}.fna ${dir_name}/${tax_genus}_${tax_species}_${new_name}.fasta
-	done < "${1}"
+	done
 
 	# #Renames all files in the localANIDB_REFSEQ folder by changing extension from fna to fasta (which pyani needs)
 	# for file in ${SAMPDATADIR}/ANI/localANIDB_REFSEQ/*.fna;
