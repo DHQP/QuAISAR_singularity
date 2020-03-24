@@ -1,4 +1,4 @@
-for i in ${1}/ANI/localANIDB_REFSEQ/*.gz; do
+for i in "${1}/ANI/localANIDB_REFSEQ/*.gz"; do
   old_name=$(basename ${i} | cut -d'.' -f1,2)
   new_name=$(echo ${old_name} | tr -d '[],')
   dir_name=$(dirname ${i})
