@@ -111,6 +111,8 @@ fi
 if [ -d "${sample_folder}/kraken/preAssembly" ]; then
 	gzip ${sample_folder}/kraken/preAssembly/${sample_name}_paired.classified
 	gzip ${sample_folder}/kraken/preAssembly/${sample_name}_paired.kraken
+	gzip ${sample_folder}/kraken/postAssembly/${sample_name}_assembled.classified
+	gzip ${sample_folder}/kraken/postAssembly/${sample_name}_assembled.kraken
 fi
 
 # Clean plasFlow folder of filtered reads
