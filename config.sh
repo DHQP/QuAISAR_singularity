@@ -12,7 +12,7 @@
 #
 # Modules required: None
 #
-# v1.0.2 (2/19/2020)
+# v1.0.3 (3/24/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -44,8 +44,6 @@ bbduk_mem=Xmx20g
 bbduk_k=31
 #hamming distance
 bbduk_hdist=1
-#location of phiX sequences
-phiX_location="${local_DBs}/phiX.fasta"
 
 
 #####Trimmomatic specific config options #####
