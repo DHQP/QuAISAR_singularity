@@ -62,39 +62,74 @@ else
 	status="ALERT"
 fi
 #Checking existence of FASTQ files
-raw_length_R1=0
-raw_length_R2=0
+raw_length_R1=-2
+raw_length_R2=-2
 if [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq" ]] && [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
 	raw_length_R1=$(cat ${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	raw_length_R2=$(cat ${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	printf "%-20s: %-8s : %s\\n" "FASTQs" "SUCCESS" "Unzipped - R1: ${raw_length_R1}bps R2: ${raw_length_R2}bps"
+	if [[ "${raw_length_R1}" -gt 0 ]] && [[ "${raw_length_R2}" -gt 0 ]]; then
+		printf "%-20s: %-8s : %s\\n" "FASTQs" "SUCCESS" "Unzipped - R1: ${raw_length_R1}bps R2: ${raw_length_R2}bps"
+	else
+		if [[ "${raw_length_R1}" -le 0 ]]; then
+			printf "%-20s: %-8s : %s\\n" "FASTQs R1" "FAILED" "Unzipped - File has no contents"
+			status="FAILED"
+		else
+			printf "%-20s: %-8s : %s\\n" "FASTQs R1" "SUCCESS" "Unzipped - ${raw_length_R1}bps"
+		fi
+		if [[ "${raw_length_R2}" -le 0 ]]; then
+			printf "%-20s: %-8s : %s\\n" "FASTQs R2" "FAILED" "Unzipped - File has no contents"
+			status="FAILED"
+		else
+			printf "%-20s: %-8s : %s\\n" "FASTQs R2" "SUCCESS" "Unzipped - ${raw_length_R2}bps"
+		fi
+	fi
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq" ]]; then
-	printf "%-20s: %-8s : %s\\n" "FASTQs" "WARNING" "Only R1 found"
 	raw_length_R1=$(cat ${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
-		status="WARNING"
+	if [[ "${raw_length_R1}" -le 0 ]]; then
+		printf "%-20s: %-8s : %s\\n" "FASTQs R1" "FAILED" "Unzipped - File has no base pairs"
+		status="FAILED"
+	else
+		printf "%-20s: %-8s : %s\\n" "FASTQs R1" "WARNING" "Only R1 found, Unzipped: ${raw_length_R1}bps"
+		if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
+			status="WARNING"
+		fi
 	fi
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
-	printf "%-20s: %-8s : %s\\n" "FASTQs" "WARNING" "Only R2 found"
 	raw_length_R2=$(cat ${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
-		status="WARNING"
+	if [[ "${raw_length_R2}" -le 0 ]]; then
+		printf "%-20s: %-8s : %s\\n" "FASTQs R2" "FAILED" "Unzipped - File has no base pairs"
+		status="FAILED"
+	else
+		printf "%-20s: %-8s : %s\\n" "FASTQs R2" "WARNING" "Only R2 found, Unzipped: ${raw_length_R2}bps"
+		if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
+			status="WARNING"
+		fi
 	fi
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq.gz" ]] && [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq.gz" ]]; then
 	raw_length_R1=$(zcat ${OUTDATADIR}/FASTQs/${1}_R1_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	raw_length_R2=$(zcat ${OUTDATADIR}/FASTQs/${1}_R2_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "SUCCESS" "Zipped - R1: ${raw_length_R1}bps R2: ${raw_length_R2}bps"
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R1_001.fastq" ]]; then
-	printf "%-20s: %-8s : %s\\n" "FASTQs" "WARNING" "Zipped, but only R1 found"
 	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
-		status="WARNING"
+	if [[ "${raw_length_R1}" -le 0 ]]; then
+		printf "%-20s: %-8s : %s\\n" "FASTQs R1" "FAILED" "Zipped - File has no contents"
+		status="FAILED"
+	else
+		printf "%-20s: %-8s : %s\\n" "FASTQs R1" "WARNING" "Only R1 found, Zipped: ${raw_length_R1}bps"
+		if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
+			status="WARNING"
+		fi
 	fi
 elif [[ -s "${OUTDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
-	printf "%-20s: %-8s : %s\\n" "FASTQs" "WARNING" "Zipped, but only R2 found"
 	raw_length_R2=$(zcat ${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
-		status="WARNING"
+	if [[ "${raw_length_R2}" -le 0 ]]; then
+		printf "%-20s: %-8s : %s\\n" "FASTQs R2" "FAILED" "Zipped - File has no contents"
+		status="FAILED"
+	else
+		printf "%-20s: %-8s : %s\\n" "FASTQs R2" "WARNING" "Only R2 found, Zipped: ${raw_length_R2}bps"
+		if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
+			status="WARNING"
+		fi
 	fi
 else
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "FAILED" "No reads found"
@@ -143,21 +178,20 @@ fi
 # Checking BBDUK output folder
 if [[ -d "${OUTDATADIR}/removedAdapters" ]]; then
 	#printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX" "SUCCESS" "Found"
-	remAdapt_length_R1=-1
-	remAdapt_length_R2=-1
+	nophi_length_R1=-1
+	nophi_length_R2=-1
 	if [[ -s "${OUTDATADIR}/removedAdapters/no_PhiX_total_lengths.txt" ]]; then
-		remAdapt_length_R1=$(head -n1 "${OUTDATADIR}/removedAdapters/no_PhiX_total_lengths.txt" | cut -d'	' -f2 )
-		remAdapt_length_R2=$(tail -n1 "${OUTDATADIR}/removedAdapters/no_PhiX_total_lengths.txt" | cut -d'	' -f2 )
-		R1_diff=$(( raw_length_R1 - remAdapt_length_R1 ))
-		R2_diff=$(( raw_length_R2 - remAdapt_length_R2 ))
-		echo "${raw_length_R1}-${remAdapt_length_R1} ${raw_length_R2}-${remAdapt_length_R2}"
-		if [[ "${remAdapt_length_R1}" -lt 0 ]]; then
+		nophi_length_R1=$(head -n1 "${OUTDATADIR}/removedAdapters/no_PhiX_total_lengths.txt" | cut -d'	' -f2 )
+		nophi_length_R2=$(tail -n1 "${OUTDATADIR}/removedAdapters/no_PhiX_total_lengths.txt" | cut -d'	' -f2 )
+		R1_diff=$(( raw_length_R1 - nophi_length_R1 ))
+		R2_diff=$(( raw_length_R2 - nophi_length_R2 ))
+		if [[ "${nophi_length_R1}" -lt 0 ]]; then
 			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "WARNING" "No R1 size found"
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 				status="WARNING"
 			fi
 		fi
-		if [[ "${remAdapt_length_R2}" -lt 0 ]]; then
+		if [[ "${nophi_length_R2}" -lt 0 ]]; then
 			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "WARNING" "No R2 size found"
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 				status="WARNING"
@@ -167,15 +201,15 @@ if [[ -d "${OUTDATADIR}/removedAdapters" ]]; then
 			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R1" "FAILED" "R1: No bases found in reads, or more found in trimmed version"
 			status="FAILED"
 		else
-			R1_percent_loss=$(( remAdapt_length_R1 * 100 / ${raw_length_R1} ))
-			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R1" "SUCCESS" "R1: ${remAdapt_length_R1} (${R1_percent_loss}% removed)"
+			R1_percent_loss=$(( R1_diff * 100 / ${raw_length_R1} ))
+			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R1" "SUCCESS" "R1: ${nophi_length_R1} (${R1_percent_loss}% removed)"
 		fi
 		if [[ "${R2_diff}" -le 1 ]]; then
 			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "FAILED" "R2: No bases found in reads, or more found in trimmed version"
 			status="FAILED"
 		else
-			R2_percent_loss=$(( remAdapt_length_R2 * 100 / ${raw_length_R2} ))
-			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "SUCCESS" "R2: ${remAdapt_length_R2} (${R2_percent_loss}% removed)"
+			R2_percent_loss=$(( R2_diff * 100 / ${raw_length_R2} ))
+			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "SUCCESS" "R2: ${nophi_length_R2} (${R2_percent_loss}% removed)"
 		fi
 	else
 		printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX" "WARNING" "No total lengths found...did it run?"
@@ -189,36 +223,55 @@ else
 fi
 
 #Checking Trimmomatic output folder
+remAdapt_length_R1=-1
+remAdapt_length_R2=-1
 if [[ -s "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq" ]] && [[ -s "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq" ]]; then
-	printf "%-20s: %-8s : %s\\n" "Trimming" "SUCCESS" "Unzipped"
-	:
+	remAdapt_length_R1=$(cat ${OUTDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	remAdapt_length_R2=$(cat ${OUTDATADIR}/FASTQs/${1}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	remAdapt_R1_diff=$(( nophi_length_R1 - remAdapt_length_R1 ))
+	remAdapt_R2_diff=$(( nophi_length_R2 - remAdapt_length_R2 ))
+	printf "%-20s: %-8s : %s\\n" "Trimming" "SUCCESS" "Unzipped - R1: ${remAdapt_length_R1}bps (${R1_adapt_percent_loss}% loss)  R2: ${remAdapt_length_R2}bps (${R2_adapt_percent_loss}% loss)"
+elif [[ -s "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq.gz" ]] && [[ -s "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq.gz" ]]; then
+	remAdapt_length_R1=$(zcat ${OUTDATADIR}/FASTQs/${1}_R1_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	remAdapt_length_R2=$(zcat ${OUTDATADIR}/FASTQs/${1}_R2_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	remAdapt_R1_diff=$(( nophi_length_R1 - remAdapt_length_R1 ))
+	remAdapt_R2_diff=$(( nophi_length_R2 - remAdapt_length_R2 ))
+	R1_adapt_percent_loss=$(( remAdapt_R1_diff * 100 / ${nophi_length_R1} ))
+	R2_adapt_percent_loss=$(( remAdapt_R2_diff * 100 / ${nophi_length_R2} ))
+	printf "%-20s: %-8s : %s\\n" "Trimming" "SUCCESS" "Zipped - R1: ${remAdapt_length_R1}bps (${R1_adapt_percent_loss}% loss)  R2: ${remAdapt_length_R2}bps (${R2_adapt_percent_loss}% loss)"
 elif [[ -s "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq" ]]; then
-	printf "%-20s: %-8s : %s\\n" "Trimming" "WARNING" "Only R1 found"
+	remAdapt_length_R1=$(cat ${OUTDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	R1_adapt_percent_loss=$(( remAdapt_R1_diff * 100 / ${nophi_length_R1} ))
+	printf "%-20s: %-8s : %s\\n" "Trimming" "WARNING" "Unzipped - R1: ${remAdapt_length_R1}bps (${R1_adapt_percent_loss}% loss)"
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
 elif [[ -s "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq" ]]; then
-	printf "%-20s: %-8s : %s\\n" "Trimming" "WARNING" "Only R2 found"
+	remAdapt_length_R2=$(cat ${OUTDATADIR}/FASTQs/${1}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	R2_adapt_percent_loss=$(( remAdapt_R2_diff * 100 / ${nophi_length_R2} ))
+	printf "%-20s: %-8s : %s\\n" "Trimming" "WARNING" "Unzipped - R2: ${remAdapt_length_R2}bps (${R2_adapt_percent_loss}% loss)"
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
-elif [[ -s "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq.gz" ]] && [[ -s "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq.gz" ]]; then
-	printf "%-20s: %-8s : %s\\n" "Trimming" "SUCCESS" "Zipped"
-	:
 elif [[ -s "${OUTDATADIR}/trimmed/${1}_R1_001.paired.fq.gz" ]]; then
-	printf "%-20s: %-8s : %s\\n" "Trimming" "WARNING" "Zipped, but only R1 found"
+	remAdapt_length_R1=$(zcat ${OUTDATADIR}/FASTQs/${1}_R1_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	R1_adapt_percent_loss=$(( remAdapt_R1_diff * 100 / ${nophi_length_R1} ))
+	printf "%-20s: %-8s : %s\\n" "Trimming" "WARNING" "Zipped - R1: ${remAdapt_length_R1}bps (${R1_adapt_percent_loss}% loss)"
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
 elif [[ -s "${OUTDATADIR}/trimmed/${1}_R2_001.paired.fq.gz" ]]; then
-	printf "%-20s: %-8s : %s\\n" "Trimming" "WARNING" "Zipped, but only R2 found"
+	remAdapt_length_R2=$(zcat ${OUTDATADIR}/FASTQs/${1}_R2_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	R2_adapt_percent_loss=$(( remAdapt_R2_diff * 100 / ${nophi_length_R2} ))
+	printf "%-20s: %-8s : %s\\n" "Trimming" "WARNING" "Zipped - R2: ${remAdapt_length_R2}bps (${R2_adapt_percent_loss}% loss)"
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
 else
-	printf "%-20s: %-8s : %s\\n" "Trimming" "FAILED" "/trimmed/${1}_R1_001.paired.fq & /trimmed/${1}_R2_001.paired.fq not found"
+	printf "%-20s: %-8s : %s\\n" "Trimming" "FAILED" "/trimmed/${1}_R1_001.paired.fq(.gz) & /trimmed/${1}_R2_001.paired.fq(.gz) not found"
 	status="FAILED"
 fi
+
 #Checking QC counts after trimming
 if [[ -s "${OUTDATADIR}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
 	reads_post=$(tail -n1 "${OUTDATADIR}/preQCcounts/${1}_trimmed_counts.txt" | cut -d'	' -f13)
