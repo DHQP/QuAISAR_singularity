@@ -190,7 +190,7 @@ if [[ -d "${OUTDATADIR}/removedAdapters" ]]; then
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 				status="WARNING"
 			fi
-		if [[ "${R1_diff}" -eq 0 ]]; then
+		elif [[ "${R1_diff}" -eq 0 ]]; then
 			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R1" "ALERT" "R1: No PhiX bases removed (already done)"
 			if [ "${status}" = "SUCCESS" ]; then
 				status="ALERT"
