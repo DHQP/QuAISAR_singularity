@@ -503,7 +503,7 @@ fi
 
 #Check kraken on assembly
 kraken_post_success=false
-if [[ -s "${OUTDATADIR}/kraken/postAssembly/${1}_assembled.kraken" ]]; then
+if [[ -s "${OUTDATADIR}/kraken/postAssembly/${1}_assembled.kraken" ]] || [[ -s "${OUTDATADIR}/kraken/postAssembly/${1}_assembled.kraken.gz" ]]; then
 	#printf "%-20s: %-8s : %s\\n" "kraken postassembly" "SUCCESS" "Found"
 	kraken_post_success=true
 else
