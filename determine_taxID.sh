@@ -120,8 +120,8 @@ Check_source() {
 do_ANI() {
 	source="ANI"
 	#echo "${source}"
-	if [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_${REFSEQ_date}).txt" ]]; then
-		source_file="${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_${REFSEQ_date}).txt"
+	if [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${REFSEQ_date}).txt" ]]; then
+		source_file="${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${REFSEQ_date}).txt"
 	elif [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_OSII).txt" ]]; then
 		source_file="${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_OSII).txt"
 	else
