@@ -873,7 +873,7 @@ fi
 #Check ANI
 ani_found=false
 #Check ANI REFSEQ. Not fully implemented yet, so not causing a failure in reporting
-if [[ -f "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_${REFSEQ_date}).txt" ]]; then
+if [[ -f "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_REFSEQ_${REFSEQ_date}).txt" ]]; then
 	#echo "ALL"
 	ani_info=$(head -n 1 "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_${REFSEQ_date}).txt")
 	percent_match=$(echo "${ani_info}" | cut -d'.' -f1)
