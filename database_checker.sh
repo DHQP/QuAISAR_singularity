@@ -262,24 +262,24 @@ else
 fi
 
 
-singularities=(bbtools blast-2.9.0-docker bowtie2-2.2.9-biocontainers cSSTAR entrez_taxon GAMA_quaisar gottcha plasmidFinder_with_DB QUAST5 srst2)
+singularities=(bbtools.simg blast-2.9.0-docker.img bowtie2-2.2.9-biocontainers.simg cSSTAR.simg entrez_taxon.simg GAMA_quaisar.simg gottcha.simg plasmidFinder_with_DB.simg QUAST5.simg srst2.simg)
 
 for simage in "${singularities[@]}"; do
 	# custom singularity images (3.6GBs)
-	if [[ ! -f "${local_DBs}/singularities/${simage}.simg" ]]; then
+	if [[ ! -f "${local_DBs}/singularities/${simage}" ]]; then
 		#cp -r /container_DBs/custom_singularities ${local_DBs}
 		if [[ "${do_download}" = "true" ]]; then
 			if [[ ! -d "${local_DBs}/singularities" ]]; then
 				mkdir "${local_DBs}/singularities"
 			fi
-			echo "Copying custom singularity image ${simage}.simg"
+			echo "Copying custom singularity image ${simage}"
 			cp ${src}/databases/singularities/${simage}.simg ${local_DBs}/singularities
 		else
-			echo "Missing custom singularity image ${simage}.simg"
+			echo "Missing custom singularity image ${simage}"
 			missing_DBS=("${missing_DBS[@]}" "singularities-${simage}")
 		fi
 	else
-		echo "custom singularity image ${simage}.simg installed"
+		echo "custom singularity image ${simage} installed"
 	fi
 done
 
