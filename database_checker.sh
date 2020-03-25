@@ -235,6 +235,7 @@ if [[ ! -d "${local_DBs}/ANI" ]]; then
 	else
 		echo "Missing latest REFSEQ sketch database (ANI)"
 		missing_DBS=("${missing_DBS[@]}" "REFSEQ-ANI")
+	fi
 else
 	echo "ANI REFSEQ sketch database installed"
 fi
@@ -248,6 +249,7 @@ if [[ ! -d "${local_DBs}/star" ]]; then
 	else
 		echo "Missing latest NAR-AR database"
 		missing_DBS=("${missing_DBS[@]}" "NAR-AR")
+	fi
 else
 	echo "NAR-AR database installed"
 fi
@@ -261,6 +263,7 @@ if [[ ! -d "${local_DBs}/custom_singularities" ]]; then
 	else
 		echo "Missing custom singularity images"
 		missing_DBS=("${missing_DBS[@]}" "singularities")
+	fi
 else
 	echo "custom singularity images installed - do we need a subscheck for each individual one"
 fi
@@ -273,6 +276,7 @@ if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
 	else
 		echo "Missing MMB_Bugs"
 		missing_DBS=("${missing_DBS[@]}" "MMB_Bugs")
+	fi
 else
 	echo "MMB_Bugs installed"
 fi
@@ -285,6 +289,7 @@ if [[ ! -f "${local_DBs}/taxes.csv" ]]; then
 	else
 		echo "Missing MMB_Bugs"
 		missing_DBS=("${missing_DBS[@]}" "MMB_Bugs")
+	fi
 else
 	echo "MMB_Bugs installed"
 fi
@@ -297,6 +302,7 @@ if [[ ! -f "${local_DBs}/phiX.fasta" ]]; then
 	else
 		echo "Missing phiX"
 		missing_DBS=("${missing_DBS[@]}" "phiX")
+	fi
 else
 	echo "phiX installed"
 fi
@@ -309,6 +315,7 @@ if [[ ! -f "${local_DBs}/adapters.fasta" ]]; then
 	else
 		echo "Missing adapters"
 		missing_DBS=("${missing_DBS[@]}" "adapters")
+	fi
 else
 	echo "adapters installed"
 fi
@@ -321,6 +328,7 @@ if [[ ! -d "${local_DBs}/pubMLSTs" ]]; then
 	else
 		echo "Missing pubMLST"
 		missing_DBS=("${missing_DBS[@]}" "pubMLST")
+	fi
 else
 	echo "pubMLST installed"
 fi
