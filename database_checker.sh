@@ -179,11 +179,9 @@ done
 	# if [[ ! -d "${local_DBs}/actinobacteria_class_odb10" ]]; then
 	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/actinobacteria_class_odb10.2019-04-24.tar.gz"
 	# fi
-	for file in ${local_DBs}/BUSCO/*.gz; do
-		tar xzf ${file}
-	done
-	rm *tar.gz
-fi
+for file in ${local_DBs}/BUSCO/*.gz; do
+	tar xzf ${file}
+done
 
 ##### Currently down.....and has been a while
 # Check to see if gottcha database is installed
