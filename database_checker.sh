@@ -67,6 +67,7 @@ if [[ ! -d "${local_DBs}/BUSCO" ]]; then
 
 	for odb_info in ${busco_taxa[@]}; do
 		# Check for top level bacteria database
+		echo ${odb_info}
 		taxa=$(echo "$odb_info" | cut -d'_' -f1)
 		db_date=$(echo "$odb_info" | cut -d'.' -f2)
 		if [[ ! -d "${local_DBs}/${taxa}_odb10" ]]; then
@@ -284,14 +285,14 @@ fi
 if [[ ! -f "${local_DBs}/taxes.csv" ]]; then
 	#cp -r /container_DBs/taxes.csv ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying MMB_bugs"
-		cp ${src}/databases/MMB_bugs.txt ${local_DBs}
+		echo "Copying taxes"
+		cp ${src}/databases/taxes.csv ${local_DBs}
 	else
-		echo "Missing MMB_Bugs"
-		missing_DBS=("${missing_DBS[@]}" "MMB_Bugs")
+		echo "Missing taxes"
+		missing_DBS=("${missing_DBS[@]}" "taxes")
 	fi
 else
-	echo "MMB_Bugs installed"
+	echo "taxes installed"
 fi
 
 if [[ ! -f "${local_DBs}/phiX.fasta" ]]; then
