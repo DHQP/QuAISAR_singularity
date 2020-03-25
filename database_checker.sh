@@ -257,19 +257,27 @@ else
 	echo "NAR-AR database installed"
 fi
 
-# custom singularity images (3.6GBs)
-if [[ ! -d "${local_DBs}/custom_singularities" ]]; then
-	#cp -r /container_DBs/custom_singularities ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying custom singularity images"
-		cp ${src}/databases/singularities ${local_DBs}
+
+singularities=(bbtools blast-2.9.0-docker bowtie2-2.2.9-biocontainers cSSTAR entrez_taxon GAMA_quaisar gottcha plasmidFinder_with_DB QUAST5 srst2)
+
+for simage in "${singularities[@]}"; do
+	# custom singularity images (3.6GBs)
+	if [[ ! -f "${local_DBs}/custom_singularities/${simage}.simg" ]]; then
+		#cp -r /container_DBs/custom_singularities ${local_DBs}
+		if [[ "${do_download}" = "true" ]]; then
+			if [[ ! -d "${local_DBs}/custom_singularities" ]]; then
+				mkdir "${local_DBs}/custom_singularities"
+			fi
+			echo "Copying custom singularity image ${simage}.simg"
+			cp ${src}/databases/singularities/${simage}.simg ${local_DBs}/custom_singularities
+		else
+			echo "Missing custom singularity image ${simage}.simg"
+			missing_DBS=("${missing_DBS[@]}" "singularities-${simage}")
+		fi
 	else
-		echo "Missing custom singularity images"
-		missing_DBS=("${missing_DBS[@]}" "singularities")
+		echo "custom singularity image ${simage}.simg installed"
 	fi
-else
-	echo "custom singularity images installed - do we need a subscheck for each individual one"
-fi
+done
 
 if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
 	#cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
