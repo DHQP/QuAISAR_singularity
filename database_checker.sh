@@ -84,6 +84,7 @@ for odb_info in "${busco_taxa[@]}"; do
 		echo "BUSCO has latest ${taxa}_odb10 as of 3/15/2020"
 	fi
 done
+find ${local_DBs}/BUSCO/ -name '*.gz' -exec tar xzf {} \;
 
 	# # Check for top level bacteria database
 	# if [[ ! -d "${local_DBs}/bacteria_odb10" ]]; then
@@ -179,12 +180,14 @@ done
 	# if [[ ! -d "${local_DBs}/actinobacteria_class_odb10" ]]; then
 	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/actinobacteria_class_odb10.2019-04-24.tar.gz"
 	# fi
-zipped=$(ls -l ${local_DBs}/BUSCO/*.gz | wc -l)
-if [[ "${zipped}" -gt 0 ]]; then
-	for file in ${local_DBs}/BUSCO/*.gz; do
-		tar xzf ${file}
-	done
-fi
+#zipped=$(ls -l ${local_DBs}/BUSCO/*.gz | wc -l)
+#if [[ "${zipped}" -gt 0 ]]; then
+#	for file in ${local_DBs}/BUSCO/*.gz; do
+#		tar xzf ${file}
+#	done
+
+
+
 
 ##### Currently down.....and has been a while
 # Check to see if gottcha database is installed
