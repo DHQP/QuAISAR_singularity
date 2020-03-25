@@ -61,14 +61,14 @@ fi
 # Check for BUSCO
 busco_taxa=(bacteria_odb10.2019-06-26 alteromonadales_odb10.2019-04-24 bacillales_odb10.2019-04-24 bacilli_odb10.2019-04-24 bacteroidetes_odb10.2019-04-24 betaproteobacteria_odb10.2019-04-24 burkholderiales_odb10.2019-04-24 campylobacterales_odb10.2019-04-24 clostridiales_odb10.2019-04-24 clostridia_odb10.2019-04-24 corynebacteriales_odb10.2019-04-24 enterobacterales_odb10.2019-04-24 epsilonproteobacteria_odb10.2019-04-24 firmicutes_odb10.2019-04-24 flavobacteriales_odb10.2019-04-24 flavobacteriales_odb10.2019-04-24 flavobacteriia_odb10.2019-04-24 gammaproteobacteria_odb10.2019-04-24 lactobacillales_odb10.2019-04-24 neisseriales_odb10.2019-04-24 proteobacteria_odb10.2019-04-24 pseudomonadales_odb10.2019-04-24 xanthomonadales_odb10.2019-04-24 actinobacteria_class_odb10.2019-04-24)
 
-echo "${#busco_taxa[@]}"
+#echo "${#busco_taxa[@]}"
 
 for odb_info in "${busco_taxa[@]}"; do
 	# Check for top level bacteria database
-	echo ${odb_info}
+	#echo ${odb_info}
 	taxa=$(echo "$odb_info" | cut -d'_' -f1)
 	db_date=$(echo "$odb_info" | cut -d'.' -f2)
-	if [[ ! -d "${local_DBs}/${taxa}_odb10" ]]; then
+	if [[ ! -d "${local_DBs}/BUSCO/${taxa}_odb10" ]]; then
 		if [[ "${do_download}" = "true" ]]; then
 			if [[ ! -d "${local_DBs}/BUSCO" ]]; then
 				mkdir "${local_DBs}/BUSCO"
