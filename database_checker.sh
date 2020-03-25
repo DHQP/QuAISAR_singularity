@@ -335,8 +335,8 @@ else
 	echo "adapters installed"
 fi
 
-if [[ ! -d "${local_DBs}/pubMLSTs" ]]; then
-	#cp -r /container_DBs/pubMLSTs ${local_DBs}
+if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
+	#cp -r /container_DBs/pubmlsts ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying pubMLST"
 		cp ${src}/databases/pubMLST ${local_DBs}
