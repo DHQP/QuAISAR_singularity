@@ -266,14 +266,14 @@ singularities=(bbtools blast-2.9.0-docker bowtie2-2.2.9-biocontainers cSSTAR ent
 
 for simage in "${singularities[@]}"; do
 	# custom singularity images (3.6GBs)
-	if [[ ! -f "${local_DBs}/custom_singularities/${simage}.simg" ]]; then
+	if [[ ! -f "${local_DBs}/singularities/${simage}.simg" ]]; then
 		#cp -r /container_DBs/custom_singularities ${local_DBs}
 		if [[ "${do_download}" = "true" ]]; then
-			if [[ ! -d "${local_DBs}/custom_singularities" ]]; then
-				mkdir "${local_DBs}/custom_singularities"
+			if [[ ! -d "${local_DBs}/singularities" ]]; then
+				mkdir "${local_DBs}/singularities"
 			fi
 			echo "Copying custom singularity image ${simage}.simg"
-			cp ${src}/databases/singularities/${simage}.simg ${local_DBs}/custom_singularities
+			cp ${src}/databases/singularities/${simage}.simg ${local_DBs}/singularities
 		else
 			echo "Missing custom singularity image ${simage}.simg"
 			missing_DBS=("${missing_DBS[@]}" "singularities-${simage}")
