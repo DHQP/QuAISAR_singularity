@@ -70,12 +70,13 @@ if [[ ! -d "${local_DBs}/BUSCO" ]]; then
 		taxa=$(echo "$odb_info" | cut -d'_' -f1)
 		db_date=$(echo "$odb_info" | cut -d'.' -f2)
 		if [[ ! -d "${local_DBs}/${taxa}_odb10" ]]; then
-			if [[ "${do_download}" = "true" ]];
+			if [[ "${do_download}" = "true" ]]; then
 				echo "Downloading latest BUSCO database for ${taxa} (wget http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz)"
 				wget "http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz"
 			else
 				echo "Missing latest BUSCO database for ${taxa}"
 				missing_DBS=("${missing_DBS[@]}" "BUSO-${taxa}")
+			fi
 		else
 			echo "BUSCO has latest ${taxa}_odb10 as of 3/15/2020"
 		fi
