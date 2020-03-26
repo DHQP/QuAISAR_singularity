@@ -21,8 +21,6 @@
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
-
-
 # Initialize progress variables
 run_location=""
 run_task_id=0
@@ -59,6 +57,8 @@ fi
 
 prereqs="true"
 missing_names=()
+
+conda activate py36_biopython_singularity
 
 echo "Checking for dependencies and databases"
 # Check for required software (python3 and singularity)
