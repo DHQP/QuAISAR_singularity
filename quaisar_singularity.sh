@@ -59,6 +59,8 @@ fi
 
 prereqs="true"
 missing_names=()
+
+echo "Checking for dpendencies and databases"
 # Check for required software (python3 and singularity)
 singularity_version=$(singularity --version | cut -d' ' -f3 | cut -d'.' -f1)
 singularity_release=$(singularity --version | cut -d' ' -f3)
@@ -75,12 +77,12 @@ elif [[ "${python_version}" = "2" ]]; then
 		python_release=$(python3 --version | cut -d' ' -f2)
 		#echo "Python $python_release is installed, please continue"
 	else
-		echo -e "\nPython3.x not installed, can not proceed\n"
+		#echo -e "\nPython3.x not installed, can not proceed\n"
 		prereqs="false"
 		missing_names=("${missing_names[@]}" python3)
 	fi
 else
-	echo -e "\nPython3.x not installed, can not proceed\n"
+	#echo -e "\nPython3.x not installed, can not proceed\n"
 	prereqs="false"
 	missing_names=("${missing_names[@]}" python3)
 fi
@@ -111,7 +113,7 @@ else
 	missing_names=("${missing_names[@]}" singularity)
 fi
 
-# Checks the arguments (more to come)
+# Checks the arguments and sets some default variables
 nopts=$#
 do_download="false"
 global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
@@ -174,7 +176,7 @@ for ((i=1 ; i <= nopts ; i++)); do
 			# Not needed anymore
 			#echo "output_dir=${BASEDIR}" >> "${src}/config.sh"
 			. ${src}/config.sh
-			echo "${output_dir}"
+			#echo "${output_dir}"
 			list_path="${BASEDIR}/${PROJECT}/${PROJECT}_list.txt"
 			if [[ ! -d ${BASEDIR} ]]; then
 				mkdir -p ${BASEDIR}
