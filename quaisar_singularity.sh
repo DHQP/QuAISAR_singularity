@@ -75,7 +75,7 @@ if [[ "${python_version}" = "3" ]]; then
 	fi
 fi
 
-echo "${singularity_version}-${singularity_release}:${python_version}-${python_release}:${python_command}"
+#echo "${singularity_version}-${singularity_release}:${python_version}-${python_release}:${python_command}"
 
 # Check that biopython is installed
 ${python_command} -c "import Bio"
@@ -94,8 +94,6 @@ else
 	echo "Singularity 3.x(+) is not installed, can not continue"
 	exit
 fi
-
-exit
 
 # Checks the arguments (more to come)
 nopts=$#
@@ -182,6 +180,10 @@ for ((i=1 ; i <= nopts ; i++)); do
 			;;
 	esac
 done
+
+${src}/database_checker.sh ${config_file}
+
+exit
 
 # Short print out summary of run settings
 echo -e "Source folder: ${INDATADIR}\\nOutput folder: ${BASEDIR}\\nList based analysis:  ${list_path}"
