@@ -60,7 +60,7 @@ fi
 prereqs="true"
 missing_names=()
 
-echo "Checking for dpendencies and databases"
+echo "Checking for dependencies and databases"
 # Check for required software (python3 and singularity)
 singularity_version=$(singularity --version | cut -d' ' -f3 | cut -d'.' -f1)
 singularity_release=$(singularity --version | cut -d' ' -f3)
@@ -213,6 +213,7 @@ if [[ "${prereqs}" = "false" ]]; then
 	for missing in "${missing_names[@]}"; do
 		echo -e "${missing}\n"
 	done
+	exit
 else
 	echo "Everything is preinstalled and ready to run"
 fi
