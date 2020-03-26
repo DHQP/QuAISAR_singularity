@@ -111,7 +111,7 @@ else
 fi
 
 # Check singularity version...dirty fix for dirty until i can figure out why it doesnt give correct version #
-if [[ "${singularity_version}" -ge 3 ]] || [[ "${singularity_version}" = "d5eaf8a+dirty"]]; then
+if [[ "${singularity_version}" -ge 3 ]] || [[ "${singularity_version}" = "d5eaf8a+dirty" ]]; then
 	#echo "Singularity ${singularity_release} is installed, please continue"
 	:
 else
