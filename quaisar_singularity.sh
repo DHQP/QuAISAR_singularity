@@ -197,7 +197,7 @@ done
 
 db_output=$(${src}/database_checker.sh ${config_file} | tail -n1)
 num_missing=$(echo "${db_output}" | cut -d' ' -f3)
-db_missing=$(echo "${db_output}" | cut -d' ' -f6-)
+db_missing=$(echo "${db_output}" | cut -d'(' -f2 | cut -d')' -f1)
 
 if [[ "${num_missing}" -gt 0 ]]; then
 	prereqs="false"

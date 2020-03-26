@@ -82,7 +82,7 @@ for odb_info in "${busco_taxa[@]}"; do
 			fi
 		else
 			echo "Missing latest BUSCO database for ${taxa}"
-			missing_DBS=("${missing_DBS[@]}" "BUSO-${taxa}")
+			missing_DBS=("${missing_DBS[@]}" "BUSCO-${taxa}")
 		fi
 	else
 		echo "BUSCO has latest ${taxa}_odb10 as of 3/15/2020"
