@@ -225,9 +225,6 @@ else
 	echo "Everything is preinstalled and ready to run"
 fi
 
-
-exit
-
 # Short print out summary of run settings
 echo -e "Source folder: ${INDATADIR}\\nOutput folder: ${BASEDIR}\\nList based analysis:  ${list_path}"
 
