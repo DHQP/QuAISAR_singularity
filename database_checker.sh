@@ -352,4 +352,4 @@ else
 	echo "pubMLST installed"
 fi
 
-echo "There are ${#missing_DBS[@]} missing databases (${missing_DBS[@]})
+echo "There are ${#missing_DBS[@]} missing databases (${missing_DBS[@]})"
