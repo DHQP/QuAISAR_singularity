@@ -32,21 +32,21 @@ dependencies:
   - wheel=0.34.2=py_1
   - xz=5.2.4=h14c3975_1001
   - zlib=1.2.11=h516909a_1006
-  - bzip2=1.0.6=h14c3975_1002
-    # Testing singularity inclusion
-  - cni=0.6.0=h8a17f66_1002
-  - cni-plugins=0.7.5=hc0beb16_0
-  - expat=2.2.5=he1b5a44_1003
-  - jq=1.6=h14c3975_1000
-  - libarchive=3.3.3=ha149a29_1000
-  - libiconv=1.15=h516909a_1005
-  - libseccomp=2.4.1=h516909a_0
-  - libuuid=2.32.1=h14c3975_1000
-  - lz4-c=1.8.3=he1b5a44_1001
-  - lzo=2.10=h14c3975_1000
-  - oniguruma=6.9.2=h516909a_0
-  - singularity=3.5.3=h6227a62_0
-  - squashfs-tools=4.3=h54f8c30_1001
+  ## Testing singularity inclusion
+  #- bzip2=1.0.6=h14c3975_1002
+  #- cni=0.6.0=h8a17f66_1002
+  #- cni-plugins=0.7.5=hc0beb16_0
+  #- expat=2.2.5=he1b5a44_1003
+  #- jq=1.6=h14c3975_1000
+  #- libarchive=3.3.3=ha149a29_1000
+  #- libiconv=1.15=h516909a_1005
+  #- libseccomp=2.4.1=h516909a_0
+  #- libuuid=2.32.1=h14c3975_1000
+  #- lz4-c=1.8.3=he1b5a44_1001
+  #- lzo=2.10=h14c3975_1000
+  #- oniguruma=6.9.2=h516909a_0
+  #- singularity=3.5.2=h6227a62_0
+  #- squashfs-tools=4.3=h54f8c30_1001
 
 # #  _libgcc_mutex             0.1                        main
 # bzip2                     1.0.6             h14c3975_1002    conda-forge
