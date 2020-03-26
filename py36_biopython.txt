@@ -1,0 +1,1 @@
+conda create --name py36_biopython python=3.6 singularity biopython -y 
