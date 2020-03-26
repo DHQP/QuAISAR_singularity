@@ -1,4 +1,4 @@
-task_number=run_task_id=#!/bin/bash -l
+#!/bin/bash -l
 
 #$ -o quaisar_X.out
 #$ -e quaisar_X.err
