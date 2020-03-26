@@ -67,13 +67,13 @@ python_release=$(python --version | cut -d' ' -f2)
 
 if [[ "${python_version}" = "3" ]]; then
 	python_command="python"
-	echo "Python $python_release is installed, please continue"
+	#echo "Python $python_release is installed, please continue"
 elif [[ "${python_version}" = "2" ]]; then
 	python_version=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1)
 	if [[ "${python_version}" = "3" ]]; then
 		python_command="python3"
 		python_release=$(python3 --version | cut -d' ' -f2)
-		echo "Python $python_release is installed, please continue"
+		#echo "Python $python_release is installed, please continue"
 	else
 		echo -e "\nPython3.x not installed, can not proceed\n"
 		prereqs="false"
@@ -93,18 +93,20 @@ fi
 ${python_command} -c "import Bio"
 bio_installed=$(echo $?)
 if [[ "${bio_installed}" -eq 0 ]]; then
-	echo "Biopython is installed, please continue"
+	#echo "Biopython is installed, please continue"
+	:
 else
-	echo -e "\nBiopython not installed, can not proceed\n"
+	#echo -e "\nBiopython not installed, can not proceed\n"
 	prereqs="false"
 	missing_names=("${missing_names[@]}" biopython)
 fi
 
 # Check singularity version
 if [[ "${singularity_version}" -ge 3 ]]; then
-	echo "Singularity ${singularity_release} is installed, please continue"
+	#echo "Singularity ${singularity_release} is installed, please continue"
+	:
 else
-	echo -e "\nSingularity 3.x(+) is not installed, can not continue\n"
+	#echo -e "\nSingularity 3.x(+) is not installed, can not continue\n"
 	prereqs="false"
 	missing_names=("${missing_names[@]}" singularity)
 fi
