@@ -351,3 +351,5 @@ if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
 else
 	echo "pubMLST installed"
 fi
+
+echo "There are ${#missing_DBS[@]} missing databases (${missing_DBS[@]})

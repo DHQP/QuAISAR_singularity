@@ -57,25 +57,37 @@ fi
 # figure out best practices install location
 # conda env create -f ~/py36_biopython/py36_biopython_singularity.yml
 
+prereqs="true"
+missing_names=()
 # Check for required software (python3 and singularity)
 singularity_version=$(singularity --version | cut -d' ' -f3 | cut -d'.' -f1)
 singularity_release=$(singularity --version | cut -d' ' -f3)
-python_version=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1)
-python_release=$(python3 --version | cut -d' ' -f2)
+python_version=$(python --version | cut -d' ' -f2 | cut -d'.' -f1)
+python_release=$(python --version | cut -d' ' -f2)
 
 if [[ "${python_version}" = "3" ]]; then
-	python_version=$(python --version | cut -d' ' -f2 | cut -d'.' -f1)
-	python_command="python3"
-	if [[ "${python_version}" -ne 3 ]]; then
-		echo "Python3.x not insalled, can not proceed"
-		exit
-	else
+	python_command="python"
+	echo "Python $python_release is installed, please continue"
+elif [[ "${python_version}" = "2" ]]; then
+	python_version=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1)
+	if [[ "${python_version}" = "3" ]]; then
+		python_command="python3"
+		python_release=$(python3 --version | cut -d' ' -f2)
 		echo "Python $python_release is installed, please continue"
-		python_command="python"
+	else
+		echo -e "\nPython3.x not installed, can not proceed\n"
+		prereqs="false"
+		missing_names=("${missing_names[@]}" python3)
 	fi
+else
+	echo -e "\nPython3.x not installed, can not proceed\n"
+	prereqs="false"
+	missing_names=("${missing_names[@]}" python3)
 fi
 
+
 #echo "${singularity_version}-${singularity_release}:${python_version}-${python_release}:${python_command}"
+
 
 # Check that biopython is installed
 ${python_command} -c "import Bio"
@@ -83,16 +95,18 @@ bio_installed=$(echo $?)
 if [[ "${bio_installed}" -eq 0 ]]; then
 	echo "Biopython is installed, please continue"
 else
-	echo "Biopython not installed, can not proceed"
-	exit
+	echo -e "\nBiopython not installed, can not proceed\n"
+	prereqs="false"
+	missing_names=("${missing_names[@]}" biopython)
 fi
 
 # Check singularity version
 if [[ "${singularity_version}" -ge 3 ]]; then
 	echo "Singularity ${singularity_release} is installed, please continue"
 else
-	echo "Singularity 3.x(+) is not installed, can not continue"
-	exit
+	echo -e "\nSingularity 3.x(+) is not installed, can not continue\n"
+	prereqs="false"
+	missing_names=("${missing_names[@]}" singularity)
 fi
 
 # Checks the arguments (more to come)
@@ -181,9 +195,26 @@ for ((i=1 ; i <= nopts ; i++)); do
 	esac
 done
 
-${src}/database_checker.sh ${config_file}
+db_output=$(${src}/database_checker.sh ${config_file} | tail -n1)
+num_missing=$(echo "${db_output}" | cut -d' ' -f3)
+db_missing=$(echo "${db_output}" | cut -d' ' -f6-)
 
-exit
+if [[ "${num_missing}" -gt 0 ]]; then
+	prereqs="false"
+	missing_names=("${missing_names[@]}" "${db_missing[@]}")
+fi
+
+if [[ "${prereqs}" = "false" ]]; then
+	echo "A dependency or database is missing:"
+	for missing in "${missing_names[@]}"; do
+		echo -e "${missing}\n"
+	done
+else
+	echo "Everything is preinstalled and ready to run"
+fi
+
+
+
 
 # Short print out summary of run settings
 echo -e "Source folder: ${INDATADIR}\\nOutput folder: ${BASEDIR}\\nList based analysis:  ${list_path}"
