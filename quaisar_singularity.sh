@@ -50,6 +50,51 @@ if [[ $# -lt 1  || $# -gt 9 ]]; then
   exit 3
 fi
 
+# Check if specific conda environment exists
+# Havent found command yet
+
+# Turn on Conda environment?
+# figure out best practices install location
+# conda env create -f ~/py36_biopython/py36_biopython_singularity.yml
+
+# Check for required software (python3 and singularity)
+singularity_version=$(singularity --version | cut -d' ' -f3 | cut -d'.' -f1)
+singularity_release=$(singularity --version | cut -d' ' -f3)
+python_version=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1)
+python_release=$(python3 --version | cut -d' ' -f2)
+
+if [[ "${python_version}" -ne 3 ]]; then
+	python_version=$(python --version | cut -d' ' -f2 | cut -d'.' -f1)
+	python_command="python3"
+	if [[ "${python_version}" -ne 3 ]]; then
+		echo "Python3.x not insalled, can not proceed"
+		exit
+	else
+		echo "Python $python_release is installed, please continue"
+		python_command="python"
+	fi
+fi
+
+# Check that biopython is installed
+${python_command} -c "import Bio"
+bio_installed=$(echo $?)
+if [[ "${bio_installed}" -eq 0 ]]; then
+	echo "Biopython is installed, please continue"
+else
+	echo "Biopython not installed, can not proceed"
+	exit
+fi
+
+# Check singularity version
+if [[ "${singularity_version}" -ge 3 ]]; then
+	echo "Singularity ${singularity_release} is installed, please continue"
+else
+	echo "Singularity 3.x(+) is not installed, can not continue"
+	exit
+fi
+
+exit
+
 # Checks the arguments (more to come)
 nopts=$#
 do_download="false"
