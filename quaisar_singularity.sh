@@ -62,10 +62,17 @@ missing_names=()
 
 echo "Checking for dependencies and databases"
 # Check for required software (python3 and singularity)
+conda_call_lines=$(conda list | wc -l)
 singularity_version=$(singularity --version | cut -d' ' -f3 | cut -d'.' -f1)
 singularity_release=$(singularity --version | cut -d' ' -f3)
 python_version=$(python --version | cut -d' ' -f2 | cut -d'.' -f1)
 python_release=$(python --version | cut -d' ' -f2)
+
+if [[ "${conda_call_lines}" -gt 1 ]]; then
+	:
+else
+	missing_names=("${missing_names[@]}" conda)
+fi
 
 if [[ "${python_version}" = "3" ]]; then
 	python_command="python"
@@ -103,8 +110,8 @@ else
 	missing_names=("${missing_names[@]}" biopython)
 fi
 
-# Check singularity version
-if [[ "${singularity_version}" -ge 3 ]]; then
+# Check singularity version...dirty fix for dirty until i can figure out why it doesnt give correct version #
+if [[ "${singularity_version}" -ge 3 ]] || [[ "${singularity_version}" = "d5eaf8a+dirty"]]; then
 	#echo "Singularity ${singularity_release} is installed, please continue"
 	:
 else
