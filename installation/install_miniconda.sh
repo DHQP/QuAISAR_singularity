@@ -14,5 +14,5 @@ conda config --set auto_activate_base false
 conda config --add channels defaults
 conda config --add channels bioconda
 conda config --add channels conda-forge
-conda install -c conda-forge/label/cf202003 singularity
+conda install -c conda-forge singularity
 rm Miniconda3-latest-Linux-x86_64.sh
