@@ -16,6 +16,33 @@
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
+# Checking for proper number of arguments from command line
+if [[ $# -lt 1  || $# -gt 3 ]]; then
+  echo "Usage: ./installation.sh script_installation_location database_installation_location Working_directory_of_output_from_runs"
+	echo "You have used $# args"
+  exit 3
+fi
+
+# Checks for proper argumentation
+if [[ $# -eq 0 ]]; then
+	echo "No argument supplied to $0, exiting"
+	exit 1
+elif [ -z "$1" ]; then
+	echo "Empty script location supplied to supplied to $0, exiting"
+	exit 1
+elif [ -z "$2" ]; then
+	echo "Empty database installation location supplied to $0, exiting"
+	exit 1
+elif [ -z "$3" ]; then
+  echo "Empty working directory for output supplied to $0, exiting"
+  exit 1
+# command line version of usage for script
+elif [[ "$1" = "-h" ]]; then
+	echo "Usage: ./installation.sh script_installation_location database_installation_location Working_directory_of_output_from_runs"
+	exit 0
+fi
+
+
 
 # need to add to bottom of yaml with proper home location
 installation_location=${1}
@@ -26,6 +53,12 @@ echo "Installing quaisar scripts to ${installation_location}"
 if [[ ! -d ${installation_location} ]]; then
   echo "Creating ${installation}"
   mkdir -p ${installation_location}
+fi
+
+echo "Checking for working directory of runs ${working_directory}"
+if [[ ! -d ${working_directory} ]]; then
+  echo "Creating ${working_directory}"
+  mkdir -p ${working_directory}
 fi
 
 # Create primary config file
