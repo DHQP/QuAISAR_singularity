@@ -63,7 +63,7 @@ singularity_release=$(singularity --version | cut -d' ' -f3)
 python_version=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1)
 python_release=$(python3 --version | cut -d' ' -f2)
 
-if [[ "${python_version}" -ne 3 ]]; then
+if [[ "${python_version}" = "3" ]]; then
 	python_version=$(python --version | cut -d' ' -f2 | cut -d'.' -f1)
 	python_command="python3"
 	if [[ "${python_version}" -ne 3 ]]; then
