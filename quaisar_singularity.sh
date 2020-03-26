@@ -75,7 +75,7 @@ if [[ "${python_version}" -ne 3 ]]; then
 	fi
 fi
 
-echo "${python_command}"
+echo "${singularity_version}-${singularity_release}:${python_version}-${python_release}:${python_command}"
 
 # Check that biopython is installed
 ${python_command} -c "import Bio"
