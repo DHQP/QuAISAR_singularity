@@ -21,8 +21,6 @@ install_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && 
 
 echo "${install_script_dir}"
 
-exit
-
 # Checking for proper number of arguments from command line
 if [[ $# -lt 1  || $# -gt 3 ]]; then
   echo "Usage: ./installation.sh script_installation_location database_installation_location Working_directory_of_output_from_runs"
@@ -81,6 +79,11 @@ echo "procs=${CPUs}" >> ${installation_location}/config.sh
 tail -n91 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/config.sh
 
 # Install databases
+#Create database folder
+if [[ ! -d ${databases} ]]; then
+  echo "Creating ${databases} for databases"
+  mkdir -p "${databases}"
+fi
 ${install_script_dir}/scripts/database_checker.sh ${installation_location}/config.sh -i
 
 # Copy all scripts from this fodler to install location
