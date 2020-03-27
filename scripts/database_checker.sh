@@ -67,7 +67,7 @@ if [[ ! -d ${local_DBs} ]]; then
 fi
 
 # Check for BUSCO
-busco_taxa=(bacteria_odb10.2019-06-26 alteromonadales_odb10.2019-04-24 bacillales_odb10.2019-04-24 bacilli_odb10.2019-04-24 bacteroidetes_odb10.2019-04-24 betaproteobacteria_odb10.2019-04-24 burkholderiales_odb10.2019-04-24 campylobacterales_odb10.2019-04-24 clostridiales_odb10.2019-04-24 clostridia_odb10.2019-04-24 corynebacteriales_odb10.2019-04-24 enterobacterales_odb10.2019-04-24 epsilonproteobacteria_odb10.2019-04-24 firmicutes_odb10.2019-04-24 flavobacteriales_odb10.2019-04-24 flavobacteriales_odb10.2019-04-24 flavobacteriia_odb10.2019-04-24 gammaproteobacteria_odb10.2019-04-24 lactobacillales_odb10.2019-04-24 neisseriales_odb10.2019-04-24 proteobacteria_odb10.2019-04-24 pseudomonadales_odb10.2019-04-24 xanthomonadales_odb10.2019-04-24 actinobacteria_class_odb10.2019-04-24)
+busco_taxa=(bacteria_odb10.2019-06-26 alteromonadales_odb10.2019-04-24 bacillales_odb10.2019-04-24 bacilli_odb10.2019-04-24 bacteroidetes_odb10.2019-04-24 betaproteobacteria_odb10.2019-04-24 burkholderiales_odb10.2019-04-24 campylobacterales_odb10.2019-04-24 clostridiales_odb10.2019-04-24 clostridia_odb10.2019-04-24 corynebacteriales_odb10.2019-04-24 enterobacterales_odb10.2019-04-24 epsilonproteobacteria_odb10.2019-04-24 firmicutes_odb10.2019-04-24 flavobacteriales_odb10.2019-04-24 flavobacteriales_odb10.2019-04-24 flavobacteriia_odb10.2019-04-24 gammaproteobacteria_odb10.2019-04-24 lactobacillales_odb10.2019-04-24 neisseriales_odb10.2019-04-24 proteobacteria_odb10.2019-04-24 pseudomonadales_odb10.2019-04-24 xanthomonadales_odb10.2019-04-24 actinobacteria_class_odb10.2019-04-24 )
 
 #echo "${#busco_taxa[@]}"
 
@@ -82,6 +82,9 @@ for odb_info in "${busco_taxa[@]}"; do
 				mkdir "${local_DBs}/BUSCO"
 			fi
 			cd "${local_DBs}/BUSCO"
+			if [[ "${taxa}" == "actinobacteria" ]]; then
+				taxa="actinobacteria_class"
+			fi
 			echo "Downloading latest BUSCO database for ${taxa} (wget http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz)"
 			wget "http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz"
 			# Dont know how to handle this one outlier (only one to specify a level in the filename) - ALl OUR bugs are in class Actinobacteria too
@@ -97,109 +100,7 @@ for odb_info in "${busco_taxa[@]}"; do
 	fi
 done
 find ${local_DBs}/BUSCO/ -name '*.gz' -exec tar xzf {} \;
-
-	# # Check for top level bacteria database
-	# if [[ ! -d "${local_DBs}/bacteria_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/bacteria_odb10.2019-06-26.tar.gz"
-	# else
-	# 	echo "BUSCO has latest Bacteria as of 3/15/2020"
-	# fi
-	# # Check for Order level Alteromonadales database
-	# if [[ ! -d "${local_DBs}/alteromonadales_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/alteromonadales_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Order level Bacillales database
-	# if [[ ! -d "${local_DBs}/bacillales_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/bacillales_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Class level Bacilli database
-	# if [[ ! -d "${local_DBs}/bacilli_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/bacilli_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Phylum level Bacteroidetes database
-	# if [[ ! -d "${local_DBs}/bacteroidetes_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/bacteroidetes_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Class level Betaproteobacteria database
-	# if [[ ! -d "${local_DBs}/betaproteobacteria_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/betaproteobacteria_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Order level Burkholderiales database
-	# if [[ ! -d "${local_DBs}/burkholderiales_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/burkholderiales_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Order level Campylobacterales database
-	# if [[ ! -d "${local_DBs}/campylobacterales_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/campylobacterales_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Order level Clostridiales database
-	# if [[ ! -d "${local_DBs}/clostridiales_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/clostridiales_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Class level Clostridia database
-	# if [[ ! -d "${local_DBs}/clostridia_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/clostridia_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Order level Corynebacteriales database
-	# if [[ ! -d "${local_DBs}/corynebacteriales_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/corynebacteriales_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Order level Enterobacterales database
-	# if [[ ! -d "${local_DBs}/enterobacterales_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/enterobacterales_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Class level Epsilonproteobacteria
-	# if [[ ! -d "${local_DBs}/epsilonproteobacteria_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/epsilonproteobacteria_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Phylum level Firmicutes database
-	# if [[ ! -d "${local_DBs}/firmicutes_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/firmicutes_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Order level Flavobacteriales database
-	# if [[ ! -d "${local_DBs}/flavobacteriales_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/flavobacteriales_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Class level Flavobacteriia database
-	# if [[ ! -d "${local_DBs}/flavobacteriia_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/flavobacteriia_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Class level Gammaproteobacteria database
-	# if [[ ! -d "${local_DBs}/gammaproteobacteria_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/gammaproteobacteria_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Order level lactobacillales database
-	# if [[ ! -d "${local_DBs}/lactobacillales_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/lactobacillales_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Order level Neisseriales database
-	# if [[ ! -d "${local_DBs}/neisseriales_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/neisseriales_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Phylum level Proteobacteria database
-	# if [[ ! -d "${local_DBs}/proteobacteria_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/proteobacteria_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Order level Pseudomonadales database
-	# if [[ ! -d "${local_DBs}/pseudomonadales_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/pseudomonadales_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Order level Xanthomonadales database
-	# if [[ ! -d "${local_DBs}/xanthomonadales_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/xanthomonadales_odb10.2019-04-24.tar.gz"
-	# fi
-	# # Check for Class level Actinobacteria database. This is the only conflict database as there is also a phylum level Actinobacteria which is not going to be used.
-	# if [[ ! -d "${local_DBs}/actinobacteria_class_odb10" ]]; then
-	# 	wget "http://busco-data.ezlab.org/v4/data/lineages/actinobacteria_class_odb10.2019-04-24.tar.gz"
-	# fi
-#zipped=$(ls -l ${local_DBs}/BUSCO/*.gz | wc -l)
-#if [[ "${zipped}" -gt 0 ]]; then
-#	for file in ${local_DBs}/BUSCO/*.gz; do
-#		tar xzf ${file}
-#	done
-
-
-
+rm "${local_DBs}/BUSCO/*.tar.gz"
 
 ##### Currently down.....and has been a while
 # Check to see if gottcha database is installed
@@ -266,7 +167,7 @@ if [[ ! -d "${local_DBs}/star" ]]; then
 	if [[ "${do_download}" = "true" ]]; then\
 		"${local_DBs}/star"
 		echo "Copying latest NAR-AR database"
-		cp ${current_dir}/databases/star ${local_DBs}
+		cp ${current_dir}/included_databases/star ${local_DBs}
 	else
 		echo "Missing latest NAR-AR database"
 		missing_DBS=("${missing_DBS[@]}" "NAR-AR")
@@ -301,7 +202,7 @@ if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
 	#cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying MMB_bugs"
-		cp ${current_dir}/included_databases/MMB_bugs.txt ${local_DBs}
+		cp ${current_dir}/included_databases/MMB_Bugs.txt ${local_DBs}
 	else
 		echo "Missing MMB_Bugs"
 		missing_DBS=("${missing_DBS[@]}" "MMB_Bugs")
@@ -353,7 +254,7 @@ if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
 	#cp -r /container_DBs/pubmlsts ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying pubMLST"
-		cp ${current_dir}/included_databases/pubMLST ${local_DBs}
+		cp ${current_dir}/included_databases/pubmlts ${local_DBs}
 	else
 		echo "Missing pubMLST"
 		missing_DBS=("${missing_DBS[@]}" "pubMLST")
