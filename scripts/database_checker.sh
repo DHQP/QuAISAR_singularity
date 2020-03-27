@@ -50,6 +50,7 @@ elif [[ "${2}" == "-i" ]]; then
 	current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd | rev | cut -d'/' -f2- | rev)"
 	if [[ ! -d ${current_dir}/installation ]]; then
 		echo "Can not install databases. Try running ./database_checker.sh from the installation folder in the GIT repo"
+		echo "${current_dir}"
 	else
 		do_download="true"
 	fi
