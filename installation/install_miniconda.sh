@@ -4,7 +4,8 @@ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 sh Miniconda3-latest-Linux-x86_64.sh -b
 
 #. ~/.bashrc
-~/miniconda/conda/bin init bash
+~/miniconda3/bin/conda init bash
+. ~/.bashrc
 conda config --set auto_activate_base false
 conda config --add channels defaults
 conda config --add channels bioconda
