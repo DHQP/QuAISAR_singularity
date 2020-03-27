@@ -67,20 +67,21 @@ if [[ ! -d ${working_directory} ]]; then
 fi
 
 # Create primary config file
-head -n25 ${install_script_dir}/installation/config_template.sh > ${installation_location}/config.sh
-echo "output_dir=${working_directory}" >> ${installation_location}/config.sh
-head -n27 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/config.sh
+head -n25 ${install_script_dir}/installation/config_template.sh > ${installation_location}/new_config.sh
+echo "output_dir=${working_directory}" >> ${installation_location}/new_config.sh
+head -n27 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
 echo "src=${installation_location}" >> ${installation_location}/config.sh
-head -n29 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/config.sh
+head -n29 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
 echo "local_DBs=${databases}" >> ${installation_location}/config.sh
-head -n31 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/config.sh
+head -n31 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
 CPUs=$(nproc --all)
-echo "procs=${CPUs}" >> ${installation_location}/config.sh
-tail -n91 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/config.sh
+echo "procs=${CPUs}" >> ${installation_location}/new_config.sh
+tail -n91 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
 
 # Copy all scripts from this fodler to install location
 cp ${install_script_dir}/scripts/* ${installation_location}
 chmod +X ${installation_location}/*
+
 
 # Install databases
 #Create database folder
@@ -88,7 +89,7 @@ if [[ ! -d ${databases} ]]; then
   echo "Creating ${databases} for databases"
   mkdir -p "${databases}"
 fi
-${installation_location}/database_checker.sh ${installation_location}/config.sh -i
+${installation_location}/database_checker.sh ${installation_location}/new_config.sh -i
 
 
 #check if conda is installed already
