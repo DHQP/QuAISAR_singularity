@@ -80,7 +80,7 @@ tail -n91 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${
 
 # Copy all scripts from this fodler to install location
 cp ${install_script_dir}/scripts/* ${installation_location}
-chmod +X ${installation_location}/*
+chmod +x ${installation_location}/*
 
 
 # Install databases
