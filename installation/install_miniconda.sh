@@ -10,7 +10,7 @@ sleep 2
 
 . ~/.bashrc
 conda init bash
-conda config --set auto_activate_base false
+conda config --set auto_activate_base true
 conda config --add channels defaults
 conda config --add channels bioconda
 conda config --add channels conda-forge
