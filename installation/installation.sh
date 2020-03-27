@@ -56,7 +56,7 @@ working_directory=${3}
 
 echo "Installing quaisar scripts to ${installation_location}"
 if [[ ! -d ${installation_location} ]]; then
-  echo "Creating ${installation}"
+  echo "Creating ${installation_location}"
   mkdir -p ${installation_location}
 fi
 
@@ -70,9 +70,9 @@ fi
 head -n25 ${install_script_dir}/installation/config_template.sh > ${installation_location}/new_config.sh
 echo "output_dir=${working_directory}" >> ${installation_location}/new_config.sh
 head -n27 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
-echo "src=${installation_location}" >> ${installation_location}/config.sh
+echo "src=${installation_location}" >> ${installation_location}/new_config.sh
 head -n29 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
-echo "local_DBs=${databases}" >> ${installation_location}/config.sh
+echo "local_DBs=${databases}" >> ${installation_location}/new_config.sh
 head -n31 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
 CPUs=$(nproc --all)
 echo "procs=${CPUs}" >> ${installation_location}/new_config.sh
