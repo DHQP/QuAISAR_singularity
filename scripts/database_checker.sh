@@ -67,7 +67,7 @@ if [[ ! -d ${local_DBs} ]]; then
 fi
 
 # Check for BUSCO
-busco_taxa=(bacteria_odb10.2019-06-26 alteromonadales_odb10.2019-04-24 bacillales_odb10.2019-04-24 bacilli_odb10.2019-04-24 bacteroidetes_odb10.2019-04-24 betaproteobacteria_odb10.2019-04-24 burkholderiales_odb10.2019-04-24 campylobacterales_odb10.2019-04-24 clostridiales_odb10.2019-04-24 clostridia_odb10.2019-04-24 corynebacteriales_odb10.2019-04-24 enterobacterales_odb10.2019-04-24 epsilonproteobacteria_odb10.2019-04-24 firmicutes_odb10.2019-04-24 flavobacteriales_odb10.2019-04-24 flavobacteriales_odb10.2019-04-24 flavobacteriia_odb10.2019-04-24 gammaproteobacteria_odb10.2019-04-24 lactobacillales_odb10.2019-04-24 neisseriales_odb10.2019-04-24 proteobacteria_odb10.2019-04-24 pseudomonadales_odb10.2019-04-24 xanthomonadales_odb10.2019-04-24 actinobacteria_class_odb10.2019-04-24 )
+busco_taxa=(bacteria_odb10.2019-06-26 alteromonadales_odb10.2019-04-24 bacillales_odb10.2019-04-24 bacilli_odb10.2019-04-24 bacteroidetes_odb10.2019-04-24 betaproteobacteria_odb10.2019-04-24 burkholderiales_odb10.2019-04-24 campylobacterales_odb10.2019-04-24 clostridiales_odb10.2019-04-24 clostridia_odb10.2019-04-24 corynebacteriales_odb10.2019-04-24 enterobacterales_odb10.2019-04-24 epsilonproteobacteria_odb10.2019-04-24 firmicutes_odb10.2019-04-24 flavobacteriales_odb10.2019-04-24  flavobacteriia_odb10.2019-04-24 gammaproteobacteria_odb10.2019-04-24 lactobacillales_odb10.2019-04-24 neisseriales_odb10.2019-04-24 proteobacteria_odb10.2019-04-24 pseudomonadales_odb10.2019-04-24 xanthomonadales_odb10.2019-04-24 actinobacteria_class_odb10.2019-04-24 )
 
 #echo "${#busco_taxa[@]}"
 
@@ -164,10 +164,9 @@ fi
 # star (6 Mbs)
 if [[ ! -d "${local_DBs}/star" ]]; then
 	#cp -r /container_DBs/star ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then\
-		"${local_DBs}/star"
+	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying latest NAR-AR database"
-		cp ${current_dir}/included_databases/star ${local_DBs}
+		cp -r ${current_dir}/included_databases/star ${local_DBs}
 	else
 		echo "Missing latest NAR-AR database"
 		missing_DBS=("${missing_DBS[@]}" "NAR-AR")
@@ -188,7 +187,7 @@ for simage in "${singularities[@]}"; do
 				mkdir "${local_DBs}/singularities"
 			fi
 			echo "Copying custom singularity image ${simage}"
-			cp ${current_dir}/included_databases/singularities/${simage}.simg ${local_DBs}/singularities
+			cp ${current_dir}/included_databases/singularities/${simage} ${local_DBs}/singularities
 		else
 			echo "Missing custom singularity image ${simage}"
 			missing_DBS=("${missing_DBS[@]}" "singularities-${simage}")
@@ -254,7 +253,7 @@ if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
 	#cp -r /container_DBs/pubmlsts ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying pubMLST"
-		cp ${current_dir}/included_databases/pubmlts ${local_DBs}
+		cp ${current_dir}/included_databases/pubmlsts ${local_DBs}
 	else
 		echo "Missing pubMLST"
 		missing_DBS=("${missing_DBS[@]}" "pubMLST")
