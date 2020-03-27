@@ -87,7 +87,7 @@ if [[ ! -d ${databases} ]]; then
   echo "Creating ${databases} for databases"
   mkdir -p "${databases}"
 fi
-${installation_location}/scripts/database_checker.sh ${installation_location}/config.sh -i
+${installation_location}/database_checker.sh ${installation_location}/config.sh -i
 
 
 #check if conda is installed already
