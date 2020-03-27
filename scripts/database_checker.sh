@@ -253,7 +253,7 @@ if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
 	#cp -r /container_DBs/pubmlsts ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying pubMLST"
-		cp ${current_dir}/included_databases/pubmlsts ${local_DBs}
+		cp -r ${current_dir}/included_databases/pubmlsts ${local_DBs}
 	else
 		echo "Missing pubMLST"
 		missing_DBS=("${missing_DBS[@]}" "pubMLST")
