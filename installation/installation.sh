@@ -78,16 +78,16 @@ CPUs=$(nproc --all)
 echo "procs=${CPUs}" >> ${installation_location}/config.sh
 tail -n91 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/config.sh
 
+# Copy all scripts from this fodler to install location
+cp ${install_script_dir}/scripts/* ${installation_location}
+
 # Install databases
 #Create database folder
 if [[ ! -d ${databases} ]]; then
   echo "Creating ${databases} for databases"
   mkdir -p "${databases}"
 fi
-${install_script_dir}/scripts/database_checker.sh ${installation_location}/config.sh -i
-
-# Copy all scripts from this fodler to install location
-cp ${install_script_dir}/scripts/* ${installation_location}
+${installation_location}/scripts/database_checker.sh ${installation_location}/config.sh -i
 
 
 #check if conda is installed already
