@@ -69,22 +69,22 @@ if [[ ! -d ${working_directory} ]]; then
 fi
 
 # Create primary config file
-head -n25 ./config_template.sh > ${installation_location}/config.sh
+head -n25 ${install_script_dir}/installation/config_template.sh > ${installation_location}/config.sh
 echo "output_dir=${working_directory}" >> ${installation_location}/config.sh
-head -n27 ./config_template.sh | tail -n1 >> ${installation_location}/config.sh
+head -n27 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/config.sh
 echo "src=${installation_location}" >> ${installation_location}/config.sh
-head -n29 ./config_template.sh | tail -n1 >> ${installation_location}/config.sh
+head -n29 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/config.sh
 echo "local_DBs=${databases}" >> ${installation_location}/config.sh
-head -n31 ./config_template.sh | tail -n1 >> ${installation_location}/config.sh
+head -n31 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/config.sh
 CPUs=$(nproc --all)
 echo "procs=${CPUs}" >> ${installation_location}/config.sh
-tail -n91 ./config_template.sh | tail -n1 >> ${installation_location}/config.sh
+tail -n91 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/config.sh
 
 # Install databases
-${source}/database_checker.sh $config_file -i
+${install_script_dir}/scripts/database_checker.sh ${installation_location}/config.sh -i
 
 # Copy all scripts from this fodler to install location
-cp ../scripts/* ${installation_location}
+cp ${install_script_dir}/scripts/* ${installation_location}
 
 
 #check if conda is installed already
@@ -92,10 +92,10 @@ conda_call_lines=$(conda list | wc -l)
 if [[ "${conda_call_lines}" -gt 1 ]]; then
 	:
 else
-	yes | ${source}/installation/install_miniconda.sh
+	yes | ${install_script_dir}/installation/install_miniconda.sh
 fi
 
 home_dir=$($HOME)
-echo "prefix: ${home_dir}/miniconda3/envs/py36_biopython_singularity" >> ./py36_biopython_singularity.yml
+echo "prefix: ${home_dir}/miniconda3/envs/py36_biopython_singularity" >> ${install_script_dir}/installation/py36_biopython_singularity.yml
 
 conda create --name py36_biopython_singularity python=3.6 singularity biopython -y
