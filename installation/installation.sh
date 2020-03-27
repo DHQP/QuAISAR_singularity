@@ -87,7 +87,7 @@ chmod +x ${installation_location}/*
 #Create database folder
 if [[ ! -d ${databases} ]]; then
   echo "Creating ${databases} for databases"
-  mkdir -p "${databases}"
+  mkdir -p "${databases}/BUSCO"
 fi
 ${installation_location}/database_checker.sh ${installation_location}/new_config.sh -i
 
