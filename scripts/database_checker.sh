@@ -46,6 +46,13 @@ elif [[ "${1}" = "-h" ]]; then
 	exit 0
 elif [[ "${2}" == "-i" ]]; then
 	do_download="true"
+	#finds where script is it, so it properly reference directories during install
+	current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd | rev | cut -d'/' -f2- | rev)"
+	if [[ ! -d ${current_dir}/installation ]]; then
+		echo "Can not install databases. Try running ./database_checker.sh from the installation folder in the GIT repo"
+	else
+		do_download="true"
+	fi
 fi
 
 # Shows where databases should be (installed)
@@ -241,8 +248,9 @@ fi
 if [[ ! -d "${local_DBs}/ANI" ]]; then
 	#cp -r /container_DBs/ANI ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
+		mkdir "${local_DBs}/ANI"
 		echo "Copying latest REFSEQ sketch database (ANI)"
-		cp ${src}/databases/ANI ${local_DBs}
+		cp ${current_dir}/databases/ANI ${local_DBs}
 	else
 		echo "Missing latest REFSEQ sketch database (ANI)"
 		missing_DBS=("${missing_DBS[@]}" "REFSEQ-ANI")
@@ -254,9 +262,10 @@ fi
 # star (6 Mbs)
 if [[ ! -d "${local_DBs}/star" ]]; then
 	#cp -r /container_DBs/star ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
+	if [[ "${do_download}" = "true" ]]; then\
+		"${local_DBs}/star"
 		echo "Copying latest NAR-AR database"
-		cp ${src}/databases/star ${local_DBs}
+		cp ${current_dir}/databases/star ${local_DBs}
 	else
 		echo "Missing latest NAR-AR database"
 		missing_DBS=("${missing_DBS[@]}" "NAR-AR")
@@ -277,7 +286,7 @@ for simage in "${singularities[@]}"; do
 				mkdir "${local_DBs}/singularities"
 			fi
 			echo "Copying custom singularity image ${simage}"
-			cp ${src}/included_databases/singularities/${simage}.simg ${local_DBs}/singularities
+			cp ${current_dir}/included_databases/singularities/${simage}.simg ${local_DBs}/singularities
 		else
 			echo "Missing custom singularity image ${simage}"
 			missing_DBS=("${missing_DBS[@]}" "singularities-${simage}")
@@ -291,7 +300,7 @@ if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
 	#cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying MMB_bugs"
-		cp ${src}/included_databases/MMB_bugs.txt ${local_DBs}
+		cp ${current_dir}/included_databases/MMB_bugs.txt ${local_DBs}
 	else
 		echo "Missing MMB_Bugs"
 		missing_DBS=("${missing_DBS[@]}" "MMB_Bugs")
@@ -304,7 +313,7 @@ if [[ ! -f "${local_DBs}/taxes.csv" ]]; then
 	#cp -r /container_DBs/taxes.csv ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying taxes"
-		cp ${src}/included_databases/taxes.csv ${local_DBs}
+		cp ${current_dir}/included_databases/taxes.csv ${local_DBs}
 	else
 		echo "Missing taxes"
 		missing_DBS=("${missing_DBS[@]}" "taxes")
@@ -317,7 +326,7 @@ if [[ ! -f "${local_DBs}/phiX.fasta" ]]; then
 	#cp -r /container_DBs/phiX.fasta ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying phiX.fasta"
-		cp ${src}/included_databases/phiX.fasta ${local_DBs}
+		cp ${current_dir}/included_databases/phiX.fasta ${local_DBs}
 	else
 		echo "Missing phiX"
 		missing_DBS=("${missing_DBS[@]}" "phiX")
@@ -330,7 +339,7 @@ if [[ ! -f "${local_DBs}/adapters.fasta" ]]; then
 	#cp -r /container_DBs/adapters.fasta ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying adapters.fasta"
-		cp ${src}/included_databases/adapters.fasta ${local_DBs}
+		cp ${current_dir}/included_databases/adapters.fasta ${local_DBs}
 	else
 		echo "Missing adapters"
 		missing_DBS=("${missing_DBS[@]}" "adapters")
@@ -343,7 +352,7 @@ if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
 	#cp -r /container_DBs/pubmlsts ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying pubMLST"
-		cp ${src}/included_databases/pubMLST ${local_DBs}
+		cp ${current_dir}/included_databases/pubMLST ${local_DBs}
 	else
 		echo "Missing pubMLST"
 		missing_DBS=("${missing_DBS[@]}" "pubMLST")
