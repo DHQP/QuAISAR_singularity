@@ -16,6 +16,13 @@
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
+#finds where script is it, so it properly reference directories during install
+install_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd | rev | cut -d'/' -f2- | rev)"
+
+echo "${install_script_dir}"
+
+exit
+
 # Checking for proper number of arguments from command line
 if [[ $# -lt 1  || $# -gt 3 ]]; then
   echo "Usage: ./installation.sh script_installation_location database_installation_location Working_directory_of_output_from_runs"
