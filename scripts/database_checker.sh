@@ -80,8 +80,8 @@ for odb_info in "${busco_taxa[@]}"; do
 		if [[ "${do_download}" = "true" ]]; then
 			if [[ ! -d "${local_DBs}/BUSCO" ]]; then
 				mkdir "${local_DBs}/BUSCO"
-				cd "${local_DBs}/BUSCO"
 			fi
+			cd "${local_DBs}/BUSCO"
 			echo "Downloading latest BUSCO database for ${taxa} (wget http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz)"
 			wget "http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz"
 			# Dont know how to handle this one outlier (only one to specify a level in the filename) - ALl OUR bugs are in class Actinobacteria too
