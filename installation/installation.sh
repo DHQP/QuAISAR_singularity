@@ -47,49 +47,49 @@ elif [[ "$1" = "-h" ]]; then
 	exit 0
 fi
 
-#
-#
-# # need to add to bottom of yaml with proper home location
-# installation_location=${1}
-# databases=${2}
-# working_directory=${3}
-#
-# echo "Installing quaisar scripts to ${installation_location}"
-# if [[ ! -d ${installation_location} ]]; then
-#   echo "Creating ${installation_location}"
-#   mkdir -p ${installation_location}
-# fi
-#
-# echo "Checking for working directory of runs ${working_directory}"
-# if [[ ! -d ${working_directory} ]]; then
-#   echo "Creating ${working_directory}"
-#   mkdir -p ${working_directory}
-# fi
-#
-# # Create primary config file
-# head -n25 ${install_script_dir}/installation/config_template.sh > ${installation_location}/new_config.sh
-# echo "output_dir=${working_directory}" >> ${installation_location}/new_config.sh
-# head -n27 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
-# echo "src=${installation_location}" >> ${installation_location}/new_config.sh
-# head -n29 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
-# echo "local_DBs=${databases}" >> ${installation_location}/new_config.sh
-# head -n31 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
-# CPUs=$(nproc --all)
-# echo "procs=${CPUs}" >> ${installation_location}/new_config.sh
-# tail -n91 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
-#
-# # Copy all scripts from this fodler to install location
-# cp ${install_script_dir}/scripts/* ${installation_location}
-# chmod +x ${installation_location}/*
-#
-#
-# # Install databases
-# #Create database folder
-# if [[ ! -d ${databases} ]]; then
-#   echo "Creating ${databases} for databases"
-#   mkdir -p "${databases}/BUSCO"
-# fi
-# ${install_script_dir}/scripts/database_checker.sh ${installation_location}/new_config.sh -i
+
+
+# need to add to bottom of yaml with proper home location
+installation_location=${1}
+databases=${2}
+working_directory=${3}
+
+echo "Installing quaisar scripts to ${installation_location}"
+if [[ ! -d ${installation_location} ]]; then
+  echo "Creating ${installation_location}"
+  mkdir -p ${installation_location}
+fi
+
+echo "Checking for working directory of runs ${working_directory}"
+if [[ ! -d ${working_directory} ]]; then
+  echo "Creating ${working_directory}"
+  mkdir -p ${working_directory}
+fi
+
+# Create primary config file
+head -n25 ${install_script_dir}/installation/config_template.sh > ${installation_location}/new_config.sh
+echo "output_dir=${working_directory}" >> ${installation_location}/new_config.sh
+head -n27 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
+echo "src=${installation_location}" >> ${installation_location}/new_config.sh
+head -n29 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
+echo "local_DBs=${databases}" >> ${installation_location}/new_config.sh
+head -n31 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
+CPUs=$(nproc --all)
+echo "procs=${CPUs}" >> ${installation_location}/new_config.sh
+tail -n91 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
+
+# Copy all scripts from this fodler to install location
+cp ${install_script_dir}/scripts/* ${installation_location}
+chmod +x ${installation_location}/*
+
+
+# Install databases
+#Create database folder
+if [[ ! -d ${databases} ]]; then
+  echo "Creating ${databases} for databases"
+  mkdir -p "${databases}/BUSCO"
+fi
+${install_script_dir}/scripts/database_checker.sh ${installation_location}/new_config.sh -i
 
 
 #check if conda is installed already
