@@ -76,10 +76,12 @@ echo "local_DBs=${databases}" >> ${installation_location}/new_config.sh
 head -n31 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
 CPUs=$(nproc --all)
 echo "procs=${CPUs}" >> ${installation_location}/new_config.sh
-tail -n91 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
+tail -n91 ${install_script_dir}/installation/config_template.sh >> ${installation_location}/new_config.sh
 
 # Copy all scripts from this fodler to install location
 cp ${install_script_dir}/scripts/* ${installation_location}
+rm ${install_script_dir}/scripts/config.sh
+mv ${install_script_dir}/scripts/new_config.sh ${install_script_dir}/scripts/config.sh
 chmod +x ${installation_location}/*
 
 

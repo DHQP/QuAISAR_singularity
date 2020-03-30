@@ -129,7 +129,7 @@ PROJECT="${requestor}_${global_time}"
 assemblies="false"
 current_directory=$(pwd)
 config_file=${current_directory}/config.sh
-
+. ${config_file}
 
 for ((i=1 ; i <= nopts ; i++)); do
 	#echo "${1} ${2}"
