@@ -150,9 +150,8 @@ fi
 if [[ ! -d "${local_DBs}/ANI" ]]; then
 	#cp -r /container_DBs/ANI ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
-		mkdir "${local_DBs}/ANI"
 		echo "Copying latest REFSEQ sketch database (ANI)"
-		cp ${current_dir}/databases/ANI ${local_DBs}
+		cp -r ${current_dir}/databases/ANI ${local_DBs}
 	else
 		echo "Missing latest REFSEQ sketch database (ANI)"
 		missing_DBS=("${missing_DBS[@]}" "REFSEQ-ANI")
