@@ -107,4 +107,4 @@ echo "prefix: ${home_dir}/miniconda3/envs/py36_biopython_singularity" >> ${insta
 
 conda create --name py36_biopython_singularity python=3.6 singularity biopython -y
 
-. "${home_dir}/.bashrc"
+echo -e "Installation complete. Before running the pipeline, open a new window or run the following:\n. "${home_dir}/.bashrc" "
