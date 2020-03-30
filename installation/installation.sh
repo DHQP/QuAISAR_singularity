@@ -80,8 +80,8 @@ tail -n91 ${install_script_dir}/installation/config_template.sh >> ${installatio
 
 # Copy all scripts from this fodler to install location
 cp ${install_script_dir}/scripts/* ${installation_location}
-rm ${install_script_dir}/scripts/config.sh
-mv ${install_script_dir}/scripts/new_config.sh ${install_script_dir}/scripts/config.sh
+rm ${installation_location}/scripts/config.sh
+mv ${installation_location}/scripts/new_config.sh ${installation_location}/scripts/config.sh
 chmod +x ${installation_location}/*
 
 
