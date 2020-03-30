@@ -106,3 +106,5 @@ echo "prefix: ${home_dir}/miniconda3/envs/py36_biopython_singularity" >> ${insta
 . "${home_dir}/.bashrc"
 
 conda create --name py36_biopython_singularity python=3.6 singularity biopython -y
+
+. "${home_dir}/.bashrc"
