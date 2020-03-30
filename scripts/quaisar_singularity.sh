@@ -2003,3 +2003,5 @@ write_Progress
 run_task_id=12
 end_date=$(date "+%m_%d_%Y_at_%Hh_%Mm")
 echo "Run ended at ${end_date}" #>> "${log_file}"
+
+conda deactivate
