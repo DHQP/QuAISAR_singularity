@@ -88,9 +88,6 @@ for odb_info in "${busco_taxa[@]}"; do
 			echo "Downloading latest BUSCO database for ${taxa} (wget http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz)"
 			wget "http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz"
 			# Dont know how to handle this one outlier (only one to specify a level in the filename) - ALl OUR bugs are in class Actinobacteria too
-			if [[ "${taxa}" == "actinobacteria_class" ]]; then
-				mv ${local_DBs}/BUSCO/actinobacteria_class_odb10.2019-04-24.tar.gz ${local_DBs}/BUSCO/actinobacteria_odb10.2019-04-24.tar.gz
-			fi
 		else
 			echo "Missing latest BUSCO database for ${taxa}"
 			missing_DBS=("${missing_DBS[@]}" "BUSCO-${taxa}")
@@ -100,6 +97,7 @@ for odb_info in "${busco_taxa[@]}"; do
 	fi
 done
 find ${local_DBs}/BUSCO/ -name '*.gz' -exec tar xzf {} \;
+mv ${local_DBs}/BUSCO/actinobacteria_class_odb10 ${local_DBs}/BUSCO/actinobacteria_odb10
 find ${local_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
 
 ##### Currently down.....and has been a while
