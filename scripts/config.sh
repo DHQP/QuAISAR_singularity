@@ -12,7 +12,7 @@
 #
 # Modules required: None
 #
-# v1.0.3 (3/24/2020)
+# v1.0.4 (3/30/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
