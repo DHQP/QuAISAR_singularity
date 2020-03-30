@@ -42,7 +42,7 @@ function write_Progress() {
 # Checking for proper number of arguments from command line
 if [[ $# -lt 1  || $# -gt 9 ]]; then
 	echo "If reads are in default location set in config file then"
-  echo "Usage: ./quaisar_containerized.sh -c location_of_config_file -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-r]"
+  echo "Usage: ./quaisar_containerized.sh -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-r]"
 	echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz 5: .fasta (Assemblies only)"
   echo "You have used $# args"
   exit 3
@@ -127,6 +127,9 @@ global_time=$(date "+%m-%d-%Y_at_%Hh_%Mm_%Ss")
 requestor=$(whoami)
 PROJECT="${requestor}_${global_time}"
 assemblies="false"
+current_directory=$(pwd)
+config_file=${current_directory}/config.sh
+
 
 for ((i=1 ; i <= nopts ; i++)); do
 	#echo "${1} ${2}"
@@ -140,18 +143,18 @@ for ((i=1 ; i <= nopts ; i++)); do
 			echo -e "\\n\\n\\n"
 			exit 0
 			;;
-		#Import the config file to set other minor locations to be used within the script
-		-c | --config)
-			config_file="$2"
-			if [ -f "${config_file}" ]; then
-				. "${config_file}"
-				BASEDIR="${output_dir}"
-			else
-				echo "Can not find config file, $2"
-				exit 22
-			fi
-			shift 2
-			;;
+		# #Import the config file to set other minor locations to be used within the script
+		# -c | --config)
+		# 	config_file="$2"
+		# 	if [ -f "${config_file}" ]; then
+		# 		. "${config_file}"
+		# 		BASEDIR="${output_dir}"
+		# 	else
+		# 		echo "Can not find config file, $2"
+		# 		exit 22
+		# 	fi
+		# 	shift 2
+		# 	;;
 		#Gets name of folder that FASTA files will be in
 		-i | --in-dir)
 			INDATADIR="$2"
