@@ -28,6 +28,7 @@ fi
 
 if [[ ! -f "${1}" ]]; then
 	echo "No config file...exiting"
+	exit 113
 else
 	. "${1}"
 fi
@@ -36,10 +37,10 @@ do_download="false"
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
-	exit 1
+	exit 113
 elif [[ -z "${1}" ]]; then
 	echo "No config file...exiting"
-	exit 1
+	exit 113
 elif [[ "${1}" = "-h" ]]; then
 	echo "Usage ./database_checker.sh -path_to_config_file [-i]"
 	echo "-i is too install databases, otherwise script just checks for existence"
@@ -149,7 +150,7 @@ if [[ ! -d "${local_DBs}/ANI" ]]; then
 	#cp -r /container_DBs/ANI ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying latest REFSEQ sketch database (ANI)"
-		cp -r ${current_dir}/databases/ANI ${local_DBs}
+		cp -r ${current_dir}/included_databases/ANI ${local_DBs}
 	else
 		echo "Missing latest REFSEQ sketch database (ANI)"
 		missing_DBS=("${missing_DBS[@]}" "REFSEQ-ANI")
