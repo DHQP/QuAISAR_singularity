@@ -11,14 +11,14 @@
 #
 # Modules required: None
 #
-# v1.0.3 (3/24/2020)
+# v1.0.4 (3/30/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
 # Get hostname to help determine if certain tools can be run and how to specifically get others to run with the right options
 hostname=$(hostname -f)
-host=$(echo ${hostname} | cut -d'.' -f1)
+host=$(echo "${hostname}" | cut -d'.' -f1)
 
 
 ############# General Options #############
@@ -85,7 +85,7 @@ max_ani_samples=20
 ani_coverage_threshold=70
 # Shortcuts used to find newest REFSEQ mash sketch
 REFSEQ=$(find ${local_DBs}/ANI/REFSEQ_*.msh -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-REFSEQ_date=$(echo ${REFSEQ} | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1)
+REFSEQ_date=$(echo "${REFSEQ}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1)
 
 ##### c-SSTAR standard settings #####
 # gapped versus ungapped
