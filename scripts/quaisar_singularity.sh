@@ -42,7 +42,7 @@ function write_Progress() {
 # Checking for proper number of arguments from command line
 if [[ $# -lt 1  || $# -gt 9 ]]; then
 	echo "If reads are in default location set in config file then"
-  echo "Usage: ./quaisar_containerized.sh -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-r]"
+  echo "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location name_of_output_folder [-r]"
 	echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz 5: .fasta (Assemblies only)"
   echo "You have used $# args"
   exit 3
