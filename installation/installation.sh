@@ -11,7 +11,7 @@
 #
 # Modules required: None
 #
-# v1.0 (3/24/2020)
+# v1.0.1 (04/01/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -32,6 +32,9 @@ fi
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
+elif [[ "$1" = "-h" ]]; then
+	echo "Usage: ./installation.sh script_installation_location database_installation_location Working_directory_of_output_from_runs"
+  exit 0
 elif [ -z "$1" ]; then
 	echo "Empty script location supplied to supplied to $0, exiting"
 	exit 1
@@ -41,10 +44,6 @@ elif [ -z "$2" ]; then
 elif [ -z "$3" ]; then
   echo "Empty working directory for output supplied to $0, exiting"
   exit 1
-# command line version of usage for script
-elif [[ "$1" = "-h" ]]; then
-	echo "Usage: ./installation.sh script_installation_location database_installation_location Working_directory_of_output_from_runs"
-	exit 0
 fi
 
 
