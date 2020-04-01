@@ -90,6 +90,8 @@ while true; do
 	sleep 1
 	if [[ "${total_progress}" -eq 100 ]] || [[ ${pro_run_task_id} -eq 12 ]]; then
 		echo "Run is complete!!!"
+		printf '\e[8;24;80t'
+		printf '\e[2t' && sleep 1 && printf '\e[1t'
 		exit
 	fi
 done

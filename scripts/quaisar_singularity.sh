@@ -9,7 +9,7 @@
 #
 # Description: The full QuAISAR-H pipeline start to end serially
 #
-# Usage: ./quaisar_singularity.sh -c Absolute_path_to_config_file -i Absolute_path_to_reads/assemblies 1|2|3|4 -o Absolute_path_to_parent_output_folder_location name_of_output_folder [-r]"
+# Usage: ./quaisar_singularity.sh -i Absolute_path_to_reads/assemblies 1|2|3|4 -o Absolute_path_to_parent_output_folder_location name_of_output_folder [-r]"
 #		filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz 5: Asssemblies (.fasta)"
 #
 # Output location: default_config.sh_output_location
