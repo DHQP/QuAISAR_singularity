@@ -1,42 +1,43 @@
 # Quaisar_singularity
-QuAISAR is a mash-up of many publicly available tools with a splash of custom scripts with the purpose of producing a multi-layered quality checked report that identifies the taxonomy of and the and Anti-microbial Resistence (AMR) elements contained within a set of paired end reads.
-This version is made to use containers to ease the necessity of having many preinstalled tools.
+Quality, Assembly, Identification, Sequence type, Annotation, Resistance mechanisms for Hospital acquired infections (QuAISAR-H) is a mash-up of many publicly available tools with a splash of custom scripts with the purpose of producing a multi-layered quality checked report that identifies the taxonomy of and the Anti-microbial Resistence (AMR) elements from a paired end sequenced bacterial isolate.
+This version uses containers to ease the necessity of having many preinstalled tools.
 
 ## Installation
-    Dependencies - None. The script will install miniconda, if there is no version of conda already installed. It will then install an environment that contains python3.6 and singularity. When the pipeline is run it will activate the environment and will deactivate it when complete
+    Dependencies - None. The script will install miniconda, if there is no version of conda already installed. It will then install an environment that contains Python3.6 and Singularity. When the pipeline is run it will activate the environment and will deactivate it when complete.
 
     To install
-        A. Clone repo
-        B. Navigate into the installation folder of the repo
+        A. Clone repository
+        B. Navigate into the installation folder of the repository
         C. Run the instllation.sh script with the following parameters
             1. location of where to put the scripts to run the pipeline (installation directory)
             2. location of where to put the databases needed to run the pipeline (3.6 Gbs)
-            3 location of where you expect to keep the output of the pipeline. This will be a folder that houses all runs (each within its own folder)
+            3. location of where you expect to keep the output of the pipeline. This will be a folder that houses all runs (each within its own folder)
             
 ## Configuration
     There is a config.sh file within the script folder that has many configurable options
-    The first section is system specific that gives the locations of where to find the scripts, databases, and output folders. These were setup during installation, but can be altered if desired. During installation, it was also attempted to learn the available number of processors to make sure pipeline can run as quickly as possible. There are a large number of run-time options used by many tools that are defined within this file. The values of these options are the defaults used by the authors, however they may be adjusted to suit the problem.
+    The first section is system specific that gives the locations of where to find the scripts, databases, and output folders. These were set up during installation, but can be altered if desired. The installation program also attempted to learn the available number of processors to make sure the pipeline can run as quickly as possible. There are a large number of run-time options used by many tools that are defined within this file. The values of these options are the defaults used by the authors, however they may be adjusted to suit the problem.
 
 ## Running the pipeline
-    This script was adjusted to run each isolate through the pipeline in a serial fashion. The QuAISAR pipeline takes a folder of paired end reads (or assemblies - BETA) and outputs multiple reports to the designated folder.
+    This script was adjusted to run each isolate through the pipeline in a serial fashion. The QuAISAR-H pipeline takes a folder of paired end reads (or assemblies - BETA) and outputs multiple reports to the designated folder.
     
-    To run the pipeline use the following command with these parameters
+    To run the pipeline use the following command with these parameters:
         A. ./quaisar_singularity.sh
             1. -i 
             2. full path to the folder of paired-end reads
-            3. numeric value matching pattern of naming of reads. 
-                1:_SX_L001_RX_00X.fastq.gz 
+            3. numeric value matching pattern of naming of reads: 
+                1: _SX_L001_RX_00X.fastq.gz 
                 2: _(R)X.fastq.gz 
                 3: _RX_00X.fastq.gz
                 4: _SX_RX_00X.fastq.gz 
                 5: .fasta (Assemblies only - BETA)
             4. -o
             5. name to describe the set of reads (e.g. project_name, run_id)
-            
+	Example: ./quaisar_singularity.sh -i /path/to/reads/folder 1 -o project_name           
+
 ## Output
 ### Each run of the pipeline will produce the following files in the main (set/project name) folder
-        1. A folder for each isolates output files
-        2. log - standard out and err of all tools are directed to this file as well as being shown on the terminal
+        1. A folder for each isolate's output files
+        2. .log - standard out and err of all tools are directed to this file as well as being shown on the terminal
         3. _command.log - shows all singularity commands that were called during the run (and what the parameters were)
         4. .sum - is a concatenated version of all the individual isolates pipeline_stats files
         5. Seqlog_output.txt - A file that the authors use for run quality record keeping
@@ -63,9 +64,9 @@ This version is made to use containers to ease the necessity of having many prei
     17. trimmed
     18. _pipeline_stats.txt - summary and status of all steps performed in the pipeline
     19. .tax - determined taxonomy of isolate
-    20._time_summary.txt - estimate of length to complete each task
+    20. _time_summary.txt - estimate of length to complete each task
     
-    Isolates within the enterobacteriaceae family (currently the only taxa that plasFlow is being run on) -
+    Isolates within the Enterobacteriaceae family (currently the only taxa that plasFlow is being run on) -
     1. Assembly_Stats_plasFlow
     2. c-sstar_plasFlow
     3. GAMA_plasFlow
