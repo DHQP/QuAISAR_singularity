@@ -21,7 +21,7 @@ fi
 #
 # Modules required: None
 #
-# v1.0 (10/3/2019)
+# v1.0.1 (04/03/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -186,7 +186,7 @@ if [[ -d "${OUTDATADIR}/removedAdapters" ]]; then
 		R1_diff=$(( raw_length_R1 - nophi_length_R1 ))
 		R2_diff=$(( raw_length_R2 - nophi_length_R2 ))
 		if [[ "${nophi_length_R1}" -lt 0 ]]; then
-			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "WARNING" "No R1 size found"
+			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R1" "WARNING" "No R1 size found"
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 				status="WARNING"
 			fi
@@ -203,8 +203,10 @@ if [[ -d "${OUTDATADIR}/removedAdapters" ]]; then
 			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R1" "SUCCESS" "R1: ${nophi_length_R1} (${R1_percent_loss}% removed)"
 		fi
 		if [[ "${nophi_length_R2}" -lt 0 ]]; then
-			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "FAILED" "No R2 size found"
-			status="FAILED"
+			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "WARNING" "No R2 size found"
+			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
+				status="WARNING"
+			fi
 		elif [[ "${R2_diff}" -eq 0 ]]; then
 			printf "%-20s: %-8s : %s\\n" "BBDUK-PhiX-R2" "ALERT" "R2: No PhiX bases removed (already done on machine etc?)"
 			if [ "${status}" = "SUCCESS" ]; then
@@ -312,7 +314,7 @@ if [[ "${kraken_pre_success}" = true ]]; then
 		#printf "%-20s: %-8s : %s\\n" "krona-kraken-preasmb" "SUCCESS" "Found"
 		:
 	else
-		printf "%-20s: %-8s : %s\\n" "krona-kraken-preasmb" "FAILED" "/kraken/preAssembly/${1}_paired.krona & /kraken/preAssembly/${1}_paired.html not found"
+		printf "%-20s: %-8s : %s\\n" "krona-kraken-preasmb" "FAILED" "/kraken/preAssembly/${1}_paired.krona &&|| /kraken/preAssembly/${1}_paired.html not found"
 		status="FAILED"
 	fi
 else
@@ -513,7 +515,7 @@ if [[ -s "${OUTDATADIR}/kraken/postAssembly/${1}_assembled.kraken" ]] || [[ -s "
 	#printf "%-20s: %-8s : %s\\n" "kraken postassembly" "SUCCESS" "Found"
 	kraken_post_success=true
 else
-	printf "%-20s: %-8s : %s\\n" "kraken postassembly" "FAILED" "/kraken/postAssembly/${1}_paired.kraken not found"
+	printf "%-20s: %-8s : %s\\n" "kraken postassembly" "FAILED" "/kraken/postAssembly/${1}_assembled.kraken not found"
 	status="FAILED"
 fi
 #Check Krona output of assembly
@@ -522,11 +524,11 @@ if [[ "${kraken_post_success}" = true ]]; then
 		#printf "%-20s: %-8s : %s\\n" "krona-kraken-pstasmb" "SUCCESS" "Found"
 		:
 	else
-		printf "%-20s: %-8s : %s\\n" "krona-kraken-pstasmb" "FAILED" "/kraken/postAssembly/${1}_assembled.krona & /kraken/postAssembly/${1}_assembled.html not found"
+		printf "%-20s: %-8s : %s\\n" "krona-kraken-pstasmb" "FAILED" "/kraken/postAssembly/${1}_assembled.krona &&|| /kraken/postAssembly/${1}_assembled.html not found"
 		status="FAILED"
 	fi
 else
-	printf "%-20s: %-8s : %s\\n" "krona-kraken-pstasmb" "FAILED" "preassembly kraken did not complete successfully"
+	printf "%-20s: %-8s : %s\\n" "krona-kraken-pstasmb" "FAILED" "postassembly kraken did not complete successfully"
 	status="FAILED"
 fi
 #Check extraction and unclassified values for kraken post assembly
@@ -550,9 +552,9 @@ if [[ -s "${OUTDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" ]
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 				status="WARNING"
 			fi
-		elif (( $(echo "${speciespercent} < 50" | bc -l) )); then
+		elif (( $(echo "${speiespercent} < 50" | bc -l) )); then
 			printf "%-20s: %-8s : %s\\n" "post Classify" "WARNING" "${genuspost} ${speciespost} is under 50% (${speciespercent}), possibly contaminated or contigs are weighted unevenly"
-			if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "SUCCESS" ]]; then
+			if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 				status="WARNING"
 			fi
 		else
@@ -597,8 +599,8 @@ if [[ -s "${OUTDATADIR}/kraken/postAssembly/${1}_assembled.list" ]]; then
 		:
 	else
 		printf "%-20s: %-8s : %s\\n" "post Class Contam." "ALERT" "No species have been found above ${contamination_threshold}% abundance"
-		if [[ "${status}" == "SUCCESS" ]]; then
-			status="ALERT"
+		if [[ "${status}" = "ALERT" ]] || [[ "${status}" = "SUCCESS" ]]; then
+			status="WARNING"
 		fi
 	fi
 	#echo "Number of species: ${number_of_species}"
@@ -610,7 +612,7 @@ if [[ -s "${OUTDATADIR}/kraken/postAssembly/${1}_assembled_BP.kraken" ]]; then
 	#printf "%-20s: %-8s : %s\\n" "kraken weighted" "SUCCESS" "Found"
 	kraken_weighted_success=true
 else
-	printf "%-20s: %-8s : %s\\n" "kraken weighted" "FAILED" "Top match is under 50%, likely contaminated"
+	printf "%-20s: %-8s : %s\\n" "kraken weighted" "FAILED" "${1}_assembled_BP.kraken not found"
 	status="FAILED"
 fi
 #Check Krona output of weighted assembly
@@ -619,7 +621,7 @@ if [[ "${kraken_weighted_success}" = true ]]; then
 		#printf "%-20s: %-8s : %s\\n" "krona-kraken-weight" "SUCCESS" "Found"
 		:
 	else
-		printf "%-20s: %-8s : %s\\n" "krona-kraken-weight" "FAILED" "/kraken/postAssembly/${1}_assembled_weighted.krona & /kraken/postAssembly/${1}_assembled_weighted_BP_krona.html not found"
+		printf "%-20s: %-8s : %s\\n" "krona-kraken-weight" "FAILED" "/kraken/postAssembly/${1}_assembled_weighted.krona &&|| /kraken/postAssembly/${1}_assembled_weighted_BP_krona.html not found"
 		status="FAILED"
 	fi
 else
@@ -908,11 +910,14 @@ else
 		else
 			if [[ "${percent_match}" -ge 95 ]] && [[ "${coverage_match}" -ge ${ani_coverage_threshold} ]]; then
 				printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "ALERT" "REFSEQ database is out of date (${old_ani_date}), not ${REFSEQ_date}. ${ani_info}"
+				if [[ "${status}" == "SUCCESS" ]]; then
+					status="ALERT"
+				fi
 			else
 				if [[ "${percent_match}" -lt 95 ]]; then
-					printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "REFSEQ database is out of date (${old_ani_date}), ${percent_match}% identity is too low, ${ani_info}"
+					printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "% Identity too low and REFSEQ database is out of date (${old_ani_date}), ${percent_match}% identity is too low, ${ani_info}"
 				elif [[ "${coverage_match}" -lt ${ani_coverage_threshold} ]]; then
-					printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "REFSEQ database is out of date (${old_ani_date}), ${coverage_match}% coverage is too low, ${ani_info}"
+					printf "%-20s: %-8s : %s\\n" "ANI_REFSEQ" "FAILED" "% coverage is too low and REFSEQ database is out of date (${old_ani_date}), ${coverage_match}% coverage is too low, ${ani_info}"
 				fi
 				status="FAILED"
 			fi
@@ -1058,8 +1063,8 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 		mlstdb="${mlstdb}(Pasteur)"
 		if [ "${mlstdb}" = "-" ]; then
 			if [ "${dec_genus}" ] && [ "${dec_species}" ]; then
-				printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no scheme found, check pubmlst for ${dec_genus} ${dec_species}"
-				if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
+				printf "%-20s: %-8s : %s\\n" "MLST" "ALERT" "no scheme found, check pubmlst for ${dec_genus} ${dec_species}"
+				if [[ "${status}" = "SUCCESS" ]]; then
 					status="WARNING"
 				fi
 			else
@@ -1245,7 +1250,7 @@ if [[ -d "${OUTDATADIR}/MLST/" ]]; then
 	fi
 	# No MLST folder exists (pipeline must have failed as it would create a default one otherwise)
 else
-	printf "%-20s: %-8s : %s\\n" "MLST" "FAILED" "/MLST/ does not exist"
+	printf "%-20s: %-8s : %s\\n" "MLST-srst2" "SUCCESS" "No MLST-srst2 requested"
 	status="FAILED"
 fi
 # check 16s Identification
@@ -1379,11 +1384,11 @@ if [[ -d "${OUTDATADIR}/plasFlow" ]]; then
 		if [[ "${plas_scaffolds}" -gt 0 ]]; then
 			printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "SUCCESS" "${plas_scaffolds} scaffolds found via plasFlow"
 			plasmidsFoundviaplasFlow=1
-		else
-			printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "ALERT" "No plasmid scaffold found?"
-			if [[ "${status}" == "SUCCESS" ]]; then
-				status="ALERT"
-			fi
+		#else
+		#	printf "%-20s: %-8s : %s\\n" "plasFlow Assembly" "ALERT" "No plasmid scaffold found?"
+		#	if [[ "${status}" == "SUCCESS" ]]; then
+		#		status="ALERT"
+		#	fi
 		fi
 	# Needs a better catch of if it ran and failed vs ran and succeeded but with nothing to find
 	else
