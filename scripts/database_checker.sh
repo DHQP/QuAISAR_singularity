@@ -133,6 +133,9 @@ if [[ ! -d "${local_DBs}/kraken" ]]; then
 		cd "${local_DBs}/kraken"
 		echo "Downloading latest (mini)kraken database (wget https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz)"
 		wget "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+		if [[ ! -f "minikraken_20171019_4GB.tgz" ]]; then
+			curl -O "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+		fi
 		tar xzf minikraken_20171019_4GB.tgz
 		rm minikraken_20171019_4GB.tgz
 	else
