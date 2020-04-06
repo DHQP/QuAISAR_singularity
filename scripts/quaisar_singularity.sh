@@ -1807,7 +1807,7 @@ write_Progress
 run_task_id=9
 
 # Create header for file
-echo "KRAKEN ID Raw Reads	KRAKEN ID Assembly	16S BLAST ID	Q20_Total_[bp]	Q30_Total_[bp]	Q20_R1_[bp]	Q20_R2_[bp]	Q20_R1_[%]	Q20_R2_[%]	Q30_R1_[bp]	Q30_R2_[bp]	Q30_R1_[%]	Q30_R2_[%]	Total_Sequenced_[bp]	Total_Sequenced_[reads]	Estimated coverage	Contigs	Cumulative_Length_Assembly (bp)	Assembly_Ratio	BUSCO	ANI" > "${PROJDATADIR}/Seqlog_output.txt"
+echo "Isolate_ID	Analysis_Date	KRAKEN ID Raw Reads	KRAKEN ID Assembly	16S BLAST ID	Q20_Total_[bp]	Q30_Total_[bp]	Q20_R1_[bp]	Q20_R2_[bp]	Q20_R1_[%]	Q20_R2_[%]	Q30_R1_[bp]	Q30_R2_[bp]	Q30_R1_[%]	Q30_R2_[%]	Total_Sequenced_[bp]	Total_Sequenced_[reads]	Estimated coverage	Contigs	Cumulative_Length_Assembly (bp)	Assembly_Ratio	BUSCO	ANI" > "${PROJDATADIR}/Seqlog_output.txt"
 while IFS= read -r var || [ -n "$var" ]; do
 	# Current (12/17/18) order of expected run output
 	#  kraken - QC - estimated coverage - #contigs - cumulative length assembly - BUSCO - ANI

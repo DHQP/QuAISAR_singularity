@@ -154,6 +154,8 @@ if [[ ! -d "${local_DBs}/ANI" ]]; then
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying latest REFSEQ sketch database (ANI)"
 		cp -r ${current_dir}/included_databases/ANI ${local_DBs}
+		cd ${local_DBs}
+		gunzip *.gz
 	else
 		echo "Missing latest REFSEQ sketch database (ANI)"
 		missing_DBS=("${missing_DBS[@]}" "REFSEQ-ANI")
