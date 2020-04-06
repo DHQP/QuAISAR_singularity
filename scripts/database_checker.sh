@@ -177,26 +177,42 @@ else
 fi
 
 
-singularities=(bbtools.simg blast-2.9.0-docker.img bowtie2-2.2.9-biocontainers.simg cSSTAR.simg entrez_taxon.simg GAMA_quaisar.simg gottcha.simg plasmidFinder_with_DB.simg QUAST5.simg srst2.simg)
+# singularities=(bbtools.simg blast-2.9.0-docker.img bowtie2-2.2.9-biocontainers.simg cSSTAR.simg entrez_taxon.simg GAMA_quaisar.simg gottcha.simg plasmidFinder_with_DB.simg QUAST5.simg srst2.simg)
+#
+# for simage in "${singularities[@]}"; do
+# 	# custom singularity images (3.6GBs)
+# 	if [[ ! -f "${local_DBs}/singularities/${simage}" ]]; then
+# 		#cp -r /container_DBs/custom_singularities ${local_DBs}
+# 		if [[ "${do_download}" = "true" ]]; then
+# 			if [[ ! -d "${local_DBs}/singularities" ]]; then
+# 				mkdir "${local_DBs}/singularities"
+# 			fi
+# 			echo "Copying custom singularity image ${simage}"
+# 			cp ${current_dir}/included_databases/singularities/${simage} ${local_DBs}/singularities
+# 		else
+# 			echo "Missing custom singularity image ${simage}"
+# 			missing_DBS=("${missing_DBS[@]}" "singularities-${simage}")
+# 		fi
+# 	else
+# 		echo "custom singularity image ${simage} installed"
+# 	fi
+# done
 
-for simage in "${singularities[@]}"; do
-	# custom singularity images (3.6GBs)
-	if [[ ! -f "${local_DBs}/singularities/${simage}" ]]; then
-		#cp -r /container_DBs/custom_singularities ${local_DBs}
-		if [[ "${do_download}" = "true" ]]; then
-			if [[ ! -d "${local_DBs}/singularities" ]]; then
-				mkdir "${local_DBs}/singularities"
-			fi
-			echo "Copying custom singularity image ${simage}"
-			cp ${current_dir}/included_databases/singularities/${simage} ${local_DBs}/singularities
-		else
-			echo "Missing custom singularity image ${simage}"
-			missing_DBS=("${missing_DBS[@]}" "singularities-${simage}")
-		fi
-	else
-		echo "custom singularity image ${simage} installed"
+if [[ ! -d "${local_DBs}/singularities" ]]; then
+	#cp -r /container_DBs/custom_singularities ${local_DBs}
+	if [[ "${do_download}" = "true" ]]; then
+		mkdir "${local_DBs}/singularities"
+		echo "Copying custom singularity image zip"
+		cp ${current_dir}/included_databases/singularity_zips/${simage} ${local_DBs}
+		cd ${local_DBs}
+		unzip singularities.zip
+ 	else
+		echo "Missing custom singularity zip"
+		missing_DBS=("${missing_DBS[@]}" "singularities")
 	fi
-done
+else
+		echo "custom singularity zips installed"
+fi
 
 if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
 	#cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
