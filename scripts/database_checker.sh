@@ -236,6 +236,7 @@ if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
 		cd ${local_DBs}
 		tar -zxvf pubmlsts.tar.gz
 		mv pubmlsts_2 pubmlsts
+		rm pubmlsts.tar.gz
 	else
 		echo "Missing pubMLST"
 		missing_DBS=("${missing_DBS[@]}" "pubMLST")
