@@ -101,31 +101,6 @@ find ${local_DBs}/BUSCO/ -name '*.gz' -exec tar xzf {} \;
 mv ${local_DBs}/BUSCO/actinobacteria_class_odb10 ${local_DBs}/BUSCO/actinobacteria_odb10
 find ${local_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
 
-##### Currently down.....and has been a while
-# Check to see if gottcha database is installed
-if [[ ! -d "${local_DBs}/gottcha" ]]; then
-	if [[ "${do_download}" = "true" ]]; then
-		cd "${local_DBs}"
-		# Original LANL hosted address that has been down a good while
-	 	#wget -P "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
-		# Temporary mirror until original is fixed
-		echo "Downloading latest gottcha database (wget https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz)"
-		wget "https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz"
-		tar xzf gottcha_bac_arc_v1.tar.gz
-		rm gottcha_bac_arc_v1.tar.gz
-		mv gottcha/gottcha_db ./
-		rm -r gottcha
-		mv gottcha_db gottcha
-		rm gottcha.dbprofile.out
-		# Need to find sa place to host genus_Lookup.tar.gz
-	else
-		echo "Missing gottcha database"
-		missing_DBS=("${missing_DBS[@]}" "gottcha")
-	fi
-else
-	echo "gottcha database installed"
-fi
-
 # Check to see if kraken mini database is installed
 if [[ ! -d "${local_DBs}/kraken" ]]; then
 	if [[ "${do_download}" = "true" ]]; then
@@ -257,13 +232,40 @@ if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
 	#cp -r /container_DBs/pubmlsts ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying pubMLST"
-		cp -r ${current_dir}/included_databases/pubmlsts ${local_DBs}
+		cp -r ${current_dir}/included_databases/pubmlsts.tar.gz ${local_DBs}
+		cd ${local_DBs}
+		tar -zxvf pubmlsts.tar.gz
 	else
 		echo "Missing pubMLST"
 		missing_DBS=("${missing_DBS[@]}" "pubMLST")
 	fi
 else
 	echo "pubMLST installed"
+fi
+
+##### Currently down.....and has been a while
+# Check to see if gottcha database is installed
+if [[ ! -d "${local_DBs}/gottcha" ]]; then
+	if [[ "${do_download}" = "true" ]]; then
+		cd "${local_DBs}"
+		# Original LANL hosted address that has been down a good while
+	 	#wget -P "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+		# Temporary mirror until original is fixed
+		echo "Downloading latest gottcha database (wget https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz)"
+		wget "https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz"
+		tar xzf gottcha_bac_arc_v1.tar.gz
+		rm gottcha_bac_arc_v1.tar.gz
+		mv gottcha/gottcha_db ./
+		rm -r gottcha
+		mv gottcha_db gottcha
+		rm gottcha.dbprofile.out
+		# Need to find sa place to host genus_Lookup.tar.gz
+	else
+		echo "Missing gottcha database"
+		missing_DBS=("${missing_DBS[@]}" "gottcha")
+	fi
+else
+	echo "gottcha database installed"
 fi
 
 echo "There are ${#missing_DBS[@]} missing databases (${missing_DBS[@]})"
