@@ -104,72 +104,6 @@ find ${local_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
 
 # All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
 
-# star (6 Mbs)
-if [[ ! -d "${local_DBs}/star" ]]; then
-	#cp -r /container_DBs/star ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying latest NAR-AR database"
-		cp -r ${current_dir}/included_databases/star ${local_DBs}
-	else
-		echo "Missing latest NAR-AR database"
-		missing_DBS=("${missing_DBS[@]}" "NAR-AR")
-	fi
-else
-	echo "NAR-AR database installed"
-fi
-
-if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
-	#cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying MMB_bugs"
-		cp ${current_dir}/included_databases/MMB_Bugs.txt ${local_DBs}
-	else
-		echo "Missing MMB_Bugs"
-		missing_DBS=("${missing_DBS[@]}" "MMB_Bugs")
-	fi
-else
-	echo "MMB_Bugs installed"
-fi
-
-if [[ ! -f "${local_DBs}/taxes.csv" ]]; then
-	#cp -r /container_DBs/taxes.csv ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying taxes"
-		cp ${current_dir}/included_databases/taxes.csv ${local_DBs}
-	else
-		echo "Missing taxes"
-		missing_DBS=("${missing_DBS[@]}" "taxes")
-	fi
-else
-	echo "taxes installed"
-fi
-
-if [[ ! -f "${local_DBs}/phiX.fasta" ]]; then
-	#cp -r /container_DBs/phiX.fasta ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying phiX.fasta"
-		cp ${current_dir}/included_databases/phiX.fasta ${local_DBs}
-	else
-		echo "Missing phiX"
-		missing_DBS=("${missing_DBS[@]}" "phiX")
-	fi
-else
-	echo "phiX installed"
-fi
-
-if [[ ! -f "${local_DBs}/adapters.fasta" ]]; then
-	#cp -r /container_DBs/adapters.fasta ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying adapters.fasta"
-		cp ${current_dir}/included_databases/adapters.fasta ${local_DBs}
-	else
-		echo "Missing adapters"
-		missing_DBS=("${missing_DBS[@]}" "adapters")
-	fi
-else
-	echo "adapters installed"
-fi
-
 # Test index
 link_index=0
 # Lists of links to test for downloading (MEGA OneDrive Google)
@@ -185,6 +119,88 @@ QUAST_links=('https://mega.nz/file/8rw0kQxL#1p-zUtABJb9sLmwkeAojSMmFJ8oRkZaOtVin
 srst2_links=('https://mega.nz/file/Y6hg3CCb#6lLqih6Dv5AYOs0hfJiBZD7BkxR8k4wwhTEkJKKmwls' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21109&authkey=AINwP6LEwO1bDgI' '')
 ANI_links=('' 'https://onedrive.live.com/embed?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21114&authkey=AB5T8jQOePfzxSg' '')
 pubmlst_links=('' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21115&authkey=AGCIPp4ZdSRdGHc' '')
+sstar_links('' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21122&authkey=AG1SomRvYC1gMxM' '')
+adapters_links('' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21121&authkey=AO1Xn0MaUceaHVw' '')
+MMBbugs_links('' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21118&authkey=AAm7qKrHhgFRao4&em=2' '')
+phiX_links+('' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21119&authkey=AEYBttLLp5mkKM0' '')
+taxes_links=('' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21120&authkey=AM1oWryNS2jR1SE&em=2' '')
+
+# star (6 Mbs)
+if [[ ! -d "${local_DBs}/star" ]]; then
+	#cp -r /container_DBs/star ${local_DBs}
+	if [[ "${do_download}" = "true" ]]; then
+		echo "Copying latest NAR-AR database"\
+		cd ${local_DBs}
+		#cp -r ${current_dir}/included_databases/star ${local_DBs}
+		wget --no-check-certificate "${sstar_links[$(link_index)]}"
+		tar -zxvf sstar.tar.gz
+	else
+		echo "Missing latest NAR-AR database"
+		missing_DBS=("${missing_DBS[@]}" "NAR-AR")
+	fi
+else
+	echo "NAR-AR database installed"
+fi
+
+if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
+	#cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
+	if [[ "${do_download}" = "true" ]]; then
+		echo "Copying MMB_bugs"
+		cd ${local_DBs}
+		#cp ${current_dir}/included_databases/MMB_Bugs.txt ${local_DBs}
+		wget --no-check-certificate "${MMB_bugs_links[$(link_index)]}"
+	else
+		echo "Missing MMB_Bugs"
+		missing_DBS=("${missing_DBS[@]}" "MMB_Bugs")
+	fi
+else
+	echo "MMB_Bugs installed"
+fi
+
+if [[ ! -f "${local_DBs}/taxes.csv" ]]; then
+	#cp -r /container_DBs/taxes.csv ${local_DBs}
+	if [[ "${do_download}" = "true" ]]; then
+		echo "Copying taxes"
+		cd ${local_DBs}
+		#cp ${current_dir}/included_databases/taxes.csv ${local_DBs}
+		wget --no-check-certificate "${taxes_links[$(link_index)]}"
+	else
+		echo "Missing taxes"
+		missing_DBS=("${missing_DBS[@]}" "taxes")
+	fi
+else
+	echo "taxes installed"
+fi
+
+if [[ ! -f "${local_DBs}/phiX.fasta" ]]; then
+	#cp -r /container_DBs/phiX.fasta ${local_DBs}
+	if [[ "${do_download}" = "true" ]]; then
+		echo "Copying phiX.fasta"
+		cd ${local_DBs}
+		#cp ${current_dir}/included_databases/phiX.fasta ${local_DBs}
+		wget --no-check-certificate "${phiX_links[$(link_index)]}"
+	else
+		echo "Missing phiX"
+		missing_DBS=("${missing_DBS[@]}" "phiX")
+	fi
+else
+	echo "phiX installed"
+fi
+
+if [[ ! -f "${local_DBs}/adapters.fasta" ]]; then
+	#cp -r /container_DBs/adapters.fasta ${local_DBs}
+	if [[ "${do_download}" = "true" ]]; then
+		echo "Copying adapters.fasta"
+		cd ${local_DBs}
+		#cp ${current_dir}/included_databases/adapters.fasta ${local_DBs}
+		wget --no-check-certificate "${adapters_links[$(link_index)]}"
+	else
+		echo "Missing adapters"
+		missing_DBS=("${missing_DBS[@]}" "adapters")
+	fi
+else
+	echo "adapters installed"
+fi
 
 if [[ ! -d "${local_DBs}/ANI" ]]; then
 	#cp -r /container_DBs/ANI ${local_DBs}
