@@ -105,7 +105,7 @@ find ${local_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
 # All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
 
 # Test index
-link_index=0
+link_index=1
 # Lists of links to test for downloading (MEGA OneDrive Google)
 bbtools_links=(https://mega.nz/file/0r5UCYIR#zn3LHj7RHKAMR-VkDGSc-5lUmWaE12A3jBPQOCJaZOk https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21106&authkey=AHXpg4F2NHk28Vw GD)
 blast_links=(https://mega.nz/file/gyhCVIQR#1n-m6DEI1LA6HOiEE40i9x3fv5iXYFZsWT9sKfsNs_M https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21111&authkey=ADVSQ-oAmV3VAJk GD)
