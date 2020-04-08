@@ -26,6 +26,7 @@ fi
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
+
 if [[ ! -f "${1}" ]]; then
 	echo "No config file...exiting"
 	exit 113
@@ -153,29 +154,6 @@ else
 	echo "NAR-AR database installed"
 fi
 
-
-singularities=(bbtools.simg blast-2.9.0-docker.img bowtie2-2.2.9-biocontainers.simg cSSTAR.simg entrez_taxon.simg GAMA_quaisar.simg gottcha.simg plasmidFinder_with_DB.simg QUAST5.simg srst2.simg)
-
-for simage in "${singularities[@]}"; do
-	# custom singularity images (3.6GBs)
-	if [[ ! -f "${local_DBs}/singularities/${simage}" ]]; then
-		#cp -r /container_DBs/custom_singularities ${local_DBs}
-		if [[ "${do_download}" = "true" ]]; then
-			if [[ ! -d "${local_DBs}/singularities" ]]; then
-				mkdir "${local_DBs}/singularities"
-			fi
-			echo "Copying custom singularity image ${simage}"
-			cat ${current_dir}/included_databases/singularities/${simage}.parta* > ${local_DBs}/singularities/${simage}
-		else
-			echo "Missing custom singularity image ${simage}"
-			missing_DBS=("${missing_DBS[@]}" "singularities-${simage}")
-		fi
-	else
-		echo "custom singularity image ${simage} installed"
-	fi
-	chmod 755 ${local_DBs}/singularities/*
-done
-
 if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
 	#cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
@@ -244,6 +222,48 @@ if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
 else
 	echo "pubMLST installed"
 fi
+
+# Test index
+link_index=0
+# Lists of links to test for downloading
+bbtools_links=('https://mega.nz/file/0r5UCYIR#zn3LHj7RHKAMR-VkDGSc-5lUmWaE12A3jBPQOCJaZOk')
+blast_links=('https://mega.nz/file/gyhCVIQR#1n-m6DEI1LA6HOiEE40i9x3fv5iXYFZsWT9sKfsNs_M')
+bowtie2_links=('https://mega.nz/file/92hgXAQJ#XThfqohBWcpD3kRzgUv4RjscDnmS2Xl5lNtBHVnvNuw')
+cSSTAR_links=('https://mega.nz/file/12wkUSDB#huoDBxj6keneY9h0hehwBWPoZ_n5zTpOiELePL0szFs')
+entrez_links=('https://mega.nz/file/gy4RQQrY#JZWvV4-PbeMfOJjnRj6qjZ9jzkXZGFgLbURGPyQu42E')
+GAMA_links=('https://mega.nz/file/R3wmFQJb#yY3gQ1tFvIPxeKSEUydezyTh5fnVANBOA0LV7dmHHFk')
+gottcha_links=('https://mega.nz/file/EyxEDCrC#Q2kkGwzDB0HdLL3q9U2uRf7gd1orHbFK_voCCTIBErc')
+plasmidFinder_links=('https://mega.nz/file/kugiyYZK#um_iss6jLcs4P3_qL7M5EYHICcyYJz0cHyCmUaR4ovg')
+QUAST_links=('https://mega.nz/file/8rw0kQxL#1p-zUtABJb9sLmwkeAojSMmFJ8oRkZaOtVinT0Jo1NY')
+srst2_links=('https://mega.nz/file/Y6hg3CCb#6lLqih6Dv5AYOs0hfJiBZD7BkxR8k4wwhTEkJKKmwls')
+
+links=( ${bbtools})
+
+singularities=(bbtools.simg:${bbtools_links[${link_index}]} blast-2.9.0-docker.img:${blast_links_[${link_index}]} bowtie2-2.2.9-biocontainers.simg:${bowtie2_links[${link_index}]} cSSTAR.simg:${cSSTAR_links[${link_index}]} entrez_taxon.simg:${entrez_links[${link_index}]} GAMA_quaisar.simg:${GAMA_links[${link_index}]} gottcha.simg:${gottcha_links[${link_index}]} plasmidFinder_with_DB.simg:${plasmidFinder_links[${link_index}]} QUAST5.simg:${QUAST_links[${link_index}]} srst2.simg_${srst2_links[${link_index}]})
+
+for simage_info in "${singularities[@]}"; do
+	# custom singularity images (3.6GBs)
+	simage=$(echo "${simage_info}" | cut -d':' -f1)
+	url_link=$(echo "${simage_info}" | cut -d':' -f2)
+	if [[ ! -f "${local_DBs}/singularities/${simage}" ]]; then
+		#cp -r /container_DBs/custom_singularities ${local_DBs}
+		if [[ "${do_download}" = "true" ]]; then
+			if [[ ! -d "${local_DBs}/singularities" ]]; then
+				mkdir "${local_DBs}/singularities"
+				cd "${local_DBs}/singularities"
+			fi
+			echo "Copying custom singularity image ${simage}"
+			#cat ${current_dir}/included_databases/singularities/${simage}.parta* > ${local_DBs}/singularities/${simage}
+			wget ${url_link}
+		else
+			echo "Missing custom singularity image ${simage}"
+			missing_DBS=("${missing_DBS[@]}" "singularities-${simage}")
+		fi
+	else
+		echo "custom singularity image ${simage} installed"
+	fi
+	chmod 755 ${local_DBs}/singularities/*
+done
 
 ##### Currently down.....and has been a while
 # Check to see if gottcha database is installed
