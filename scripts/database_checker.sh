@@ -102,43 +102,7 @@ find ${local_DBs}/BUSCO/ -name '*.gz' -exec tar xzf {} \;
 mv ${local_DBs}/BUSCO/actinobacteria_class_odb10 ${local_DBs}/BUSCO/actinobacteria_odb10
 find ${local_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
 
-# Check to see if kraken mini database is installed
-if [[ ! -d "${local_DBs}/kraken" ]]; then
-	if [[ "${do_download}" = "true" ]]; then
-		mkdir "${local_DBs}/kraken"
-		cd "${local_DBs}/kraken"
-		echo "Downloading latest (mini)kraken database (wget https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz)"
-		wget "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
-		if [[ ! -f "minikraken_20171019_4GB.tgz" ]]; then
-			curl -O "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
-		fi
-		tar xzf minikraken_20171019_4GB.tgz
-		rm minikraken_20171019_4GB.tgz
-	else
-		echo "Missing latest kraken database"
-		missing_DBS=("${missing_DBS[@]}" "kraken")
-	fi
-else
-	echo "kraken database is installed"
-fi
-
 # All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
-
-# ANI sketch file / aniDB (150MBs/1.3Gbs)
-if [[ ! -d "${local_DBs}/ANI" ]]; then
-	#cp -r /container_DBs/ANI ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying latest REFSEQ sketch database (ANI)"
-		cp -r ${current_dir}/included_databases/ANI ${local_DBs}
-		cd ${local_DBs}/ANI
-		gunzip *.gz
-	else
-		echo "Missing latest REFSEQ sketch database (ANI)"
-		missing_DBS=("${missing_DBS[@]}" "REFSEQ-ANI")
-	fi
-else
-	echo "ANI REFSEQ sketch database installed"
-fi
 
 # star (6 Mbs)
 if [[ ! -d "${local_DBs}/star" ]]; then
@@ -206,12 +170,45 @@ else
 	echo "adapters installed"
 fi
 
+# Test index
+link_index=0
+# Lists of links to test for downloading (MEGA OneDrive Google)
+bbtools_links=('https://mega.nz/file/0r5UCYIR#zn3LHj7RHKAMR-VkDGSc-5lUmWaE12A3jBPQOCJaZOk' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21106&authkey=AHXpg4F2NHk28Vw' '')
+blast_links=('https://mega.nz/file/gyhCVIQR#1n-m6DEI1LA6HOiEE40i9x3fv5iXYFZsWT9sKfsNs_M' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21111&authkey=ADVSQ-oAmV3VAJk' '')
+bowtie2_links=('https://mega.nz/file/92hgXAQJ#XThfqohBWcpD3kRzgUv4RjscDnmS2Xl5lNtBHVnvNuw' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21113&authkey=AKpz8agXXcDjON0' '')
+cSSTAR_links=('https://mega.nz/file/12wkUSDB#huoDBxj6keneY9h0hehwBWPoZ_n5zTpOiELePL0szFs' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21117&authkey=AFzS-KUAFnQdSnU' '')
+entrez_links=('https://mega.nz/file/gy4RQQrY#JZWvV4-PbeMfOJjnRj6qjZ9jzkXZGFgLbURGPyQu42E' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21116&authkey=AGPABuxJPVYnJgA' '')
+GAMA_links=('https://mega.nz/file/R3wmFQJb#yY3gQ1tFvIPxeKSEUydezyTh5fnVANBOA0LV7dmHHFk' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21107&authkey=AJKsAgfit5oEhCs' '')
+gottcha_links=('https://mega.nz/file/EyxEDCrC#Q2kkGwzDB0HdLL3q9U2uRf7gd1orHbFK_voCCTIBErc' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21108&authkey=AMIQfW5e3Yi-sH4' '')
+plasmidFinder_links=('https://mega.nz/file/kugiyYZK#um_iss6jLcs4P3_qL7M5EYHICcyYJz0cHyCmUaR4ovg' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21112&authkey=AHORh2N541BayFw' '')
+QUAST_links=('https://mega.nz/file/8rw0kQxL#1p-zUtABJb9sLmwkeAojSMmFJ8oRkZaOtVinT0Jo1NY' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21110&authkey=AM_c7ih_fP4JxrE' '')
+srst2_links=('https://mega.nz/file/Y6hg3CCb#6lLqih6Dv5AYOs0hfJiBZD7BkxR8k4wwhTEkJKKmwls' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21109&authkey=AINwP6LEwO1bDgI' '')
+ANI_links=('' 'https://onedrive.live.com/embed?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21114&authkey=AB5T8jQOePfzxSg' '')
+pubmlst_links=('' 'https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21115&authkey=AGCIPp4ZdSRdGHc' '')
+
+if [[ ! -d "${local_DBs}/ANI" ]]; then
+	#cp -r /container_DBs/ANI ${local_DBs}
+	if [[ "${do_download}" = "true" ]]; then
+		echo "Copying latest REFSEQ sketch database (ANI)"
+		#cp -r ${current_dir}/included_databases/ANI ${local_DBs}
+		cd ${local_DBs}/ANI
+		wget --no-check-certificate "${ANI_links[$link_index]}"
+		gunzip *.gz
+	else
+		echo "Missing latest REFSEQ sketch database (ANI)"
+		missing_DBS=("${missing_DBS[@]}" "REFSEQ-ANI")
+	fi
+else
+	echo "ANI REFSEQ sketch database installed"
+fi
+
 if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
 	#cp -r /container_DBs/pubmlsts ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying pubMLST"
-		cp ${current_dir}/included_databases/pubmlsts.tar.gz ${local_DBs}
+		#cp ${current_dir}/included_databases/pubmlsts.tar.gz ${local_DBs}
 		cd ${local_DBs}
+		wget --no-check-certificate "${pubmlst_links[${link_index}]}"
 		tar -zxvf pubmlsts.tar.gz
 		mv pubmlsts_2 pubmlsts
 		rm pubmlsts.tar.gz
@@ -223,21 +220,7 @@ else
 	echo "pubMLST installed"
 fi
 
-# Test index
-link_index=0
-# Lists of links to test for downloading
-bbtools_links=('https://mega.nz/file/0r5UCYIR#zn3LHj7RHKAMR-VkDGSc-5lUmWaE12A3jBPQOCJaZOk')
-blast_links=('https://mega.nz/file/gyhCVIQR#1n-m6DEI1LA6HOiEE40i9x3fv5iXYFZsWT9sKfsNs_M')
-bowtie2_links=('https://mega.nz/file/92hgXAQJ#XThfqohBWcpD3kRzgUv4RjscDnmS2Xl5lNtBHVnvNuw')
-cSSTAR_links=('https://mega.nz/file/12wkUSDB#huoDBxj6keneY9h0hehwBWPoZ_n5zTpOiELePL0szFs')
-entrez_links=('https://mega.nz/file/gy4RQQrY#JZWvV4-PbeMfOJjnRj6qjZ9jzkXZGFgLbURGPyQu42E')
-GAMA_links=('https://mega.nz/file/R3wmFQJb#yY3gQ1tFvIPxeKSEUydezyTh5fnVANBOA0LV7dmHHFk')
-gottcha_links=('https://mega.nz/file/EyxEDCrC#Q2kkGwzDB0HdLL3q9U2uRf7gd1orHbFK_voCCTIBErc')
-plasmidFinder_links=('https://mega.nz/file/kugiyYZK#um_iss6jLcs4P3_qL7M5EYHICcyYJz0cHyCmUaR4ovg')
-QUAST_links=('https://mega.nz/file/8rw0kQxL#1p-zUtABJb9sLmwkeAojSMmFJ8oRkZaOtVinT0Jo1NY')
-srst2_links=('https://mega.nz/file/Y6hg3CCb#6lLqih6Dv5AYOs0hfJiBZD7BkxR8k4wwhTEkJKKmwls')
 
-links=( ${bbtools})
 
 singularities=(bbtools.simg:${bbtools_links[${link_index}]} blast-2.9.0-docker.img:${blast_links_[${link_index}]} bowtie2-2.2.9-biocontainers.simg:${bowtie2_links[${link_index}]} cSSTAR.simg:${cSSTAR_links[${link_index}]} entrez_taxon.simg:${entrez_links[${link_index}]} GAMA_quaisar.simg:${GAMA_links[${link_index}]} gottcha.simg:${gottcha_links[${link_index}]} plasmidFinder_with_DB.simg:${plasmidFinder_links[${link_index}]} QUAST5.simg:${QUAST_links[${link_index}]} srst2.simg_${srst2_links[${link_index}]})
 
@@ -254,7 +237,7 @@ for simage_info in "${singularities[@]}"; do
 			fi
 			echo "Copying custom singularity image ${simage}"
 			#cat ${current_dir}/included_databases/singularities/${simage}.parta* > ${local_DBs}/singularities/${simage}
-			wget ${url_link}
+			wget --no-check-certificate "${url_link}"
 		else
 			echo "Missing custom singularity image ${simage}"
 			missing_DBS=("${missing_DBS[@]}" "singularities-${simage}")
@@ -264,6 +247,26 @@ for simage_info in "${singularities[@]}"; do
 	fi
 	chmod 755 ${local_DBs}/singularities/*
 done
+
+# Check to see if kraken mini database is installed
+if [[ ! -d "${local_DBs}/kraken" ]]; then
+	if [[ "${do_download}" = "true" ]]; then
+		mkdir "${local_DBs}/kraken"
+		cd "${local_DBs}/kraken"
+		echo "Downloading latest (mini)kraken database (wget https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz)"
+		wget "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+		if [[ ! -f "minikraken_20171019_4GB.tgz" ]]; then
+			curl -O "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+		fi
+		tar xzf minikraken_20171019_4GB.tgz
+		rm minikraken_20171019_4GB.tgz
+	else
+		echo "Missing latest kraken database"
+		missing_DBS=("${missing_DBS[@]}" "kraken")
+	fi
+else
+	echo "kraken database is installed"
+fi
 
 ##### Currently down.....and has been a while
 # Check to see if gottcha database is installed
