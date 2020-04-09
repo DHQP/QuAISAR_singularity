@@ -104,26 +104,35 @@ find ${local_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
 
 # All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
 
-# Test index
-link_index=1
+# Test index 0 is filename output, 1 is MEGA link, 2 is onedrive link, 3 is drive link
+link_index=3
 # Lists of links to test for downloading (MEGA OneDrive Google)
-bbtools_links=("https://mega.nz/file/0r5UCYIR#zn3LHj7RHKAMR-VkDGSc-5lUmWaE12A3jBPQOCJaZOk" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21106&authkey=AHXpg4F2NHk28Vw" "GD")
-blast_links=("https://mega.nz/file/gyhCVIQR#1n-m6DEI1LA6HOiEE40i9x3fv5iXYFZsWT9sKfsNs_M" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21111&authkey=ADVSQ-oAmV3VAJk" "GD")
-bowtie2_links=("https://mega.nz/file/92hgXAQJ#XThfqohBWcpD3kRzgUv4RjscDnmS2Xl5lNtBHVnvNuw" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21113&authkey=AKpz8agXXcDjON0" "GD")
-cSSTAR_links=("https://mega.nz/file/12wkUSDB#huoDBxj6keneY9h0hehwBWPoZ_n5zTpOiELePL0szFs" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21117&authkey=AFzS-KUAFnQdSnU" "GD")
-entrez_links=("https://mega.nz/file/gy4RQQrY#JZWvV4-PbeMfOJjnRj6qjZ9jzkXZGFgLbURGPyQu42E" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21116&authkey=AGPABuxJPVYnJgA" "GD")
-GAMA_links=("https://mega.nz/file/R3wmFQJb#yY3gQ1tFvIPxeKSEUydezyTh5fnVANBOA0LV7dmHHFk" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21107&authkey=AJKsAgfit5oEhCs" "GD")
-gottcha_links=("https://mega.nz/file/EyxEDCrC#Q2kkGwzDB0HdLL3q9U2uRf7gd1orHbFK_voCCTIBErc" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21108&authkey=AMIQfW5e3Yi-sH4" "GD")
-plasmidFinder_links=("https://mega.nz/file/kugiyYZK#um_iss6jLcs4P3_qL7M5EYHICcyYJz0cHyCmUaR4ovg" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21112&authkey=AHORh2N541BayFw" "GD")
-QUAST_links=("https://mega.nz/file/8rw0kQxL#1p-zUtABJb9sLmwkeAojSMmFJ8oRkZaOtVinT0Jo1NY" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21110&authkey=AM_c7ih_fP4JxrE" "GD")
-srst2_links=("https://mega.nz/file/Y6hg3CCb#6lLqih6Dv5AYOs0hfJiBZD7BkxR8k4wwhTEkJKKmwls" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21109&authkey=AINwP6LEwO1bDgI" "GD")
-ANI_links=("https://mega.nz/file/puxixKaT#tUbaDQ1YV2TpxgpHyhlOI1ryTfaBP7RhBgD9_Psimhc" "https://onedrive.live.com/embed?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21114&authkey=AB5T8jQOePfzxSg" "GD")
-pubmlst_links=("https://mega.nz/file/M2h2mYZT#SJ4ohNn60WsdHovWxNKp6sQTtcA5tfk6WY-iECA9zEw" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21115&authkey=AGCIPp4ZdSRdGHc" "GD")
-sstar_links=("https://mega.nz/file/Z7gEWArZ#MfOJld0JsjtYMXI7vzkr-N2f8oKCpTgM1zYobL6fX3E" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21122&authkey=AG1SomRvYC1gMxM" "GD")
-adapters_links=("https://mega.nz/file/AqwyXA7S#Ao8VR1JELCeos6ISbDE3e1r7LNXSplfA5pc5m8ICb5w" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21121&authkey=AO1Xn0MaUceaHVw" "GD")
-MMBbugs_links=("https://mega.nz/file/ArxWwCbD#gtCCSQAKZCKB_euY2tryANlq_R4hZkN_HdZhEfPjo1k" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21118&authkey=AAm7qKrHhgFRao4&em=2" "GD")
-phiX_links=("https://mega.nz/file/drg00AIK#rH95tA3qTuE7SDGvcUIDuGfENm4un4MPYyI5G1tmCB4" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21119&authkey=AEYBttLLp5mkKM0" "GD")
-taxes_links=("https://mega.nz/file/1v5UFIgY#K5pFtVNLrKP5kB6BH5S_f_nqwVNvLRhnW7xkd8dSteo" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21120&authkey=AM1oWryNS2jR1SE&em=2" "GD")
+bbtools_links=("bbtools.simg" "https://mega.nz/file/0r5UCYIR#zn3LHj7RHKAMR-VkDGSc-5lUmWaE12A3jBPQOCJaZOk" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21106&authkey=AHXpg4F2NHk28Vw" "https://drive.google.com/uc?export=download&id=1QCvz1LRidSmeXhzMrfm7GtEDff4ik3zs")
+blast_links=("blast-2.9.0-docker.img" "https://mega.nz/file/gyhCVIQR#1n-m6DEI1LA6HOiEE40i9x3fv5iXYFZsWT9sKfsNs_M" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21111&authkey=ADVSQ-oAmV3VAJk" "https://drive.google.com/uc?export=download&id=1-Ic9CxvcR4ubNsJX6k2XubWKhFXS_GVc")
+bowtie2_links=("bowtie2-2.2.9-biocontainers" "https://mega.nz/file/92hgXAQJ#XThfqohBWcpD3kRzgUv4RjscDnmS2Xl5lNtBHVnvNuw" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21113&authkey=AKpz8agXXcDjON0" "https://drive.google.com/uc?export=download&id=1rQncOI9oqQKRDFLvxJFrZSZh2We5WA_S")
+cSSTAR_links=("csstar.simg" "https://mega.nz/file/12wkUSDB#huoDBxj6keneY9h0hehwBWPoZ_n5zTpOiELePL0szFs" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21117&authkey=AFzS-KUAFnQdSnU" "https://drive.google.com/uc?export=download&id=1b--ivEqsFdnPPB85Ds340J8Pu3BzSRoI")
+entrez_links=("entrez_taxon.simg" "https://mega.nz/file/gy4RQQrY#JZWvV4-PbeMfOJjnRj6qjZ9jzkXZGFgLbURGPyQu42E" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21116&authkey=AGPABuxJPVYnJgA" "https://drive.google.com/uc?export=download&id=1Earz_6jrnTkIjV_oLTmnuY9P2NSMY614")
+GAMA_links=("GAMA_quaisar.simg" "https://mega.nz/file/R3wmFQJb#yY3gQ1tFvIPxeKSEUydezyTh5fnVANBOA0LV7dmHHFk" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21107&authkey=AJKsAgfit5oEhCs" "https://drive.google.com/uc?export=download&id=1kzEloxzGIVPaV-1PngLt9FAn2dpGeguj")
+gottcha_links=("gottcha.simg" "https://mega.nz/file/EyxEDCrC#Q2kkGwzDB0HdLL3q9U2uRf7gd1orHbFK_voCCTIBErc" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21108&authkey=AMIQfW5e3Yi-sH4" "https://drive.google.com/uc?export=download&id=1SnGgM60JUdhe0y5EoZprcPpG326pG79j")
+plasmidFinder_links=("plasmidFinder_with_DB.simg" "https://mega.nz/file/kugiyYZK#um_iss6jLcs4P3_qL7M5EYHICcyYJz0cHyCmUaR4ovg" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21112&authkey=AHORh2N541BayFw" "https://drive.google.com/uc?export=download&id=1wZAzkiTD2rLxkgDon16rZErMjg986yit")
+QUAST_links=("QUAST5.simg" "https://mega.nz/file/8rw0kQxL#1p-zUtABJb9sLmwkeAojSMmFJ8oRkZaOtVinT0Jo1NY" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21110&authkey=AM_c7ih_fP4JxrE" "https://drive.google.com/uc?export=download&id=1JhxjA2xt4dsjpO96egc7Iyz9wOEbnXXF")
+srst2_links=("srst2.simg""https://mega.nz/file/Y6hg3CCb#6lLqih6Dv5AYOs0hfJiBZD7BkxR8k4wwhTEkJKKmwls" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21109&authkey=AINwP6LEwO1bDgI" "https://drive.google.com/uc?export=download&id=1Kobw285kXNy7yxHHxhRxYY2PjjEmVtYK")
+ANI_links=("REFSEQ_20200305.msh.gz" "https://mega.nz/file/puxixKaT#tUbaDQ1YV2TpxgpHyhlOI1ryTfaBP7RhBgD9_Psimhc" "https://onedrive.live.com/embed?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21114&authkey=AB5T8jQOePfzxSg" "https://drive.google.com/uc?export=download&id=161jVEG-AV38qNxIcNHSM-T0hn1RoyIv0")
+pubmlst_links=("pubmlsts.tar.gz" "https://mega.nz/file/M2h2mYZT#SJ4ohNn60WsdHovWxNKp6sQTtcA5tfk6WY-iECA9zEw" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21115&authkey=AGCIPp4ZdSRdGHc" "https://drive.google.com/uc?export=download&id=1DoqUliXXJSWEsZFCoGSnakzjySbywgx2")
+sstar_links=("sstar.tar.gz" "https://mega.nz/file/Z7gEWArZ#MfOJld0JsjtYMXI7vzkr-N2f8oKCpTgM1zYobL6fX3E" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21122&authkey=AG1SomRvYC1gMxM" "https://drive.google.com/uc?export=download&id=1WXqL4bdT-eO_zyIk-csLPdZatj-JTyPM")
+adapters_links=("adapters.fasta" "https://mega.nz/file/AqwyXA7S#Ao8VR1JELCeos6ISbDE3e1r7LNXSplfA5pc5m8ICb5w" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21121&authkey=AO1Xn0MaUceaHVw" "https://drive.google.com/uc?export=download&id=1Ec_tQoL-fsMYJArP92-1g--SHoEiEhIY")
+MMBbugs_links=("MMB_Bugs.txt" "https://mega.nz/file/ArxWwCbD#gtCCSQAKZCKB_euY2tryANlq_R4hZkN_HdZhEfPjo1k" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21118&authkey=AAm7qKrHhgFRao4&em=2" "https://drive.google.com/uc?export=download&id=1_pPdXlFs4t-uxaFweoz4_1LAjVFdS5QW")
+phiX_links=("phiX.fasta" "https://mega.nz/file/drg00AIK#rH95tA3qTuE7SDGvcUIDuGfENm4un4MPYyI5G1tmCB4" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21119&authkey=AEYBttLLp5mkKM0" "https://drive.google.com/uc?export=download&id=111clfbuw7sjUoQN0Uw8NVhZINJAf739G")
+taxes_links=("taxes.csv" "https://mega.nz/file/1v5UFIgY#K5pFtVNLrKP5kB6BH5S_f_nqwVNvLRhnW7xkd8dSteo" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21120&authkey=AM1oWryNS2jR1SE&em=2" "https://drive.google.com/uc?export=download&id=1-lnexzeEquhcvJT-UE3wx8YD804rr5ts")
+
+wget_options=""
+if [[ ${link_index} -eq 1 ]]; then
+	echo "Unknown how to process"
+elif [[ ${link_index} -eq 2 ]]; then
+	wget_options="--no-check-cerificate"
+elif [[ ${link_index} -eq 3 ]]; then
+	echo "None needed for google drive"
+fi
 
 # star (6 Mbs)
 if [[ ! -d "${local_DBs}/star" ]]; then
@@ -132,7 +141,7 @@ if [[ ! -d "${local_DBs}/star" ]]; then
 		echo "Copying latest NAR-AR database"\
 		cd ${local_DBs}
 		#cp -r ${current_dir}/included_databases/star ${local_DBs}
-		wget --no-check-certificate "${sstar_links[$(link_index)]}"
+		wget ${wget_options} "${sstar_links[$(link_index)]}"
 		tar -zxvf sstar.tar.gz
 	else
 		echo "Missing latest NAR-AR database"
@@ -238,12 +247,13 @@ fi
 
 
 
-singularities=(bbtools.simg:${bbtools_links[${link_index}]} blast-2.9.0-docker.img:${blast_links_[${link_index}]} bowtie2-2.2.9-biocontainers.simg:${bowtie2_links[${link_index}]} cSSTAR.simg:${cSSTAR_links[${link_index}]} entrez_taxon.simg:${entrez_links[${link_index}]} GAMA_quaisar.simg:${GAMA_links[${link_index}]} gottcha.simg:${gottcha_links[${link_index}]} plasmidFinder_with_DB.simg:${plasmidFinder_links[${link_index}]} QUAST5.simg:${QUAST_links[${link_index}]} srst2.simg_${srst2_links[${link_index}]})
+singularities=(bbtools.simg:${bbtools_links[${link_index}]}:76 blast-2.9.0-docker.img:${blast_links_[${link_index}]}:94 bowtie2-2.2.9-biocontainers.simg:${bowtie2_links[${link_index}]}:364 cSSTAR.simg:${cSSTAR_links[${link_index}]}:688 entrez_taxon.simg:${entrez_links[${link_index}]}:239 GAMA_quaisar.simg:${GAMA_links[${link_index}]}:242 gottcha.simg:${gottcha_links[${link_index}]}:208 plasmidFinder_with_DB.simg:${plasmidFinder_links[${link_index}]}:805 QUAST5.simg:${QUAST_links[${link_index}]}:345 srst2.simg_${srst2_links[${link_index}]}:262)
 
 for simage_info in "${singularities[@]}"; do
 	# custom singularity images (3.6GBs)
 	simage=$(echo "${simage_info}" | cut -d':' -f1)
 	url_link=$(echo "${simage_info}" | cut -d':' -f2)
+	size=$(echo "${simage_info}" | cut -d':' -f3)
 	if [[ ! -f "${local_DBs}/singularities/${simage}" ]]; then
 		#cp -r /container_DBs/custom_singularities ${local_DBs}
 		if [[ "${do_download}" = "true" ]]; then
@@ -253,7 +263,12 @@ for simage_info in "${singularities[@]}"; do
 			fi
 			echo "Copying custom singularity image ${simage}"
 			#cat ${current_dir}/included_databases/singularities/${simage}.parta* > ${local_DBs}/singularities/${simage}
-			wget --no-check-certificate "${url_link}"
+			if [[ ${size} -ge 100]] && [[ ${link_index} -eq 3 ]]; then
+				wget --save-cookies cookies.txt ${url_link} -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
+		 		wget --load-cookies cookies.txt -O $filename '${url_link}'&'confirm='$(<confirm.txt)
+			else
+				wget ${wget_options} -O ${simage} "${url_link}"
+			fi
 		else
 			echo "Missing custom singularity image ${simage}"
 			missing_DBS=("${missing_DBS[@]}" "singularities-${simage}")
