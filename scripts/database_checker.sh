@@ -140,7 +140,7 @@ if [[ ! -d "${local_DBs}/star" ]]; then
 		#cp -r ${current_dir}/included_databases/star ${local_DBs}
 		wget ${wget_options} -O "${sstar_links[0]}" "${sstar_links[${link_index}]}"
 		tar -zxvf sstar.tar.gz
-		mv -r ${local_DBs}/raid5/QuAISAR_databases/star ${local_DBs}
+		mv ${local_DBs}/raid5/QuAISAR_databases/star ${local_DBs}
 	else
 		echo "Missing latest NAR-AR database"
 		missing_DBS=("${missing_DBS[@]}" "NAR-AR")
