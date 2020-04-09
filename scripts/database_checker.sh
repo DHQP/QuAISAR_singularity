@@ -135,7 +135,7 @@ fi
 if [[ ! -d "${local_DBs}/star" ]]; then
 	#cp -r /container_DBs/star ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying latest NAR-AR database"\
+		echo "Copying latest NAR-AR database"
 		cd ${local_DBs}
 		pwd
 		ls
