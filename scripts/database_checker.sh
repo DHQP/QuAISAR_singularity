@@ -137,10 +137,15 @@ if [[ ! -d "${local_DBs}/star" ]]; then
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying latest NAR-AR database"\
 		cd ${local_DBs}
+		pwd
+		ls
 		#cp -r ${current_dir}/included_databases/star ${local_DBs}
 		wget ${wget_options} -O "${sstar_links[0]}" "${sstar_links[${link_index}]}"
+		ls
 		tar -zxvf sstar.tar.gz
+		ls
 		mv ${local_DBs}/raid5/QuAISAR_databases/star ${local_DBs}
+		ls
 	else
 		echo "Missing latest NAR-AR database"
 		missing_DBS=("${missing_DBS[@]}" "NAR-AR")
