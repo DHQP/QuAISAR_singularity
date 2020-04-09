@@ -140,7 +140,7 @@ if [[ ! -d "${local_DBs}/star" ]]; then
 		#cp -r ${current_dir}/included_databases/star ${local_DBs}
 		wget ${wget_options} -O "${sstar_links[0]}" "${sstar_links[${link_index}]}"
 		tar -zxvf sstar.tar.gz
-		mv ${local_DBs}/raid5/QuAISAR_databases/star ${local_DBs}
+		mv -r ${local_DBs}/raid5/QuAISAR_databases/star ${local_DBs}
 	else
 		echo "Missing latest NAR-AR database"
 		missing_DBS=("${missing_DBS[@]}" "NAR-AR")
@@ -263,8 +263,8 @@ for simage_info in "${singularities[@]}"; do
 			echo "Copying custom singularity image ${simage}"
 			#cat ${current_dir}/included_databases/singularities/${simage}.parta* > ${local_DBs}/singularities/${simage}
 			if [[ ${size} -ge 100 ]] && [[ ${link_index} -eq 3 ]]; then
-				wget --save-cookies cookies.txt ${url_link} -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
-		 		wget --load-cookies cookies.txt -O $filename '${url_link}'&'confirm='$(<confirm.txt)
+				wget --save-cookies cookies.txt "${url_link}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
+		 		wget --load-cookies cookies.txt -O ${local_DBs}/singularities/${simage} '${url_link}'&'confirm='$(<confirm.txt)
 			else
 				wget ${wget_options} -O ${simage} "${url_link}"
 			fi
@@ -275,7 +275,6 @@ for simage_info in "${singularities[@]}"; do
 	else
 		echo "custom singularity image ${simage} installed"
 	fi
-	chmod 755 ${local_DBs}/singularities/*
 done
 
 # # Check to see if kraken mini database is installed
@@ -322,5 +321,7 @@ done
 # else
 # 	echo "gottcha database installed"
 # fi
+
+chmod 755 ${local_DBs}/*
 
 echo "There are ${#missing_DBS[@]} missing databases (${missing_DBS[@]})"
