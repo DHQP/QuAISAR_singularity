@@ -141,7 +141,7 @@ if [[ ! -d "${local_DBs}/star" ]]; then
 		echo "Copying latest NAR-AR database"\
 		cd ${local_DBs}
 		#cp -r ${current_dir}/included_databases/star ${local_DBs}
-		wget ${wget_options} -O "${sstar_links[0]}" "${sstar_links[$(link_index)]}"
+		wget ${wget_options} -O "${sstar_links[0]}" "${sstar_links[${link_index}]}"
 		tar -zxvf sstar.tar.gz
 	else
 		echo "Missing latest NAR-AR database"
@@ -157,7 +157,7 @@ if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
 		echo "Copying MMB_bugs"
 		cd ${local_DBs}
 		#cp ${current_dir}/included_databases/MMB_Bugs.txt ${local_DBs}
-		wget ${wget_options} -O "${MMB_bugs_links[0]}" "${MMB_bugs_links[$(link_index)]}"
+		wget ${wget_options} -O "${MMB_bugs_links[0]}" "${MMB_bugs_links[${link_index}]}"
 	else
 		echo "Missing MMB_Bugs"
 		missing_DBS=("${missing_DBS[@]}" "MMB_Bugs")
@@ -172,7 +172,7 @@ if [[ ! -f "${local_DBs}/taxes.csv" ]]; then
 		echo "Copying taxes"
 		cd ${local_DBs}
 		#cp ${current_dir}/included_databases/taxes.csv ${local_DBs}
-		wget ${wget_options} -O "${taxes_links[0]}" "${taxes_links[$(link_index)]}"
+		wget ${wget_options} -O "${taxes_links[0]}" "${taxes_links[${link_index}]}"
 	else
 		echo "Missing taxes"
 		missing_DBS=("${missing_DBS[@]}" "taxes")
@@ -187,7 +187,7 @@ if [[ ! -f "${local_DBs}/phiX.fasta" ]]; then
 		echo "Copying phiX.fasta"
 		cd ${local_DBs}
 		#cp ${current_dir}/included_databases/phiX.fasta ${local_DBs}
-		wget ${wget_options} -O "${phiX_links[0]}" "${phiX_links[$(link_index)]}"
+		wget ${wget_options} -O "${phiX_links[0]}" "${phiX_links[${link_index}]}"
 	else
 		echo "Missing phiX"
 		missing_DBS=("${missing_DBS[@]}" "phiX")
@@ -202,7 +202,7 @@ if [[ ! -f "${local_DBs}/adapters.fasta" ]]; then
 		echo "Copying adapters.fasta"
 		cd ${local_DBs}
 		#cp ${current_dir}/included_databases/adapters.fasta ${local_DBs}
-		wget ${wget_options} -O "${adapters_links[$(link_index)]}" "${adapters_links[$(link_index)]}"
+		wget ${wget_options} -O "${adapters_links[0}" "${adapters_links[${link_index}]}"
 	else
 		echo "Missing adapters"
 		missing_DBS=("${missing_DBS[@]}" "adapters")
