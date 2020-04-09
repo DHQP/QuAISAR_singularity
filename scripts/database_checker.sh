@@ -151,8 +151,6 @@ else
 	echo "NAR-AR database installed"
 fi
 
-exit
-
 if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
 	#cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
 	if [[ "${do_download}" = "true" ]]; then
