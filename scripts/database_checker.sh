@@ -157,7 +157,7 @@ if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
 		echo "Copying MMB_bugs"
 		cd ${local_DBs}
 		#cp ${current_dir}/included_databases/MMB_Bugs.txt ${local_DBs}
-		wget ${wget_options} -O "${MMB_bugs_links[0]}" "${MMB_bugs_links[${link_index}]}"
+		wget ${wget_options} -O "${MMBbugs_links[0]}" "${MMBbugs_links[${link_index}]}"
 	else
 		echo "Missing MMB_Bugs"
 		missing_DBS=("${missing_DBS[@]}" "MMB_Bugs")
@@ -202,7 +202,7 @@ if [[ ! -f "${local_DBs}/adapters.fasta" ]]; then
 		echo "Copying adapters.fasta"
 		cd ${local_DBs}
 		#cp ${current_dir}/included_databases/adapters.fasta ${local_DBs}
-		wget ${wget_options} -O "${adapters_links[0}" "${adapters_links[${link_index}]}"
+		wget ${wget_options} -O "${adapters_links[0]}" "${adapters_links[${link_index}]}"
 	else
 		echo "Missing adapters"
 		missing_DBS=("${missing_DBS[@]}" "adapters")
@@ -216,6 +216,7 @@ if [[ ! -d "${local_DBs}/ANI" ]]; then
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying latest REFSEQ sketch database (ANI)"
 		#cp -r ${current_dir}/included_databases/ANI ${local_DBs}
+		mkdir ${local_DBs}/ANI
 		cd ${local_DBs}/ANI
 		wget ${wget_options} -O "${ANI_links[0]}" "${ANI_links[$link_index]}"
 		gunzip *.gz
