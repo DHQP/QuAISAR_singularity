@@ -264,7 +264,7 @@ for simage_info in "${singularities[@]}"; do
 			fi
 			echo "Copying custom singularity image ${simage}"
 			#cat ${current_dir}/included_databases/singularities/${simage}.parta* > ${local_DBs}/singularities/${simage}
-			if [[ ${size} -ge 100]] && [[ ${link_index} -eq 3 ]]; then
+			if [[ ${size} -ge 100 ]] && [[ ${link_index} -eq 3 ]]; then
 				wget --save-cookies cookies.txt ${url_link} -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
 		 		wget --load-cookies cookies.txt -O $filename '${url_link}'&'confirm='$(<confirm.txt)
 			else
