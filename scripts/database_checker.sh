@@ -7,9 +7,6 @@
 #$ -q short.q
 
 #Import the config file with shortcuts and settings
-if [[ ! -f "./config.sh" ]]; then
-	cp ./config_template.sh ./config.sh
-fi
 . ./config.sh
 
 #
@@ -143,6 +140,7 @@ if [[ ! -d "${local_DBs}/star" ]]; then
 		#cp -r ${current_dir}/included_databases/star ${local_DBs}
 		wget ${wget_options} -O "${sstar_links[0]}" "${sstar_links[${link_index}]}"
 		tar -zxvf sstar.tar.gz
+		mv ${local_DBs}/raid5/QuAISAR_databases/star ./
 	else
 		echo "Missing latest NAR-AR database"
 		missing_DBS=("${missing_DBS[@]}" "NAR-AR")
@@ -248,7 +246,7 @@ fi
 
 
 
-singularities=(bbtools.simg:${bbtools_links[${link_index}]}:76 blast-2.9.0-docker.img:${blast_links_[${link_index}]}:94 bowtie2-2.2.9-biocontainers.simg:${bowtie2_links[${link_index}]}:364 cSSTAR.simg:${cSSTAR_links[${link_index}]}:688 entrez_taxon.simg:${entrez_links[${link_index}]}:239 GAMA_quaisar.simg:${GAMA_links[${link_index}]}:242 gottcha.simg:${gottcha_links[${link_index}]}:208 plasmidFinder_with_DB.simg:${plasmidFinder_links[${link_index}]}:805 QUAST5.simg:${QUAST_links[${link_index}]}:345 srst2.simg_${srst2_links[${link_index}]}:262)
+singularities=(bbtools.simg:${bbtools_links[${link_index}]}:76 blast-2.9.0-docker.img:${blast_links_[${link_index}]}:94 bowtie2-2.2.9-biocontainers.simg:${bowtie2_links[${link_index}]}:364 cSSTAR.simg:${cSSTAR_links[${link_index}]}:688 entrez_taxon.simg:${entrez_links[${link_index}]}:239 GAMA_quaisar.simg:${GAMA_links[${link_index}]}:242 gottcha.simg:${gottcha_links[${link_index}]}:208 plasmidFinder_with_DB.simg:${plasmidFinder_links[${link_index}]}:805 QUAST5.simg:${QUAST_links[${link_index}]}:345 srst2.simg:${srst2_links[${link_index}]}:262)
 
 for simage_info in "${singularities[@]}"; do
 	# custom singularity images (3.6GBs)
