@@ -113,7 +113,7 @@ GAMA_links=("GAMA_quaisar.simg" "https://mega.nz/file/R3wmFQJb#yY3gQ1tFvIPxeKSEU
 gottcha_links=("gottcha.simg" "https://mega.nz/file/EyxEDCrC#Q2kkGwzDB0HdLL3q9U2uRf7gd1orHbFK_voCCTIBErc" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21108&authkey=AMIQfW5e3Yi-sH4" "https://drive.google.com/uc?export=download&id=1SnGgM60JUdhe0y5EoZprcPpG326pG79j")
 plasmidFinder_links=("plasmidFinder_with_DB.simg" "https://mega.nz/file/kugiyYZK#um_iss6jLcs4P3_qL7M5EYHICcyYJz0cHyCmUaR4ovg" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21112&authkey=AHORh2N541BayFw" "https://drive.google.com/uc?export=download&id=1wZAzkiTD2rLxkgDon16rZErMjg986yit")
 QUAST_links=("QUAST5.simg" "https://mega.nz/file/8rw0kQxL#1p-zUtABJb9sLmwkeAojSMmFJ8oRkZaOtVinT0Jo1NY" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21110&authkey=AM_c7ih_fP4JxrE" "https://drive.google.com/uc?export=download&id=1JhxjA2xt4dsjpO96egc7Iyz9wOEbnXXF")
-srst2_links=("srst2.simg""https://mega.nz/file/Y6hg3CCb#6lLqih6Dv5AYOs0hfJiBZD7BkxR8k4wwhTEkJKKmwls" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21109&authkey=AINwP6LEwO1bDgI" "https://drive.google.com/uc?export=download&id=1Kobw285kXNy7yxHHxhRxYY2PjjEmVtYK")
+srst2_links=("srst2.simg" "https://mega.nz/file/Y6hg3CCb#6lLqih6Dv5AYOs0hfJiBZD7BkxR8k4wwhTEkJKKmwls" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21109&authkey=AINwP6LEwO1bDgI" "https://drive.google.com/uc?export=download&id=1Kobw285kXNy7yxHHxhRxYY2PjjEmVtYK")
 ANI_links=("REFSEQ_20200305.msh.gz" "https://mega.nz/file/puxixKaT#tUbaDQ1YV2TpxgpHyhlOI1ryTfaBP7RhBgD9_Psimhc" "https://onedrive.live.com/embed?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21114&authkey=AB5T8jQOePfzxSg" "https://drive.google.com/uc?export=download&id=161jVEG-AV38qNxIcNHSM-T0hn1RoyIv0")
 pubmlst_links=("pubmlsts.tar.gz" "https://mega.nz/file/M2h2mYZT#SJ4ohNn60WsdHovWxNKp6sQTtcA5tfk6WY-iECA9zEw" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21115&authkey=AGCIPp4ZdSRdGHc" "https://drive.google.com/uc?export=download&id=1DoqUliXXJSWEsZFCoGSnakzjySbywgx2")
 sstar_links=("sstar.tar.gz" "https://mega.nz/file/Z7gEWArZ#MfOJld0JsjtYMXI7vzkr-N2f8oKCpTgM1zYobL6fX3E" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21122&authkey=AG1SomRvYC1gMxM" "https://drive.google.com/uc?export=download&id=1WXqL4bdT-eO_zyIk-csLPdZatj-JTyPM")
@@ -267,9 +267,11 @@ for simage_info in "${singularities[@]}"; do
 			echo "Copying custom singularity image ${simage}"
 			#cat ${current_dir}/included_databases/singularities/${simage}.parta* > ${local_DBs}/singularities/${simage}
 			if [[ ${size} -ge 100 ]] && [[ ${link_index} -eq 3 ]]; then
+				echo "Too big, special command"
 				wget --save-cookies cookies.txt "${url_link}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
 		 		wget --load-cookies cookies.txt -O ${simage} '${url_link}'&'confirm='$(<confirm.txt)
 			else
+				echo "Normal command"
 				wget ${wget_options} -O ${simage} "${url_link}"
 			fi
 		else
