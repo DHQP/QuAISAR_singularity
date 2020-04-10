@@ -218,7 +218,16 @@ if [[ ! -d "${local_DBs}/ANI" ]]; then
 		#cp -r ${current_dir}/included_databases/ANI ${local_DBs}
 		mkdir ${local_DBs}/ANI
 		cd ${local_DBs}/ANI
-		wget ${wget_options} -O "${ANI_links[0]}" "${ANI_links[$link_index]}"
+		if [[ ${link_index} -eq 3 ]]; then
+			query=`curl -c ./cookie.txt -s -L "${ANI_links[3]}" \
+			| perl -nE'say/uc-download-link.*? href="(.*?)\">/' \
+			| sed -e 's/amp;//g' | sed -n 2p`
+			url="https://drive.google.com$query"
+			curl -b ./cookie.txt -L -o ${ANI_links[0]} $url
+			rm ./cookie.txt
+		else
+			wget ${wget_options} -O "${ANI_links[0]}" "${ANI_links[${link_index}]}"
+		fi
 		gunzip *.gz
 	else
 		echo "Missing latest REFSEQ sketch database (ANI)"
