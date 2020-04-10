@@ -102,7 +102,7 @@ find ${local_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
 # All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
 
 # Test index 0 is filename output, 1 is MEGA link, 2 is onedrive link, 3 is drive link
-link_index=3
+link_index=2
 # Lists of links to test for downloading (MEGA OneDrive Google)
 bbtools_links=("bbtools.simg" "https://mega.nz/file/0r5UCYIR#zn3LHj7RHKAMR-VkDGSc-5lUmWaE12A3jBPQOCJaZOk" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21106&authkey=AHXpg4F2NHk28Vw" "https://drive.google.com/uc?export=download&id=1QCvz1LRidSmeXhzMrfm7GtEDff4ik3zs")
 blast_links=("blast-2.9.0-docker.img" "https://mega.nz/file/gyhCVIQR#1n-m6DEI1LA6HOiEE40i9x3fv5iXYFZsWT9sKfsNs_M" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21111&authkey=ADVSQ-oAmV3VAJk" "https://drive.google.com/uc?export=download&id=1-Ic9CxvcR4ubNsJX6k2XubWKhFXS_GVc")
@@ -138,7 +138,7 @@ if [[ ! -d "${local_DBs}/star" ]]; then
 		echo "Copying latest NAR-AR database"
 		cd ${local_DBs}
 		#cp -r ${current_dir}/included_databases/star ${local_DBs}
-		wget ${wget_options} -O "${sstar_links[0]}" "${sstar_links[${link_index}]}"
+		wget "${wget_options}" -O "${sstar_links[0]}" "${sstar_links[${link_index}]}"
 		tar -zxvf sstar.tar.gz
 		mv ${local_DBs}/raid5/QuAISAR_databases/star ${local_DBs}
 		rm -r ${local_DBs}/raid5
@@ -157,7 +157,7 @@ if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
 		echo "Copying MMB_bugs"
 		cd ${local_DBs}
 		#cp ${current_dir}/included_databases/MMB_Bugs.txt ${local_DBs}
-		wget ${wget_options} -O "${MMBbugs_links[0]}" "${MMBbugs_links[${link_index}]}"
+		wget "${wget_options}" -O "${MMBbugs_links[0]}" "${MMBbugs_links[${link_index}]}"
 	else
 		echo "Missing MMB_Bugs"
 		missing_DBS=("${missing_DBS[@]}" "MMB_Bugs")
@@ -172,7 +172,7 @@ if [[ ! -f "${local_DBs}/taxes.csv" ]]; then
 		echo "Copying taxes"
 		cd ${local_DBs}
 		#cp ${current_dir}/included_databases/taxes.csv ${local_DBs}
-		wget ${wget_options} -O "${taxes_links[0]}" "${taxes_links[${link_index}]}"
+		wget "${wget_options}" -O "${taxes_links[0]}" "${taxes_links[${link_index}]}"
 	else
 		echo "Missing taxes"
 		missing_DBS=("${missing_DBS[@]}" "taxes")
@@ -187,7 +187,7 @@ if [[ ! -f "${local_DBs}/phiX.fasta" ]]; then
 		echo "Copying phiX.fasta"
 		cd ${local_DBs}
 		#cp ${current_dir}/included_databases/phiX.fasta ${local_DBs}
-		wget ${wget_options} -O "${phiX_links[0]}" "${phiX_links[${link_index}]}"
+		wget "${wget_options}" -O "${phiX_links[0]}" "${phiX_links[${link_index}]}"
 	else
 		echo "Missing phiX"
 		missing_DBS=("${missing_DBS[@]}" "phiX")
@@ -202,7 +202,7 @@ if [[ ! -f "${local_DBs}/adapters.fasta" ]]; then
 		echo "Copying adapters.fasta"
 		cd ${local_DBs}
 		#cp ${current_dir}/included_databases/adapters.fasta ${local_DBs}
-		wget ${wget_options} -O "${adapters_links[0]}" "${adapters_links[${link_index}]}"
+		wget "${wget_options}" -O "${adapters_links[0]}" "${adapters_links[${link_index}]}"
 	else
 		echo "Missing adapters"
 		missing_DBS=("${missing_DBS[@]}" "adapters")
@@ -226,7 +226,7 @@ if [[ ! -d "${local_DBs}/ANI" ]]; then
 			curl -b ./cookie.txt -L -o ${ANI_links[0]} $url
 			rm ./cookie.txt
 		else
-			wget ${wget_options} -O "${ANI_links[0]}" "${ANI_links[${link_index}]}"
+			wget "${wget_options}" -O "${ANI_links[0]}" "${ANI_links[${link_index}]}"
 		fi
 		gunzip *.gz
 	else
@@ -286,7 +286,7 @@ for simage_info in "${singularities[@]}"; do
 				rm ./cookie.txt
 			else
 				echo "Normal command -just testing"
-				wget ${wget_options} -O ${simage} "${url_link}"
+				wget "${wget_options}" -O ${simage} "${url_link}"
 			fi
 		else
 			echo "Missing custom singularity image ${simage}"
