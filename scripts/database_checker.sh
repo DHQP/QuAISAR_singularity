@@ -102,7 +102,7 @@ find ${local_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
 # All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
 
 # Test index 0 is filename output, 1 is MEGA link, 2 is onedrive link, 3 is drive link
-link_index=3
+link_index=2
 # Lists of links to test for downloading (MEGA OneDrive Google)
 bbtools_links=("bbtools.simg" "https://mega.nz/file/0r5UCYIR#zn3LHj7RHKAMR-VkDGSc-5lUmWaE12A3jBPQOCJaZOk" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21106&authkey=AHXpg4F2NHk28Vw" "https://drive.google.com/uc?export=download&id=1QCvz1LRidSmeXhzMrfm7GtEDff4ik3zs")
 blast_links=("blast-2.9.0-docker.img" "https://mega.nz/file/gyhCVIQR#1n-m6DEI1LA6HOiEE40i9x3fv5iXYFZsWT9sKfsNs_M" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21111&authkey=ADVSQ-oAmV3VAJk" "https://drive.google.com/uc?export=download&id=1-Ic9CxvcR4ubNsJX6k2XubWKhFXS_GVc")
@@ -120,7 +120,7 @@ sstar_links=("sstar.tar.gz" "https://mega.nz/file/Z7gEWArZ#MfOJld0JsjtYMXI7vzkr-
 adapters_links=("adapters.fasta" "https://mega.nz/file/AqwyXA7S#Ao8VR1JELCeos6ISbDE3e1r7LNXSplfA5pc5m8ICb5w" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21121&authkey=AO1Xn0MaUceaHVw" "https://drive.google.com/uc?export=download&id=1Ec_tQoL-fsMYJArP92-1g--SHoEiEhIY")
 MMBbugs_links=("MMB_Bugs.txt" "https://mega.nz/file/ArxWwCbD#gtCCSQAKZCKB_euY2tryANlq_R4hZkN_HdZhEfPjo1k" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21118&authkey=AAm7qKrHhgFRao4&em=2" "https://drive.google.com/uc?export=download&id=1_pPdXlFs4t-uxaFweoz4_1LAjVFdS5QW")
 phiX_links=("phiX.fasta" "https://mega.nz/file/drg00AIK#rH95tA3qTuE7SDGvcUIDuGfENm4un4MPYyI5G1tmCB4" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21119&authkey=AEYBttLLp5mkKM0" "https://drive.google.com/uc?export=download&id=111clfbuw7sjUoQN0Uw8NVhZINJAf739G")
-taxes_links=("taxes.csv" "https://mega.nz/file/1v5UFIgY#K5pFtVNLrKP5kB6BH5S_f_nqwVNvLRhnW7xkd8dSteo" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21120&authkey=AM1oWryNS2jR1SE&em=2" "https://drive.google.com/uc?export=download&id=1-lnexzeEquhcvJT-UE3wx8YD804rr5ts")
+taxes_links=("taxes.csv" "https://mega.nz/file/1v5UFIgY#K5pFtVNLrKP5kB6BH5S_f_nqwVNvLRhnW7xkd8dSteo" "https://onedrive.live.com/download?cid=89BB0F0D841B2A3B&resid=89BB0F0D841B2A3B%21127&authkey=AOl2_e_i2ubfrt4" "https://drive.google.com/uc?export=download&id=1-lnexzeEquhcvJT-UE3wx8YD804rr5ts")
 
 wget_options=""
 if [[ ${link_index} -eq 1 ]]; then
@@ -333,6 +333,6 @@ else
 	echo "gottcha database installed"
 fi
 
-chmod 755 ${local_DBs}/*
+chmod -R 755 ${local_DBs}/*
 
 echo "There are ${#missing_DBS[@]} missing databases (${missing_DBS[@]})"
