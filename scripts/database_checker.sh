@@ -248,7 +248,7 @@ fi
 
 
 
-singularities=(bbtools.simg+${bbtools_links[${link_index}]}+76 blast-2.9.0-docker.img+${blast_links_[${link_index}]}+94 bowtie2-2.2.9-biocontainers.simg+${bowtie2_links[${link_index}]}+364 cSSTAR.simg+${cSSTAR_links[${link_index}]}+688 entrez_taxon.simg+${entrez_links[${link_index}]}+239 GAMA_quaisar.simg+${GAMA_links[${link_index}]}+242 gottcha.simg+${gottcha_links[${link_index}]}+208 plasmidFinder_with_DB.simg+${plasmidFinder_links[${link_index}]}+805 QUAST5.simg+${QUAST_links[${link_index}]}+345 srst2.simg+${srst2_links[${link_index}]}+262)
+singularities=(bbtools.simg+${bbtools_links[${link_index}]}+76 blast-2.9.0-docker.img+${blast_links[${link_index}]}+94 bowtie2-2.2.9-biocontainers.simg+${bowtie2_links[${link_index}]}+364 cSSTAR.simg+${cSSTAR_links[${link_index}]}+688 entrez_taxon.simg+${entrez_links[${link_index}]}+239 GAMA_quaisar.simg+${GAMA_links[${link_index}]}+242 gottcha.simg+${gottcha_links[${link_index}]}+208 plasmidFinder_with_DB.simg+${plasmidFinder_links[${link_index}]}+805 QUAST5.simg+${QUAST_links[${link_index}]}+345 srst2.simg+${srst2_links[${link_index}]}+262)
 
 for simage_info in "${singularities[@]}"; do
 	# custom singularity images (3.6GBs)
@@ -268,8 +268,15 @@ for simage_info in "${singularities[@]}"; do
 			#cat ${current_dir}/included_databases/singularities/${simage}.parta* > ${local_DBs}/singularities/${simage}
 			if [[ ${size} -ge 100 ]] && [[ ${link_index} -eq 3 ]]; then
 				echo "Too big, special command"
-				wget --save-cookies cookies.txt "${url_link}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
-		 		wget --load-cookies cookies.txt -O ${simage} '${url_link}'&'confirm='$(<confirm.txt)
+				#wget --save-cookies cookies.txt "${url_link}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
+		 		#wget --load-cookies cookies.txt -O ${simage} '${url_link}'&'confirm='$(<confirm.txt)
+
+				query=`curl -c ./cookie.txt -s -L "${url_link}" \
+				| perl -nE'say/uc-download-link.*? href="(.*?)\">/' \
+				| sed -e 's/amp;//g' | sed -n 2p`
+				url="https://drive.google.com$query"
+				curl -b ./cookie.txt -L -o ${simage} $url
+
 			else
 				echo "Normal command -just testing"
 				wget ${wget_options} -O ${simage} "${url_link}"
