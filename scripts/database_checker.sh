@@ -248,13 +248,13 @@ fi
 
 
 
-singularities=(bbtools.simg:${bbtools_links[${link_index}]}:76 blast-2.9.0-docker.img:${blast_links_[${link_index}]}:94 bowtie2-2.2.9-biocontainers.simg:${bowtie2_links[${link_index}]}:364 cSSTAR.simg:${cSSTAR_links[${link_index}]}:688 entrez_taxon.simg:${entrez_links[${link_index}]}:239 GAMA_quaisar.simg:${GAMA_links[${link_index}]}:242 gottcha.simg:${gottcha_links[${link_index}]}:208 plasmidFinder_with_DB.simg:${plasmidFinder_links[${link_index}]}:805 QUAST5.simg:${QUAST_links[${link_index}]}:345 srst2.simg:${srst2_links[${link_index}]}:262)
+singularities=(bbtools.simg+${bbtools_links[${link_index}]}+76 blast-2.9.0-docker.img+${blast_links_[${link_index}]}+94 bowtie2-2.2.9-biocontainers.simg+${bowtie2_links[${link_index}]}+364 cSSTAR.simg+${cSSTAR_links[${link_index}]}+688 entrez_taxon.simg+${entrez_links[${link_index}]}+239 GAMA_quaisar.simg+${GAMA_links[${link_index}]}+242 gottcha.simg+${gottcha_links[${link_index}]}+208 plasmidFinder_with_DB.simg+${plasmidFinder_links[${link_index}]}+805 QUAST5.simg+${QUAST_links[${link_index}]}+345 srst2.simg+${srst2_links[${link_index}]}+262)
 
 for simage_info in "${singularities[@]}"; do
 	# custom singularity images (3.6GBs)
-	simage=$(echo "${simage_info}" | cut -d':' -f1)
-	url_link=$(echo "${simage_info}" | cut -d':' -f2)
-	size=$(echo "${simage_info}" | cut -d':' -f3)
+	simage=$(echo "${simage_info}" | cut -d'+' -f1)
+	url_link=$(echo "${simage_info}" | cut -d'+' -f2)
+	size=$(echo "${simage_info}" | cut -d'+' -f3)
 	echo -e "${simage}\n${url_link}\n${size}\n"
 
 	if [[ ! -f "${local_DBs}/singularities/${simage}" ]]; then
