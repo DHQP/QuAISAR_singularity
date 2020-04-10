@@ -126,7 +126,7 @@ wget_options=""
 if [[ ${link_index} -eq 1 ]]; then
 	echo "Unknown how to process"
 elif [[ ${link_index} -eq 2 ]]; then
-	wget_options="--no-check-cerificate"
+	wget_options="--no-check-certificate"
 elif [[ ${link_index} -eq 3 ]]; then
 	echo "None needed for google drive"
 fi
