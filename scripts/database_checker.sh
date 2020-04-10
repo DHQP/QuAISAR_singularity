@@ -65,39 +65,39 @@ if [[ ! -d ${local_DBs} ]]; then
 	mkdir -p ${local_DBs}
 fi
 
-# # # Check for BUSCO
-busco_taxa=(bacteria_odb10.2019-06-26 alteromonadales_odb10.2019-04-24 bacillales_odb10.2019-04-24 bacilli_odb10.2019-04-24 bacteroidetes_odb10.2019-04-24 betaproteobacteria_odb10.2019-04-24 burkholderiales_odb10.2019-04-24 campylobacterales_odb10.2019-04-24 clostridiales_odb10.2019-04-24 clostridia_odb10.2019-04-24 corynebacteriales_odb10.2019-04-24 enterobacterales_odb10.2019-04-24 epsilonproteobacteria_odb10.2019-04-24 firmicutes_odb10.2019-04-24 flavobacteriales_odb10.2019-04-24  flavobacteriia_odb10.2019-04-24 gammaproteobacteria_odb10.2019-04-24 lactobacillales_odb10.2019-04-24 neisseriales_odb10.2019-04-24 proteobacteria_odb10.2019-04-24 pseudomonadales_odb10.2019-04-24 xanthomonadales_odb10.2019-04-24 actinobacteria_class_odb10.2019-04-24 )
-
-#echo "${#busco_taxa[@]}"
-
-for odb_info in "${busco_taxa[@]}"; do
-	# Check for top level bacteria database
-	#echo ${odb_info}
-	taxa=$(echo "$odb_info" | cut -d'_' -f1)
-	db_date=$(echo "$odb_info" | cut -d'.' -f2)
-	if [[ ! -d "${local_DBs}/BUSCO/${taxa}_odb10" ]]; then
-		if [[ "${do_download}" = "true" ]]; then
-			if [[ ! -d "${local_DBs}/BUSCO" ]]; then
-				mkdir "${local_DBs}/BUSCO"
-			fi
-			cd "${local_DBs}/BUSCO"
-			if [[ "${taxa}" == "actinobacteria" ]]; then
-				taxa="actinobacteria_class"
-			fi
-			echo "Downloading latest BUSCO database for ${taxa} (wget http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz)"
-			wget "http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz"
-			# Dont know how to handle this one outlier (only one to specify a level in the filename) - ALl OUR bugs are in class Actinobacteria too
-		else
-			echo "Missing latest BUSCO database for ${taxa}"
-			missing_DBS=("${missing_DBS[@]}" "BUSCO-${taxa}")
-		fi
-	else
-		echo "BUSCO has latest ${taxa}_odb10 as of 3/15/2020"
-	fi
-done
-find ${local_DBs}/BUSCO/ -name '*.gz' -exec tar xzf {} \;
-mv ${local_DBs}/BUSCO/actinobacteria_class_odb10 ${local_DBs}/BUSCO/actinobacteria_odb10
-find ${local_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
+# # # # Check for BUSCO
+# busco_taxa=(bacteria_odb10.2019-06-26 alteromonadales_odb10.2019-04-24 bacillales_odb10.2019-04-24 bacilli_odb10.2019-04-24 bacteroidetes_odb10.2019-04-24 betaproteobacteria_odb10.2019-04-24 burkholderiales_odb10.2019-04-24 campylobacterales_odb10.2019-04-24 clostridiales_odb10.2019-04-24 clostridia_odb10.2019-04-24 corynebacteriales_odb10.2019-04-24 enterobacterales_odb10.2019-04-24 epsilonproteobacteria_odb10.2019-04-24 firmicutes_odb10.2019-04-24 flavobacteriales_odb10.2019-04-24  flavobacteriia_odb10.2019-04-24 gammaproteobacteria_odb10.2019-04-24 lactobacillales_odb10.2019-04-24 neisseriales_odb10.2019-04-24 proteobacteria_odb10.2019-04-24 pseudomonadales_odb10.2019-04-24 xanthomonadales_odb10.2019-04-24 actinobacteria_class_odb10.2019-04-24 )
+#
+# #echo "${#busco_taxa[@]}"
+#
+# for odb_info in "${busco_taxa[@]}"; do
+# 	# Check for top level bacteria database
+# 	#echo ${odb_info}
+# 	taxa=$(echo "$odb_info" | cut -d'_' -f1)
+# 	db_date=$(echo "$odb_info" | cut -d'.' -f2)
+# 	if [[ ! -d "${local_DBs}/BUSCO/${taxa}_odb10" ]]; then
+# 		if [[ "${do_download}" = "true" ]]; then
+# 			if [[ ! -d "${local_DBs}/BUSCO" ]]; then
+# 				mkdir "${local_DBs}/BUSCO"
+# 			fi
+# 			cd "${local_DBs}/BUSCO"
+# 			if [[ "${taxa}" == "actinobacteria" ]]; then
+# 				taxa="actinobacteria_class"
+# 			fi
+# 			echo "Downloading latest BUSCO database for ${taxa} (wget http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz)"
+# 			wget "http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz"
+# 			# Dont know how to handle this one outlier (only one to specify a level in the filename) - ALl OUR bugs are in class Actinobacteria too
+# 		else
+# 			echo "Missing latest BUSCO database for ${taxa}"
+# 			missing_DBS=("${missing_DBS[@]}" "BUSCO-${taxa}")
+# 		fi
+# 	else
+# 		echo "BUSCO has latest ${taxa}_odb10 as of 3/15/2020"
+# 	fi
+# done
+# find ${local_DBs}/BUSCO/ -name '*.gz' -exec tar xzf {} \;
+# mv ${local_DBs}/BUSCO/actinobacteria_class_odb10 ${local_DBs}/BUSCO/actinobacteria_odb10
+# find ${local_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
 
 # All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
 
