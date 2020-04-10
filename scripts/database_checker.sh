@@ -273,8 +273,7 @@ for simage_info in "${singularities[@]}"; do
 				| perl -nE'say/uc-download-link.*? href="(.*?)\">/' \
 				| sed -e 's/amp;//g' | sed -n 2p`
 				url="https://drive.google.com$query"
-				#curl -b ./cookie.txt -L -o ${simage} $url
-				wget --load-cookies cookie.txt -O ${simage} ${url}
+				curl -b ./cookie.txt -L -o ${simage} $url
 				rm ./cookie.txt
 			else
 				echo "Normal command -just testing"
