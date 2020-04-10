@@ -271,7 +271,7 @@ for simage_info in "${singularities[@]}"; do
 				wget --save-cookies cookies.txt "${url_link}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
 		 		wget --load-cookies cookies.txt -O ${simage} '${url_link}'&'confirm='$(<confirm.txt)
 			else
-				echo "Normal command"
+				echo "Normal command -just testing"
 				wget ${wget_options} -O ${simage} "${url_link}"
 			fi
 		else
