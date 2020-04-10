@@ -274,7 +274,7 @@ for simage_info in "${singularities[@]}"; do
 				| sed -e 's/amp;//g' | sed -n 2p`
 				url="https://drive.google.com$query"
 				#curl -b ./cookie.txt -L -o ${simage} $url
-				wget --load-cookies cookies.txt -O ${simage} ${url}
+				wget --load-cookies cookie.txt -O ${simage} ${url}
 				rm ./cookie.txt
 			else
 				echo "Normal command -just testing"
