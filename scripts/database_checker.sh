@@ -131,120 +131,120 @@ elif [[ ${link_index} -eq 3 ]]; then
 	echo "None needed for google drive"
 fi
 
-# star (6 Mbs)
-if [[ ! -d "${local_DBs}/star" ]]; then
-	#cp -r /container_DBs/star ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying latest NAR-AR database"
-		cd ${local_DBs}
-		#cp -r ${current_dir}/included_databases/star ${local_DBs}
-		wget ${wget_options} -O "${sstar_links[0]}" "${sstar_links[${link_index}]}"
-		tar -zxvf sstar.tar.gz
-		mv ${local_DBs}/raid5/QuAISAR_databases/star ${local_DBs}
-		rm -r ${local_DBs}/raid5
-		rm sstar.tar.gz
-	else
-		echo "Missing latest NAR-AR database"
-		missing_DBS=("${missing_DBS[@]}" "NAR-AR")
-	fi
-else
-	echo "NAR-AR database installed"
-fi
-
-if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
-	#cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying MMB_bugs"
-		cd ${local_DBs}
-		#cp ${current_dir}/included_databases/MMB_Bugs.txt ${local_DBs}
-		wget ${wget_options} -O "${MMBbugs_links[0]}" "${MMBbugs_links[${link_index}]}"
-	else
-		echo "Missing MMB_Bugs"
-		missing_DBS=("${missing_DBS[@]}" "MMB_Bugs")
-	fi
-else
-	echo "MMB_Bugs installed"
-fi
-
-if [[ ! -f "${local_DBs}/taxes.csv" ]]; then
-	#cp -r /container_DBs/taxes.csv ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying taxes"
-		cd ${local_DBs}
-		#cp ${current_dir}/included_databases/taxes.csv ${local_DBs}
-		wget ${wget_options} -O "${taxes_links[0]}" "${taxes_links[${link_index}]}"
-	else
-		echo "Missing taxes"
-		missing_DBS=("${missing_DBS[@]}" "taxes")
-	fi
-else
-	echo "taxes installed"
-fi
-
-if [[ ! -f "${local_DBs}/phiX.fasta" ]]; then
-	#cp -r /container_DBs/phiX.fasta ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying phiX.fasta"
-		cd ${local_DBs}
-		#cp ${current_dir}/included_databases/phiX.fasta ${local_DBs}
-		wget ${wget_options} -O "${phiX_links[0]}" "${phiX_links[${link_index}]}"
-	else
-		echo "Missing phiX"
-		missing_DBS=("${missing_DBS[@]}" "phiX")
-	fi
-else
-	echo "phiX installed"
-fi
-
-if [[ ! -f "${local_DBs}/adapters.fasta" ]]; then
-	#cp -r /container_DBs/adapters.fasta ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying adapters.fasta"
-		cd ${local_DBs}
-		#cp ${current_dir}/included_databases/adapters.fasta ${local_DBs}
-		wget ${wget_options} -O "${adapters_links[0]}" "${adapters_links[${link_index}]}"
-	else
-		echo "Missing adapters"
-		missing_DBS=("${missing_DBS[@]}" "adapters")
-	fi
-else
-	echo "adapters installed"
-fi
-
-if [[ ! -d "${local_DBs}/ANI" ]]; then
-	#cp -r /container_DBs/ANI ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying latest REFSEQ sketch database (ANI)"
-		#cp -r ${current_dir}/included_databases/ANI ${local_DBs}
-		mkdir ${local_DBs}/ANI
-		cd ${local_DBs}/ANI
-		wget ${wget_options} -O "${ANI_links[0]}" "${ANI_links[$link_index]}"
-		gunzip *.gz
-	else
-		echo "Missing latest REFSEQ sketch database (ANI)"
-		missing_DBS=("${missing_DBS[@]}" "REFSEQ-ANI")
-	fi
-else
-	echo "ANI REFSEQ sketch database installed"
-fi
-
-if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
-	#cp -r /container_DBs/pubmlsts ${local_DBs}
-	if [[ "${do_download}" = "true" ]]; then
-		echo "Copying pubMLST"
-		#cp ${current_dir}/included_databases/pubmlsts.tar.gz ${local_DBs}
-		cd ${local_DBs}
-		wget {wget_options} -O "${pubmlst_links[0]}" "${pubmlst_links[${link_index}]}"
-		tar -zxvf pubmlsts.tar.gz
-		mv pubmlsts_2 pubmlsts
-		rm pubmlsts.tar.gz
-	else
-		echo "Missing pubMLST"
-		missing_DBS=("${missing_DBS[@]}" "pubMLST")
-	fi
-else
-	echo "pubMLST installed"
-fi
+# # star (6 Mbs)
+# if [[ ! -d "${local_DBs}/star" ]]; then
+# 	#cp -r /container_DBs/star ${local_DBs}
+# 	if [[ "${do_download}" = "true" ]]; then
+# 		echo "Copying latest NAR-AR database"
+# 		cd ${local_DBs}
+# 		#cp -r ${current_dir}/included_databases/star ${local_DBs}
+# 		wget ${wget_options} -O "${sstar_links[0]}" "${sstar_links[${link_index}]}"
+# 		tar -zxvf sstar.tar.gz
+# 		mv ${local_DBs}/raid5/QuAISAR_databases/star ${local_DBs}
+# 		rm -r ${local_DBs}/raid5
+# 		rm sstar.tar.gz
+# 	else
+# 		echo "Missing latest NAR-AR database"
+# 		missing_DBS=("${missing_DBS[@]}" "NAR-AR")
+# 	fi
+# else
+# 	echo "NAR-AR database installed"
+# fi
+#
+# if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
+# 	#cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
+# 	if [[ "${do_download}" = "true" ]]; then
+# 		echo "Copying MMB_bugs"
+# 		cd ${local_DBs}
+# 		#cp ${current_dir}/included_databases/MMB_Bugs.txt ${local_DBs}
+# 		wget ${wget_options} -O "${MMBbugs_links[0]}" "${MMBbugs_links[${link_index}]}"
+# 	else
+# 		echo "Missing MMB_Bugs"
+# 		missing_DBS=("${missing_DBS[@]}" "MMB_Bugs")
+# 	fi
+# else
+# 	echo "MMB_Bugs installed"
+# fi
+#
+# if [[ ! -f "${local_DBs}/taxes.csv" ]]; then
+# 	#cp -r /container_DBs/taxes.csv ${local_DBs}
+# 	if [[ "${do_download}" = "true" ]]; then
+# 		echo "Copying taxes"
+# 		cd ${local_DBs}
+# 		#cp ${current_dir}/included_databases/taxes.csv ${local_DBs}
+# 		wget ${wget_options} -O "${taxes_links[0]}" "${taxes_links[${link_index}]}"
+# 	else
+# 		echo "Missing taxes"
+# 		missing_DBS=("${missing_DBS[@]}" "taxes")
+# 	fi
+# else
+# 	echo "taxes installed"
+# fi
+#
+# if [[ ! -f "${local_DBs}/phiX.fasta" ]]; then
+# 	#cp -r /container_DBs/phiX.fasta ${local_DBs}
+# 	if [[ "${do_download}" = "true" ]]; then
+# 		echo "Copying phiX.fasta"
+# 		cd ${local_DBs}
+# 		#cp ${current_dir}/included_databases/phiX.fasta ${local_DBs}
+# 		wget ${wget_options} -O "${phiX_links[0]}" "${phiX_links[${link_index}]}"
+# 	else
+# 		echo "Missing phiX"
+# 		missing_DBS=("${missing_DBS[@]}" "phiX")
+# 	fi
+# else
+# 	echo "phiX installed"
+# fi
+#
+# if [[ ! -f "${local_DBs}/adapters.fasta" ]]; then
+# 	#cp -r /container_DBs/adapters.fasta ${local_DBs}
+# 	if [[ "${do_download}" = "true" ]]; then
+# 		echo "Copying adapters.fasta"
+# 		cd ${local_DBs}
+# 		#cp ${current_dir}/included_databases/adapters.fasta ${local_DBs}
+# 		wget ${wget_options} -O "${adapters_links[0]}" "${adapters_links[${link_index}]}"
+# 	else
+# 		echo "Missing adapters"
+# 		missing_DBS=("${missing_DBS[@]}" "adapters")
+# 	fi
+# else
+# 	echo "adapters installed"
+# fi
+#
+# if [[ ! -d "${local_DBs}/ANI" ]]; then
+# 	#cp -r /container_DBs/ANI ${local_DBs}
+# 	if [[ "${do_download}" = "true" ]]; then
+# 		echo "Copying latest REFSEQ sketch database (ANI)"
+# 		#cp -r ${current_dir}/included_databases/ANI ${local_DBs}
+# 		mkdir ${local_DBs}/ANI
+# 		cd ${local_DBs}/ANI
+# 		wget ${wget_options} -O "${ANI_links[0]}" "${ANI_links[$link_index]}"
+# 		gunzip *.gz
+# 	else
+# 		echo "Missing latest REFSEQ sketch database (ANI)"
+# 		missing_DBS=("${missing_DBS[@]}" "REFSEQ-ANI")
+# 	fi
+# else
+# 	echo "ANI REFSEQ sketch database installed"
+# fi
+#
+# if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
+# 	#cp -r /container_DBs/pubmlsts ${local_DBs}
+# 	if [[ "${do_download}" = "true" ]]; then
+# 		echo "Copying pubMLST"
+# 		#cp ${current_dir}/included_databases/pubmlsts.tar.gz ${local_DBs}
+# 		cd ${local_DBs}
+# 		wget {wget_options} -O "${pubmlst_links[0]}" "${pubmlst_links[${link_index}]}"
+# 		tar -zxvf pubmlsts.tar.gz
+# 		mv pubmlsts_2 pubmlsts
+# 		rm pubmlsts.tar.gz
+# 	else
+# 		echo "Missing pubMLST"
+# 		missing_DBS=("${missing_DBS[@]}" "pubMLST")
+# 	fi
+# else
+# 	echo "pubMLST installed"
+# fi
 
 
 
@@ -266,7 +266,7 @@ for simage_info in "${singularities[@]}"; do
 			#cat ${current_dir}/included_databases/singularities/${simage}.parta* > ${local_DBs}/singularities/${simage}
 			if [[ ${size} -ge 100 ]] && [[ ${link_index} -eq 3 ]]; then
 				wget --save-cookies cookies.txt "${url_link}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
-		 		wget --load-cookies cookies.txt -O ${local_DBs}/singularities/${simage} '${url_link}'&'confirm='$(<confirm.txt)
+		 		wget --load-cookies cookies.txt -O ${simage} '${url_link}'&'confirm='$(<confirm.txt)
 			else
 				wget ${wget_options} -O ${simage} "${url_link}"
 			fi
@@ -279,50 +279,50 @@ for simage_info in "${singularities[@]}"; do
 	fi
 done
 
-# Check to see if kraken mini database is installed
-if [[ ! -d "${local_DBs}/kraken" ]]; then
-	if [[ "${do_download}" = "true" ]]; then
-		mkdir "${local_DBs}/kraken"
-		cd "${local_DBs}/kraken"
-		echo "Downloading latest (mini)kraken database (wget https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz)"
-		wget "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
-		if [[ ! -f "minikraken_20171019_4GB.tgz" ]]; then
-			curl -O "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
-		fi
-		tar xzf minikraken_20171019_4GB.tgz
-		rm minikraken_20171019_4GB.tgz
-	else
-		echo "Missing latest kraken database"
-		missing_DBS=("${missing_DBS[@]}" "kraken")
-	fi
-else
-	echo "kraken database is installed"
-fi
-
-##### Currently down.....and has been a while
-# Check to see if gottcha database is installed
-if [[ ! -d "${local_DBs}/gottcha" ]]; then
-	if [[ "${do_download}" = "true" ]]; then
-		cd "${local_DBs}"
-		# Original LANL hosted address that has been down a good while
-	 	#wget -P "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
-		# Temporary mirror until original is fixed
-		echo "Downloading latest gottcha database (wget https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz)"
-		wget "https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz"
-		tar xzf gottcha_bac_arc_v1.tar.gz
-		rm gottcha_bac_arc_v1.tar.gz
-		mv gottcha/gottcha_db ./
-		rm -r gottcha
-		mv gottcha_db gottcha
-		rm gottcha.dbprofile.out
-		# Need to find sa place to host genus_Lookup.tar.gz
-	else
-		echo "Missing gottcha database"
-		missing_DBS=("${missing_DBS[@]}" "gottcha")
-	fi
-else
-	echo "gottcha database installed"
-fi
+# # Check to see if kraken mini database is installed
+# if [[ ! -d "${local_DBs}/kraken" ]]; then
+# 	if [[ "${do_download}" = "true" ]]; then
+# 		mkdir "${local_DBs}/kraken"
+# 		cd "${local_DBs}/kraken"
+# 		echo "Downloading latest (mini)kraken database (wget https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz)"
+# 		wget "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+# 		if [[ ! -f "minikraken_20171019_4GB.tgz" ]]; then
+# 			curl -O "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+# 		fi
+# 		tar xzf minikraken_20171019_4GB.tgz
+# 		rm minikraken_20171019_4GB.tgz
+# 	else
+# 		echo "Missing latest kraken database"
+# 		missing_DBS=("${missing_DBS[@]}" "kraken")
+# 	fi
+# else
+# 	echo "kraken database is installed"
+# fi
+#
+# ##### Currently down.....and has been a while
+# # Check to see if gottcha database is installed
+# if [[ ! -d "${local_DBs}/gottcha" ]]; then
+# 	if [[ "${do_download}" = "true" ]]; then
+# 		cd "${local_DBs}"
+# 		# Original LANL hosted address that has been down a good while
+# 	 	#wget -P "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+# 		# Temporary mirror until original is fixed
+# 		echo "Downloading latest gottcha database (wget https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz)"
+# 		wget "https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz"
+# 		tar xzf gottcha_bac_arc_v1.tar.gz
+# 		rm gottcha_bac_arc_v1.tar.gz
+# 		mv gottcha/gottcha_db ./
+# 		rm -r gottcha
+# 		mv gottcha_db gottcha
+# 		rm gottcha.dbprofile.out
+# 		# Need to find sa place to host genus_Lookup.tar.gz
+# 	else
+# 		echo "Missing gottcha database"
+# 		missing_DBS=("${missing_DBS[@]}" "gottcha")
+# 	fi
+# else
+# 	echo "gottcha database installed"
+# fi
 
 chmod 755 ${local_DBs}/*
 
