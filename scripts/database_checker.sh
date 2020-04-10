@@ -255,6 +255,8 @@ for simage_info in "${singularities[@]}"; do
 	simage=$(echo "${simage_info}" | cut -d':' -f1)
 	url_link=$(echo "${simage_info}" | cut -d':' -f2)
 	size=$(echo "${simage_info}" | cut -d':' -f3)
+	echo -e "${simage}\n${url_link}\n${size}\n"
+
 	if [[ ! -f "${local_DBs}/singularities/${simage}" ]]; then
 		#cp -r /container_DBs/custom_singularities ${local_DBs}
 		if [[ "${do_download}" = "true" ]]; then
