@@ -132,7 +132,7 @@ if [[ ${OS_type} -eq 1 ]]; then
 
 #Install Singularity on Redhat based systems
 elif [[ ${OS_type} -eq 2 ]]; then
-  echo "Will likely not need this"
+  echo "Will likely not need this forcing changes agin because it wont pull correctly"
 fi
 
 
