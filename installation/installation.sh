@@ -135,7 +135,7 @@ elif [[ ${OS_type} -eq 2 ]]; then
   echo "Will likely not need this forcing changes agin because it wont pull correctly"
 fi
 
-
+test_singularity
 
 # Create primary config file
 head -n25 ${install_script_dir}/installation/config_template.sh > ${installation_location}/new_config.sh
