@@ -29,12 +29,6 @@ if [[ $# -lt 1  || $# -gt 4 ]]; then
   exit 3
 fi
 
-echo "Installing quaisar scripts to ${installation_location}"
-if [[ ! -d ${installation_location} ]]; then
-  echo "Creating ${installation_location}"
-  mkdir -p ${installation_location}
-fi
-
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
@@ -54,6 +48,18 @@ elif [ -z "$3" ]; then
 elif [ -z "$4" ]; then
   echo "Empty working directory for output supplied to $0, exiting"
   exit 1
+fi
+
+# need to add to bottom of yaml with proper home location
+OS_type=${1}
+installation_location=${2}
+databases=${3}
+working_directory=${4}
+
+echo "Installing quaisar scripts to ${installation_location}"
+if [[ ! -d ${installation_location} ]]; then
+  echo "Creating ${installation_location}"
+  mkdir -p ${installation_location}
 fi
 
 function test_go() {
@@ -89,12 +95,6 @@ function test_singularity() {
     exit 101
   fi
 }
-
-# need to add to bottom of yaml with proper home location
-OS_type=${1}
-installation_location=${2}
-databases=${3}
-working_directory=${4}
 
 echo "Checking for working directory of runs ${working_directory}"
 if [[ ! -d ${working_directory} ]]; then
