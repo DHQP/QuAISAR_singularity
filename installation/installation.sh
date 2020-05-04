@@ -22,7 +22,7 @@ install_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && 
 echo "${install_script_dir}"
 
 # Checking for proper number of arguments from command line
-if [[ $# -lt 1  || $# -gt 3 ]]; then
+if [[ $# -lt 1  || $# -gt 4 ]]; then
   echo "Usage: ./installation.sh OS-Type script_installation_location database_installation_location Working_directory_of_output_from_runs"
 	echo "You have used $# args"
   echo "Options for OS-type are 0-Other/No Singularity Install needed 1-Ubuntu/Debian Family, 2-CentOS/Red Hat Family"
