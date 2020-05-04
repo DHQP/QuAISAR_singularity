@@ -19,7 +19,7 @@
 #finds where script is it, so it properly reference directories during install
 install_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd | rev | cut -d'/' -f2- | rev)"
 
-echo "${install_script_dir}"
+echo "Current directory is ${install_script_dir}"
 
 # Checking for proper number of arguments from command line
 if [[ $# -lt 1  || $# -gt 4 ]]; then
