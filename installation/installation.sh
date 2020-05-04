@@ -96,13 +96,6 @@ installation_location=${2}
 databases=${3}
 working_directory=${4}
 
-#Check if Go is installed already
-
-
-
-
-
-
 echo "Checking for working directory of runs ${working_directory}"
 if [[ ! -d ${working_directory} ]]; then
   echo "Creating ${working_directory}"
@@ -138,7 +131,7 @@ if [[ ${OS_type} -eq 1 ]]; then
   test_singularity
 
 #Install Singularity on Redhat based systems
-elif [[ ${OS_type} -eq 2]]; then
+elif [[ ${OS_type} -eq 2 ]]; then
 
 fi
 
