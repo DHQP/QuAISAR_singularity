@@ -117,6 +117,7 @@ if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
     pkg-config \
     git \
     cryptsetup
+  elif [[ ${OS_type} -eq 2 ]]; then
     echo "Completed installing pre dependencies"
   fi
   echo "Installing Go"
@@ -133,9 +134,6 @@ if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
     make -c builddir && \
     sudo make -C builddir install.
   test_singularity
-#Install Singularity on Redhat based systems
-elif [[ ${OS_type} -eq 2 ]]; then
-  echo "Will likely not need this forcing changes agin because it wont pull correctly"
 fi
 
 test_singularity
