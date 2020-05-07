@@ -137,9 +137,9 @@ for ((i=1 ; i <= nopts ; i++)); do
 		#Help/Usage section
 		-h | --help)
 			echo -e "\\n\\n\\n"
-			echo -e "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location project_name [-r]"
+			echo -e "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location project_name [-s] [-r] [-d]"
 			echo -e "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
-			echo -e "Additional functions/flags: \n\t -s If you would like to reference and run pipeline scripts installed in an alternate location \n\t -r if you would like to retry the list of samples if they failed during assembly"
+			echo -e "Additional functions/flags: \n\t -s If you would like to reference and run pipeline scripts installed in an alternate location \n\t -r if you would like to retry the list of samples if they failed during assembly \n\t -d if you would like to reference a different location for databases, but must contain all necessary for pipeline"
 			echo -e "\\n\\n\\n"
 			exit 0
 			;;
@@ -200,7 +200,11 @@ for ((i=1 ; i <= nopts ; i++)); do
 				mkdir -p ${output_dir}
 			fi
 			;;
-		-s | --retry_from_assembly)
+		-d | --database)
+			local_DBs="$2"
+			shift 2
+			;;
+		-s | --scripts_location)
 			src="$2"
 			shift 2
 			;;
