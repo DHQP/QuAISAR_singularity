@@ -105,7 +105,7 @@ fi
 
 if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
   echo "Installing pre-dependencies"
-  if [[ "${OS_type}" -eq 1 ]];
+  if [[ "${OS_type}" -eq 1 ]]; then
     sudo apt-get update && sudo apt-get install -y \
     build-essential \
     libssl-dev \
@@ -117,6 +117,7 @@ if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
     pkg-config \
     git \
     cryptsetup
+
   elif [[ ${OS_type} -eq 2 ]]; then
     echo "Completed installing pre dependencies"
   fi
