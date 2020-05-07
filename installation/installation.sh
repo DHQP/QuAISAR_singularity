@@ -165,6 +165,7 @@ if [[ ! -d ${databases} ]]; then
   echo "Creating ${databases} for databases"
   mkdir -p "${databases}/BUSCO"
 fi
+echo "${install_script_dir}/scripts/database_checker.sh ${installation_location}/config.sh"
 ${install_script_dir}/scripts/database_checker.sh ${installation_location}/config.sh -i
 
 
