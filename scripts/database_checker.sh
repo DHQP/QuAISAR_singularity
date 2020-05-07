@@ -20,26 +20,18 @@
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
-
-if [[ ! -f "${1}" ]]; then
-	echo "No config file...exiting"
-	exit 113
-else
-	. "${1}"
-fi
-
 do_download="false"
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 113
-elif [[ -z "${1}" ]]; then
-	echo "No config file...exiting"
-	exit 113
 elif [[ "${1}" = "-h" ]]; then
 	echo "Usage ./database_checker.sh -path_to_config_file [-i]"
 	echo "-i is too install databases, otherwise script just checks for existence"
 	exit 0
+elif [[ -z "${1}" ]]; then
+	echo "No config file...exiting"
+	exit 113
 elif [[ "${2}" == "-i" ]]; then
 	do_download="true"
 	#finds where script is it, so it properly reference directories during install
@@ -50,6 +42,8 @@ elif [[ "${2}" == "-i" ]]; then
 	else
 		do_download="true"
 	fi
+else
+	. "${1}"
 fi
 
 # Shows where databases should be (installed)
