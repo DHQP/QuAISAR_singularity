@@ -51,10 +51,12 @@ elif [ -z "$4" ]; then
 fi
 
 # need to add to bottom of yaml with proper home location
-OS_type=${1}
-installation_location=${2}
-databases=${3}
-working_directory=${4}
+OS_type="${1}"
+installation_location="${2}"
+databases="${3}"
+working_directory="${4}"
+
+echo -e "${OS_type}\n${installation_location}\n${databases}\n${working_directory}"
 
 echo "Installing quaisar scripts to ${installation_location}"
 if [[ ! -d ${installation_location} ]]; then
