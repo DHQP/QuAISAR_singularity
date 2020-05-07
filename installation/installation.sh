@@ -105,7 +105,7 @@ fi
 
 if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
   echo "Installing pre-dependencies"
-  if [[ "${OS_type}" -eq 1 ];
+  if [[ "${OS_type}" -eq 1 ]];
     sudo apt-get update && sudo apt-get install -y \
     build-essential \
     libssl-dev \
