@@ -32,7 +32,11 @@ elif [[ "${1}" = "-h" ]]; then
 elif [[ -z "${1}" ]]; then
 	echo "No config file...exiting"
 	exit 113
-elif [[ "${2}" == "-i" ]]; then
+else
+	. "${1}"
+fi
+
+if [[ "${2}" == "-i" ]]; then
 	do_download="true"
 	#finds where script is it, so it properly reference directories during install
 	current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd | rev | cut -d'/' -f2- | rev)"
@@ -42,8 +46,6 @@ elif [[ "${2}" == "-i" ]]; then
 	else
 		do_download="true"
 	fi
-else
-	. "${1}"
 fi
 
 # Shows where databases should be (installed)
