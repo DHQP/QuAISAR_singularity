@@ -200,7 +200,7 @@ for ((i=1 ; i <= nopts ; i++)); do
 				mkdir -p ${output_dir}
 			fi
 			;;
-		-r | --retry_from_assembly)
+		-s | --retry_from_assembly)
 			src="$2"
 			shift 2
 			;;
