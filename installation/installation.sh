@@ -64,7 +64,7 @@ fi
 
 function test_go() {
   current_dir=$(pwd)
-  "Testing Go!"
+  echo "Testing Go!"
   echo -e "package main\n" > ${installation_location}/hello.go
   echo -e "import fmt\n" >> ${installation_location}/hello.go
   echo -e "func main() {\nfmt.Printf(\"hello, world\")\n}" >> ${installation_location}/hello.go
@@ -84,6 +84,7 @@ function test_singularity() {
   sing_version=$(singularity --version)
   if [[ "${sing_version}" = "singularity version"* ]]; then
     v3plus=$(echo "${sing_version}" | cut -d' ' -f3 | cut -d'.' -f1)
+    echo "${v3plus}"
     if [[ "${v3plus}" -gt 3 ]]; then
       echo "Singularity installed and ready to go"
     else
@@ -102,9 +103,10 @@ if [[ ! -d ${working_directory} ]]; then
   mkdir -p ${working_directory}
 fi
 
-if [[ ${OS_type} -eq 1 ]]; then
+if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
   echo "Installing pre-dependencies"
-  sudo apt-get update && sudo apt-get install -y \
+  if [[ "${OS_type}" -eq 1 ];
+    sudo apt-get update && sudo apt-get install -y \
     build-essential \
     libssl-dev \
     uuid-dev \
