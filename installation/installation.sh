@@ -117,6 +117,7 @@ if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
     pkg-config \
     git \
     cryptsetup
+  fi
   echo "Installing Go"
   curl -O https://storage.googleapis.com/golang/go1.14.2.linux-amd64.tar.gz --output ${installation_location}
   tar -C /usr/local -xvf go1.14.2.linux-amd64.tar.gz
@@ -131,7 +132,6 @@ if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
     make -c builddir && \
     sudo make -C builddir install.
   test_singularity
-
 #Install Singularity on Redhat based systems
 elif [[ ${OS_type} -eq 2 ]]; then
   echo "Will likely not need this forcing changes agin because it wont pull correctly"
