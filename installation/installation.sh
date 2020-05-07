@@ -117,6 +117,7 @@ if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
     pkg-config \
     git \
     cryptsetup
+    echo "Completed installing pre dependencies"
   fi
   echo "Installing Go"
   curl -O https://storage.googleapis.com/golang/go1.14.2.linux-amd64.tar.gz --output ${installation_location}
