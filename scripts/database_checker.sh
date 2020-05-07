@@ -6,9 +6,6 @@
 #$ -cwd
 #$ -q short.q
 
-#Import the config file with shortcuts and settings
-. ./config.sh
-
 #
 # Description: Script checks for all databases used by QuAISAR pipeline and sets up any missing ones
 #
