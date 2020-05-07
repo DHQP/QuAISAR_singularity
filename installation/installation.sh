@@ -85,7 +85,7 @@ function test_singularity() {
   if [[ "${sing_version}" = "singularity version"* ]]; then
     v3plus=$(echo "${sing_version}" | cut -d' ' -f3 | cut -d'.' -f1)
     echo "${v3plus}"
-    if [[ "${v3plus}" -gt 3 ]]; then
+    if [[ "${v3plus}" -ge 3 ]]; then
       echo "Singularity installed and ready to go"
     else
       echo "Your singularity version is too old, please upgrade to version 3 (or remove old versions and change parameters) before trying again"
