@@ -111,6 +111,7 @@ for ((i=1 ; i <= nopts ; i++)); do
 			;;
 		#Gets output directory name of folder that all output files will be stored
 		-o | --out-dir)
+			echo "Setting output directory as: ${2}"
 			output_dir="$2"
 			shift 2
 			#echo "${output_dir}"
@@ -121,6 +122,7 @@ for ((i=1 ; i <= nopts ; i++)); do
 			;;
 			#Gets output directory name of folder that all output files will be stored
 		-p | --project_name)
+		echo "Setting project name as: ${2}"
 			PROJECT="$2"
 			shift 2
 			# Not needed anymore
@@ -132,10 +134,12 @@ for ((i=1 ; i <= nopts ; i++)); do
 			fi
 			;;
 		-d | --database)
+			echo "Setting database location as: ${2}"
 			local_DBs="$2"
 			shift 2
 			;;
 		-s | --scripts_location)
+			echo "Setting script location as: ${2}"
 			src="$2"
 			shift 2
 			;;
