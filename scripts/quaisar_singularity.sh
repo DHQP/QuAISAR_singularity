@@ -9,7 +9,7 @@
 #
 # Description: The full QuAISAR-H pipeline start to end serially
 #
-# Usage: ./quaisar_singularity.sh -i Absolute_path_to_reads/assemblies 1|2|3|4 -o path_to_output_folder name_of_project [-s] [-r] [-d]"
+# Usage: ./quaisar_singularity.sh -i Absolute_path_to_reads/assemblies 1|2|3|4 -o path_to_output_folder -p name_of_project [-s] [-r] [-d]"
 #		filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz 5: Asssemblies (.fasta)"
 #
 # Output location: default_config.sh_output_location
@@ -28,6 +28,9 @@ task_number=0
 isolate_number=0
 isolate_count=0
 
+version_type=quas-sing
+version_num=qs1.0.1
+
 # Will be called throughout the script to write current progress for inquisitive minds and to restart run from where it was murdered
 # parameters need to be as follows
 # 1 - path_to_run_folder
@@ -42,82 +45,10 @@ function write_Progress() {
 # Checking for proper number of arguments from command line
 if [[ $# -lt 1  || $# -gt 9 ]]; then
 	echo "If reads are in default location set in config file then"
-  echo "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o name_of_output_folder project_name [-s location_to_script_folder] [-r] [-d database location, if not in default installed location]"
+  echo "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o name_of_output_folder -p project_name [-s location_to_script_folder] [-r] [-d database location, if not in default installed location]"
 	echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz 5: .fasta (Assemblies only)"
   echo "You have used $# args"
   exit 3
-fi
-
-# Check if specific conda environment exists
-# Havent found command yet
-
-# Turn on Conda environment?
-# figure out best practices install location
-# conda env create -f ~/py36_biopython/py36_biopython_singularity.yml
-
-prereqs="true"
-missing_names=()
-
-conda activate py36_biopython_singularity
-
-echo "Checking for dependencies and databases"
-# Check for required software (python3 and singularity)
-conda_call_lines=$(conda list | wc -l)
-singularity_version=$(singularity --version | cut -d' ' -f3 | cut -d'.' -f1)
-singularity_release=$(singularity --version | cut -d' ' -f3)
-python_version=$(python --version | cut -d' ' -f2 | cut -d'.' -f1)
-python_release=$(python --version | cut -d' ' -f2)
-
-if [[ "${conda_call_lines}" -gt 1 ]]; then
-	:
-else
-	missing_names=("${missing_names[@]}" conda)
-fi
-
-if [[ "${python_version}" = "3" ]]; then
-	python_command="python"
-	#echo "Python $python_release is installed, please continue"
-elif [[ "${python_version}" = "2" ]]; then
-	python_version=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1)
-	if [[ "${python_version}" = "3" ]]; then
-		python_command="python3"
-		python_release=$(python3 --version | cut -d' ' -f2)
-		#echo "Python $python_release is installed, please continue"
-	else
-		#echo -e "\nPython3.x not installed, can not proceed\n"
-		prereqs="false"
-		missing_names=("${missing_names[@]}" python3)
-	fi
-else
-	#echo -e "\nPython3.x not installed, can not proceed\n"
-	prereqs="false"
-	missing_names=("${missing_names[@]}" python3)
-fi
-
-
-#echo "${singularity_version}-${singularity_release}:${python_version}-${python_release}:${python_command}"
-
-
-# Check that biopython is installed
-${python_command} -c "import Bio"
-bio_installed=$(echo $?)
-if [[ "${bio_installed}" -eq 0 ]]; then
-	#echo "Biopython is installed, please continue"
-	:
-else
-	#echo -e "\nBiopython not installed, can not proceed\n"
-	prereqs="false"
-	missing_names=("${missing_names[@]}" biopython)
-fi
-
-# Check singularity version...dirty fix for dirty until i can figure out why it doesnt give correct version #
-if [[ "${singularity_version}" -ge 3 ]] || [[ "${singularity_version}" = "d5eaf8a+dirty" ]]; then
-	#echo "Singularity ${singularity_release} is installed, please continue"
-	:
-else
-	#echo -e "\nSingularity 3.x(+) is not installed, can not continue\n"
-	prereqs="false"
-	missing_names=("${missing_names[@]}" singularity)
 fi
 
 # Checks the arguments and sets some default variables
@@ -220,6 +151,78 @@ for ((i=1 ; i <= nopts ; i++)); do
 			;;
 	esac
 done
+
+# Check if specific conda environment exists
+# Havent found command yet
+
+# Turn on Conda environment?
+# figure out best practices install location
+# conda env create -f ~/py36_biopython/py36_biopython_singularity.yml
+
+prereqs="true"
+missing_names=()
+
+conda activate py36_biopython_singularity
+
+echo "Checking for dependencies and databases"
+# Check for required software (python3 and singularity)
+conda_call_lines=$(conda list | wc -l)
+singularity_version=$(singularity --version | cut -d' ' -f3 | cut -d'.' -f1)
+singularity_release=$(singularity --version | cut -d' ' -f3)
+python_version=$(python --version | cut -d' ' -f2 | cut -d'.' -f1)
+python_release=$(python --version | cut -d' ' -f2)
+
+if [[ "${conda_call_lines}" -gt 1 ]]; then
+	:
+else
+	missing_names=("${missing_names[@]}" conda)
+fi
+
+if [[ "${python_version}" = "3" ]]; then
+	python_command="python"
+	#echo "Python $python_release is installed, please continue"
+elif [[ "${python_version}" = "2" ]]; then
+	python_version=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1)
+	if [[ "${python_version}" = "3" ]]; then
+		python_command="python3"
+		python_release=$(python3 --version | cut -d' ' -f2)
+		#echo "Python $python_release is installed, please continue"
+	else
+		#echo -e "\nPython3.x not installed, can not proceed\n"
+		prereqs="false"
+		missing_names=("${missing_names[@]}" python3)
+	fi
+else
+	#echo -e "\nPython3.x not installed, can not proceed\n"
+	prereqs="false"
+	missing_names=("${missing_names[@]}" python3)
+fi
+
+
+#echo "${singularity_version}-${singularity_release}:${python_version}-${python_release}:${python_command}"
+
+
+# Check that biopython is installed
+${python_command} -c "import Bio"
+bio_installed=$(echo $?)
+if [[ "${bio_installed}" -eq 0 ]]; then
+	#echo "Biopython is installed, please continue"
+	:
+else
+	#echo -e "\nBiopython not installed, can not proceed\n"
+	prereqs="false"
+	missing_names=("${missing_names[@]}" biopython)
+fi
+
+# Check singularity version...dirty fix for dirty until i can figure out why it doesnt give correct version #
+if [[ "${singularity_version}" -ge 3 ]] || [[ "${singularity_version}" = "d5eaf8a+dirty" ]]; then
+	#echo "Singularity ${singularity_release} is installed, please continue"
+	:
+else
+	#echo -e "\nSingularity 3.x(+) is not installed, can not continue\n"
+	prereqs="false"
+	missing_names=("${missing_names[@]}" singularity)
+fi
 
 db_output=$(${src}/database_checker.sh ${config_file} | tail -n1)
 num_missing=$(echo "${db_output}" | cut -d' ' -f3)
