@@ -37,14 +37,6 @@ fi
 
 if [[ "${2}" == "-i" ]]; then
 	do_download="true"
-	#finds where script is it, so it properly reference directories during install
-	current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd | rev | cut -d'/' -f2- | rev)"
-	if [[ ! -d ${current_dir}/installation ]]; then
-		echo "Can not install databases. Try running ./database_checker.sh from the installation folder in the GIT repo"
-		echo "${current_dir}"
-	else
-		do_download="true"
-	fi
 fi
 
 # Shows where databases should be (installed)
@@ -129,7 +121,6 @@ if [[ ! -d "${path_to_DBs}/star" ]]; then
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying latest NAR-AR database"
 		cd ${path_to_DBs}
-		#cp -r ${current_dir}/included_databases/star ${path_to_DBs}
 		wget "${wget_options}" -O "${sstar_links[0]}" "${sstar_links[${link_index}]}"
 		tar -zxvf sstar.tar.gz
 		mv ${path_to_DBs}/raid5/QuAISAR_databases/star ${path_to_DBs}
@@ -148,7 +139,6 @@ if [[ ! -f "${path_to_DBs}/MMB_Bugs.txt" ]]; then
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying MMB_bugs"
 		cd ${path_to_DBs}
-		#cp ${current_dir}/included_databases/MMB_Bugs.txt ${path_to_DBs}
 		wget "${wget_options}" -O "${MMBbugs_links[0]}" "${MMBbugs_links[${link_index}]}"
 	else
 		echo "Missing MMB_Bugs"
@@ -163,7 +153,6 @@ if [[ ! -f "${path_to_DBs}/taxes.csv" ]]; then
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying taxes"
 		cd ${path_to_DBs}
-		#cp ${current_dir}/included_databases/taxes.csv ${path_to_DBs}
 		wget "${wget_options}" -O "${taxes_links[0]}" "${taxes_links[${link_index}]}"
 	else
 		echo "Missing taxes"
@@ -178,7 +167,6 @@ if [[ ! -f "${path_to_DBs}/phiX.fasta" ]]; then
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying phiX.fasta"
 		cd ${path_to_DBs}
-		#cp ${current_dir}/included_databases/phiX.fasta ${path_to_DBs}
 		wget "${wget_options}" -O "${phiX_links[0]}" "${phiX_links[${link_index}]}"
 	else
 		echo "Missing phiX"
@@ -193,7 +181,6 @@ if [[ ! -f "${path_to_DBs}/adapters.fasta" ]]; then
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying adapters.fasta"
 		cd ${path_to_DBs}
-		#cp ${current_dir}/included_databases/adapters.fasta ${path_to_DBs}
 		wget "${wget_options}" -O "${adapters_links[0]}" "${adapters_links[${link_index}]}"
 	else
 		echo "Missing adapters"
@@ -207,7 +194,6 @@ if [[ ! -d "${path_to_DBs}/ANI" ]]; then
 	#cp -r /container_DBs/ANI ${path_to_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying latest REFSEQ sketch database (ANI)"
-		#cp -r ${current_dir}/included_databases/ANI ${path_to_DBs}
 		mkdir ${path_to_DBs}/ANI
 		cd ${path_to_DBs}/ANI
 		if [[ ${link_index} -eq 3 ]]; then
@@ -233,7 +219,6 @@ if [[ ! -d "${path_to_DBs}/pubmlsts" ]]; then
 	#cp -r /container_DBs/pubmlsts ${path_to_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying pubMLST"
-		#cp ${current_dir}/included_databases/pubmlsts.tar.gz ${path_to_DBs}
 		cd ${path_to_DBs}
 		wget {wget_options} -O "${pubmlst_links[0]}" "${pubmlst_links[${link_index}]}"
 		tar -zxvf pubmlsts.tar.gz
@@ -264,7 +249,6 @@ for simage_info in "${singularities[@]}"; do
 				cd "${path_to_DBs}/singularities"
 			fi
 			echo "Copying custom singularity image ${simage}"
-			#cat ${current_dir}/included_databases/singularities/${simage}.parta* > ${path_to_DBs}/singularities/${simage}
 			if [[ ${size} -ge 100 ]] && [[ ${link_index} -eq 3 ]]; then
 				echo "Too big, special command"
 				#wget --save-cookies cookies.txt "${url_link}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
