@@ -39,11 +39,15 @@ elif [[ "${1}" = "-h" ]]; then
 elif [[ -z "${2}" ]]; then
 	echo "Empty run_ID supplied to determine_taxID.sh, exiting"
 	exit 1
+elif [[ -z "${3}" ]] || [[ ! -d "${3}" ]]; then
+	echo "Empty database location supplied to determine_taxID.sh, exiting"
+	exit 1
 fi
 
 # Set default values after setting variables
 sample=${1}
 project=${2}
+databases=${3}
 
 # Set default values for a ll taxonomic levels
 Domain="Not_assigned"
@@ -232,7 +236,7 @@ while IFS= read -r line  || [ -n "$line" ]; do
 	DB_genus=$(echo ${line} | cut -d"," -f1)
 	#echo ":${Genus}:${DB_genus}:"
 	if [[ "${Genus,}" = "${DB_genus}" ]]; then
-			tax_DB="${local_DBs}/taxes.csv"
+			tax_DB="${databases}/taxes.csv"
 			Domain=$(echo "${line}" | cut -d"," -f2)
 			Phylum=$(echo "${line}" | cut -d"," -f3)
 			Class=$(echo "${line}" | cut -d"," -f4)
@@ -241,7 +245,7 @@ while IFS= read -r line  || [ -n "$line" ]; do
 			#echo ":${Family}:"
 			break
 	fi
-done < "${local_DBs}/taxes.csv"
+done < "${databases}/taxes.csv"
 
 # Print output to tax file for sample
 echo -e "(${source})-${confidence_index}%-${source_file}\nD:	${Domain}\nP:	${Phylum}\nC:	${Class}\nO:	${Order}\nF:	${Family}\nG:	${Genus}\ns:	${species}\n" > "${output_dir}/${project}/${sample}/${sample}.tax"

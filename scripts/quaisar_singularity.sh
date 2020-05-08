@@ -1173,7 +1173,7 @@ for isolate in "${isolate_list[@]}"; do
 	# Task: Get taxonomy from currently available files (Only ANI, has not been run...yet, will change after discussions)
 	write_Progress
 	task_number=17
-	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}"
+	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}" "${local_DBs}"
 	# Capture the anticipated taxonomy of the sample using kraken on assembly output
 	echo "----- Extracting Taxonomy from Taxon Summary -----"
 	# Checks to see if the kraken on assembly completed successfully
