@@ -159,7 +159,7 @@ rm ${installation_location}/config.sh
 mv ${installation_location}/new_config.sh ${installation_location}/config.sh
 echo "${installation_location}"
 exit
-chmod +x ${installation_location}/*.sh ${installation_location}/*.py
+#chmod +x ${installation_location}/*.sh ${installation_location}/*.py
 
 
 echo "Exiting prematurely to prevent constant installations"
