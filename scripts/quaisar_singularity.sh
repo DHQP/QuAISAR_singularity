@@ -228,7 +228,7 @@ else
 	missing_names=("${missing_names[@]}" singularity)
 fi
 
-db_output=$(${src}/database_checker.sh ${config_file} | tail -n1)
+db_output=$(${src}/database_checker.sh ${local_DBs} | tail -n1)
 num_missing=$(echo "${db_output}" | cut -d' ' -f3)
 db_missing=$(echo "${db_output}" | cut -d'(' -f2 | cut -d')' -f1)
 

@@ -9,13 +9,12 @@
 #
 # Description: Script checks for all databases used by QuAISAR pipeline and sets up any missing ones
 #
-# Usage ./database_checker.sh -path_to_config_file [-i]
+# Usage ./database_checker.sh -path_to_database_folder [-i]
 #	optional -i is for chencking AND installing, otherwise script just checks for existence..no downloading
-# Output location: ${local_DBs} in config file
 #
 # Modules required: None
 #
-# v1.0 (03/04/2020)
+# v1.0.1 (05/08/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -29,11 +28,11 @@ elif [[ "${1}" = "-h" ]]; then
 	echo "Usage ./database_checker.sh -path_to_config_file [-i]"
 	echo "-i is too install databases, otherwise script just checks for existence"
 	exit 0
-elif [[ -z "${1}" ]]; then
-	echo "No config file...exiting"
+elif [[ ! -d "${1}" ]]; then
+	echo "No folder exists as ${1}...exiting"
 	exit 113
 else
-	. "${1}"
+	path_to_DBs="${1}"
 fi
 
 if [[ "${2}" == "-i" ]]; then
@@ -49,13 +48,13 @@ if [[ "${2}" == "-i" ]]; then
 fi
 
 # Shows where databases should be (installed)
-echo "${local_DBs}"
+echo "${path_to_DBs}"
 
 missing_DBS=()
 
 # Check for parent directory
-if [[ ! -d ${local_DBs} ]]; then
-	mkdir -p ${local_DBs}
+if [[ ! -d ${path_to_DBs} ]]; then
+	mkdir -p ${path_to_DBs}
 fi
 
 # # # # Check for BUSCO
@@ -68,12 +67,12 @@ for odb_info in "${busco_taxa[@]}"; do
 	#echo ${odb_info}
 	taxa=$(echo "$odb_info" | cut -d'_' -f1)
 	db_date=$(echo "$odb_info" | cut -d'.' -f2)
-	if [[ ! -d "${local_DBs}/BUSCO/${taxa}_odb10" ]]; then
+	if [[ ! -d "${path_to_DBs}/BUSCO/${taxa}_odb10" ]]; then
 		if [[ "${do_download}" = "true" ]]; then
-			if [[ ! -d "${local_DBs}/BUSCO" ]]; then
-				mkdir "${local_DBs}/BUSCO"
+			if [[ ! -d "${path_to_DBs}/BUSCO" ]]; then
+				mkdir "${path_to_DBs}/BUSCO"
 			fi
-			cd "${local_DBs}/BUSCO"
+			cd "${path_to_DBs}/BUSCO"
 			if [[ "${taxa}" == "actinobacteria" ]]; then
 				taxa="actinobacteria_class"
 			fi
@@ -88,9 +87,9 @@ for odb_info in "${busco_taxa[@]}"; do
 		echo "BUSCO has latest ${taxa}_odb10 as of 3/15/2020"
 	fi
 done
-find ${local_DBs}/BUSCO/ -name '*.gz' -exec tar xzf {} \;
-mv ${local_DBs}/BUSCO/actinobacteria_class_odb10 ${local_DBs}/BUSCO/actinobacteria_odb10
-find ${local_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
+find ${path_to_DBs}/BUSCO/ -name '*.gz' -exec tar xzf {} \;
+mv ${path_to_DBs}/BUSCO/actinobacteria_class_odb10 ${path_to_DBs}/BUSCO/actinobacteria_odb10
+find ${path_to_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
 
 # All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
 
@@ -125,16 +124,16 @@ elif [[ ${link_index} -eq 3 ]]; then
 fi
 
 # star (6 Mbs)
-if [[ ! -d "${local_DBs}/star" ]]; then
-	#cp -r /container_DBs/star ${local_DBs}
+if [[ ! -d "${path_to_DBs}/star" ]]; then
+	#cp -r /container_DBs/star ${path_to_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying latest NAR-AR database"
-		cd ${local_DBs}
-		#cp -r ${current_dir}/included_databases/star ${local_DBs}
+		cd ${path_to_DBs}
+		#cp -r ${current_dir}/included_databases/star ${path_to_DBs}
 		wget "${wget_options}" -O "${sstar_links[0]}" "${sstar_links[${link_index}]}"
 		tar -zxvf sstar.tar.gz
-		mv ${local_DBs}/raid5/QuAISAR_databases/star ${local_DBs}
-		rm -r ${local_DBs}/raid5
+		mv ${path_to_DBs}/raid5/QuAISAR_databases/star ${path_to_DBs}
+		rm -r ${path_to_DBs}/raid5
 		rm sstar.tar.gz
 	else
 		echo "Missing latest NAR-AR database"
@@ -144,12 +143,12 @@ else
 	echo "NAR-AR database installed"
 fi
 
-if [[ ! -f "${local_DBs}/MMB_Bugs.txt" ]]; then
-	#cp -r /container_DBs/MMB_Bugs.txt ${local_DBs}
+if [[ ! -f "${path_to_DBs}/MMB_Bugs.txt" ]]; then
+	#cp -r /container_DBs/MMB_Bugs.txt ${path_to_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying MMB_bugs"
-		cd ${local_DBs}
-		#cp ${current_dir}/included_databases/MMB_Bugs.txt ${local_DBs}
+		cd ${path_to_DBs}
+		#cp ${current_dir}/included_databases/MMB_Bugs.txt ${path_to_DBs}
 		wget "${wget_options}" -O "${MMBbugs_links[0]}" "${MMBbugs_links[${link_index}]}"
 	else
 		echo "Missing MMB_Bugs"
@@ -159,12 +158,12 @@ else
 	echo "MMB_Bugs installed"
 fi
 
-if [[ ! -f "${local_DBs}/taxes.csv" ]]; then
-	#cp -r /container_DBs/taxes.csv ${local_DBs}
+if [[ ! -f "${path_to_DBs}/taxes.csv" ]]; then
+	#cp -r /container_DBs/taxes.csv ${path_to_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying taxes"
-		cd ${local_DBs}
-		#cp ${current_dir}/included_databases/taxes.csv ${local_DBs}
+		cd ${path_to_DBs}
+		#cp ${current_dir}/included_databases/taxes.csv ${path_to_DBs}
 		wget "${wget_options}" -O "${taxes_links[0]}" "${taxes_links[${link_index}]}"
 	else
 		echo "Missing taxes"
@@ -174,12 +173,12 @@ else
 	echo "taxes installed"
 fi
 
-if [[ ! -f "${local_DBs}/phiX.fasta" ]]; then
-	#cp -r /container_DBs/phiX.fasta ${local_DBs}
+if [[ ! -f "${path_to_DBs}/phiX.fasta" ]]; then
+	#cp -r /container_DBs/phiX.fasta ${path_to_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying phiX.fasta"
-		cd ${local_DBs}
-		#cp ${current_dir}/included_databases/phiX.fasta ${local_DBs}
+		cd ${path_to_DBs}
+		#cp ${current_dir}/included_databases/phiX.fasta ${path_to_DBs}
 		wget "${wget_options}" -O "${phiX_links[0]}" "${phiX_links[${link_index}]}"
 	else
 		echo "Missing phiX"
@@ -189,12 +188,12 @@ else
 	echo "phiX installed"
 fi
 
-if [[ ! -f "${local_DBs}/adapters.fasta" ]]; then
-	#cp -r /container_DBs/adapters.fasta ${local_DBs}
+if [[ ! -f "${path_to_DBs}/adapters.fasta" ]]; then
+	#cp -r /container_DBs/adapters.fasta ${path_to_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying adapters.fasta"
-		cd ${local_DBs}
-		#cp ${current_dir}/included_databases/adapters.fasta ${local_DBs}
+		cd ${path_to_DBs}
+		#cp ${current_dir}/included_databases/adapters.fasta ${path_to_DBs}
 		wget "${wget_options}" -O "${adapters_links[0]}" "${adapters_links[${link_index}]}"
 	else
 		echo "Missing adapters"
@@ -204,13 +203,13 @@ else
 	echo "adapters installed"
 fi
 
-if [[ ! -d "${local_DBs}/ANI" ]]; then
-	#cp -r /container_DBs/ANI ${local_DBs}
+if [[ ! -d "${path_to_DBs}/ANI" ]]; then
+	#cp -r /container_DBs/ANI ${path_to_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying latest REFSEQ sketch database (ANI)"
-		#cp -r ${current_dir}/included_databases/ANI ${local_DBs}
-		mkdir ${local_DBs}/ANI
-		cd ${local_DBs}/ANI
+		#cp -r ${current_dir}/included_databases/ANI ${path_to_DBs}
+		mkdir ${path_to_DBs}/ANI
+		cd ${path_to_DBs}/ANI
 		if [[ ${link_index} -eq 3 ]]; then
 			query=`curl -c ./cookie.txt -s -L "${ANI_links[3]}" \
 			| perl -nE'say/uc-download-link.*? href="(.*?)\">/' \
@@ -230,12 +229,12 @@ else
 	echo "ANI REFSEQ sketch database installed"
 fi
 
-if [[ ! -d "${local_DBs}/pubmlsts" ]]; then
-	#cp -r /container_DBs/pubmlsts ${local_DBs}
+if [[ ! -d "${path_to_DBs}/pubmlsts" ]]; then
+	#cp -r /container_DBs/pubmlsts ${path_to_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying pubMLST"
-		#cp ${current_dir}/included_databases/pubmlsts.tar.gz ${local_DBs}
-		cd ${local_DBs}
+		#cp ${current_dir}/included_databases/pubmlsts.tar.gz ${path_to_DBs}
+		cd ${path_to_DBs}
 		wget {wget_options} -O "${pubmlst_links[0]}" "${pubmlst_links[${link_index}]}"
 		tar -zxvf pubmlsts.tar.gz
 		mv pubmlsts_2 pubmlsts
@@ -257,15 +256,15 @@ for simage_info in "${singularities[@]}"; do
 	size=$(echo "${simage_info}" | cut -d'+' -f3)
 	echo -e "${simage}\n${url_link}\n${size}\n"
 
-	if [[ ! -f "${local_DBs}/singularities/${simage}" ]]; then
-		#cp -r /container_DBs/custom_singularities ${local_DBs}
+	if [[ ! -f "${path_to_DBs}/singularities/${simage}" ]]; then
+		#cp -r /container_DBs/custom_singularities ${path_to_DBs}
 		if [[ "${do_download}" = "true" ]]; then
-			if [[ ! -d "${local_DBs}/singularities" ]]; then
-				mkdir "${local_DBs}/singularities"
-				cd "${local_DBs}/singularities"
+			if [[ ! -d "${path_to_DBs}/singularities" ]]; then
+				mkdir "${path_to_DBs}/singularities"
+				cd "${path_to_DBs}/singularities"
 			fi
 			echo "Copying custom singularity image ${simage}"
-			#cat ${current_dir}/included_databases/singularities/${simage}.parta* > ${local_DBs}/singularities/${simage}
+			#cat ${current_dir}/included_databases/singularities/${simage}.parta* > ${path_to_DBs}/singularities/${simage}
 			if [[ ${size} -ge 100 ]] && [[ ${link_index} -eq 3 ]]; then
 				echo "Too big, special command"
 				#wget --save-cookies cookies.txt "${url_link}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
@@ -291,10 +290,10 @@ for simage_info in "${singularities[@]}"; do
 done
 
 # Check to see if kraken mini database is installed
-if [[ ! -d "${local_DBs}/kraken" ]]; then
+if [[ ! -d "${path_to_DBs}/kraken" ]]; then
 	if [[ "${do_download}" = "true" ]]; then
-		mkdir "${local_DBs}/kraken"
-		cd "${local_DBs}/kraken"
+		mkdir "${path_to_DBs}/kraken"
+		cd "${path_to_DBs}/kraken"
 		echo "Downloading latest (mini)kraken database (wget https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz)"
 		wget "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
 		if [[ ! -f "minikraken_20171019_4GB.tgz" ]]; then
@@ -312,11 +311,11 @@ fi
 
 ##### Currently down.....and has been a while
 # Check to see if gottcha database is installed
-if [[ ! -d "${local_DBs}/gottcha" ]]; then
+if [[ ! -d "${path_to_DBs}/gottcha" ]]; then
 	if [[ "${do_download}" = "true" ]]; then
-		cd "${local_DBs}"
+		cd "${path_to_DBs}"
 		# Original LANL hosted address that has been down a good while
-	 	#wget -P "${local_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+	 	#wget -P "${path_to_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
 		# Temporary mirror until original is fixed
 		echo "Downloading latest gottcha database (wget https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz)"
 		wget "https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz"
@@ -335,6 +334,6 @@ else
 	echo "gottcha database installed"
 fi
 
-chmod -R 755 ${local_DBs}/*
+chmod -R 755 ${path_to_DBs}/*
 
 echo "There are ${#missing_DBS[@]} missing databases (${missing_DBS[@]})"
