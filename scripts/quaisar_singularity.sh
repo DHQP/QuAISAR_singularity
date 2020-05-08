@@ -28,8 +28,8 @@ task_number=0
 isolate_number=0
 isolate_count=0
 
-version_type=quas-sing
-version_num=qs1.0.1
+version_type="Quaisar-Singularity"
+version_num="qs1.0.1"
 
 # Will be called throughout the script to write current progress for inquisitive minds and to restart run from where it was murdered
 # parameters need to be as follows
@@ -136,6 +136,11 @@ for ((i=1 ; i <= nopts ; i++)); do
 		-d | --database)
 			echo "Setting database location as: ${2}"
 			local_DBs="$2"
+			resGANNCBI_previous_srst2=$(find ${local_DBs}/star/ResGANNCBI_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 2 | tail -n 1)
+			resGANNOT_srst2_filename=$(echo "${resGANNOT_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
+			ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
+			REFSEQ=$(find ${local_DBs}/ANI/REFSEQ_*.msh -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+			REFSEQ_date=$(echo ${REFSEQ} | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1,2)
 			shift 2
 			;;
 		-s | --scripts_location)
