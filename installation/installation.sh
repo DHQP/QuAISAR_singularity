@@ -157,7 +157,8 @@ tail -n91 ${install_script_dir}/installation/config_template.sh >> ${installatio
 cp ${install_script_dir}/scripts/* ${installation_location}
 rm ${installation_location}/config.sh
 mv ${installation_location}/new_config.sh ${installation_location}/config.sh
-chmod +x ${installation_location}/*
+chmod +x ${installation_location}/*.sh ${installation_location}/*.py
+
 
 echo "Exiting prematurely to prevent constant installations"
 
@@ -167,8 +168,8 @@ if [[ ! -d ${databases} ]]; then
   echo "Creating ${databases} for databases"
   mkdir -p "${databases}/BUSCO"
 fi
-echo "${install_script_dir}/scripts/database_checker.sh ${installation_location}/config.sh"
-${install_script_dir}/scripts/database_checker.sh ${installation_location}/config.sh -i
+echo "${install_script_dir}/scripts/database_checker.sh ${databases} -i"
+${install_script_dir}/scripts/database_checker.sh ${databases} -i
 
 
 #check if conda is installed already

@@ -318,6 +318,7 @@ else
 	echo "gottcha database installed"
 fi
 
-chmod -R 755 ${path_to_DBs}/*
+ls ${path_to_DBs}
+#chmod -Rx ${path_to_DBs}/*
 
 echo "There are ${#missing_DBS[@]} missing databases (${missing_DBS[@]})"
