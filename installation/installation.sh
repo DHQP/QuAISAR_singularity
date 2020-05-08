@@ -157,6 +157,8 @@ tail -n91 ${install_script_dir}/installation/config_template.sh >> ${installatio
 cp ${install_script_dir}/scripts/* ${installation_location}
 rm ${installation_location}/config.sh
 mv ${installation_location}/new_config.sh ${installation_location}/config.sh
+echo "${installation_location}"
+exit
 chmod +x ${installation_location}/*.sh ${installation_location}/*.py
 
 
