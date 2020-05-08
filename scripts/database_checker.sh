@@ -41,7 +41,7 @@ fi
 
 # Shows where databases should be (installed)
 echo "${path_to_DBs}"
-
+exit
 missing_DBS=()
 
 # Check for parent directory
