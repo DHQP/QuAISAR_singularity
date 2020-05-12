@@ -138,9 +138,10 @@ for ((i=1 ; i <= nopts ; i++)); do
 			local_DBs="$2"
 			resGANNCBI_previous_srst2=$(find ${local_DBs}/star/ResGANNCBI_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 2 | tail -n 1)
 			resGANNOT_srst2_filename=$(echo "${resGANNOT_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
+			ResGANNCBI_srst2=$(find ${local_DBs}/star/ResGANNCBI_*_srst2.fasta -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 			ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
 			REFSEQ=$(find ${local_DBs}/ANI/REFSEQ_*.msh -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-			REFSEQ_date=$(echo ${REFSEQ} | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1,2)
+			REFSEQ_date=$(echo ${REFSEQ} | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1)
 			shift 2
 			;;
 		-s | --scripts_location)
@@ -480,7 +481,9 @@ for isolate in "${isolate_list[@]}"; do
 	SAMPDATADIR="${PROJDATADIR}/${isolate_name}"
 
 	echo -e "${isolate} started at ${start_time}\n" #>> "${log_file}"
+	echo -e "${version_type}:${version_num}" > "${command_log_file}"
 	echo -e "-:-:-:-:-:   Starting on isolate: ${isolate_name} :-:-:-:-:-\n" >> "${command_log_file}"
+
 
 	# Remove old run stats as the presence of the file indicates run completion
 	if [[ -f "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt" ]]; then
@@ -1907,16 +1910,17 @@ while IFS= read -r var || [ -n "$var" ]; do
 	fi
 
 	source_call=$(head -n1 "${SAMPDATADIR}/${isolate_name}.tax")
+	tax_source="UNK"
 	while IFS= read -r line  || [ -n "$line" ]; do
 		# Grab first letter of line (indicating taxonomic level)
 		first=${line:0:1}
 		# Assign taxonomic level value from 4th value in line (1st-classification level,2nd-% by kraken, 3rd-true % of total reads, 4th-identifier)
-		if [ "${first}" = "s" ]
-		then
+		if [ "${first}" = "s" ]; then
 			dec_species=$(echo "${line}" | awk -F ' ' '{print $2}')
-		elif [ "${first}" = "G" ]
-		then
+		elif [ "${first}" = "G" ]; then
 			dec_genus=$(echo "${line}" | awk -F ' ' '{print $2}')
+		elif [ "${first}" = "(" ]; then
+			tax_source=$(echo "${line}" | cut -d'(' -f2 | cut -d')' -f1)
 		fi
 	done < "${SAMPDATADIR}/${isolate_name}.tax"
 
@@ -1939,9 +1943,9 @@ while IFS= read -r var || [ -n "$var" ]; do
 				assembly_ID="${dec_genus_initial}.${dec_species}"
 				echo "About to check mmb_bugs[${assembly_ID}]"
 				if [[ ! -z "${mmb_bugs[${assembly_ID}]}" ]]; then
-					assembly_ratio=$(awk -v p="${assembly_length}" -v q="${mmb_bugs[${assembly_ID}]}" 'BEGIN{printf("%.2f",p/q)}')
+					assembly_ratio=$(awk -v p="${assembly_length}" -v q="${mmb_bugs[${assembly_ID}]}" -v r="${tax_source}" -v s="${assembly_ID}" 'BEGIN{printf("%.2f(%s-%s)",p/q, r, s)}')
 				else
-					assembly_ratio="Not_in_DB"
+					assembly_ratio="Not_in_DB (${tax_source}-${assembly_ID})"
 				fi
 			elif [ ${counter} -eq 3 ]
 			then
