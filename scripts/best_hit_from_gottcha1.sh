@@ -84,7 +84,7 @@ species_reads=0
 
 # If the source TSV produced from gottcha does not exist then the script will exit with error code 1
 if [[ ! -s "${OUTDATADIR}/gottcha_S/${1}.gottcha.tsv" ]]; then
-	echo "GOTTCHA output tsv does not exist, exiting..."
+	echo "GOTTCHA output (${OUTDATADIR}/gottcha_S/${1}.gottcha.tsv) does not exist , exiting..."
 	exit 1
 fi
 
