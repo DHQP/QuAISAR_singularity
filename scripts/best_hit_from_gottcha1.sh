@@ -53,9 +53,6 @@ else
 	OUTDATADIR="${processed}/${2}/${1}/gottcha"
 fi
 
-#Sets output directory to the gottcha folder of sample ID that was passed. Sample ID folder is found under processed samples in MMB_Data folder
-OUTDATADIR="${output_dir}/${2}/${1}/gottcha"
-
 #Sets many of the values of percents/descriptions to default values to guard against null/unset values if a failure occurs during processing
 unclass_percent=0
 domain_percent=100
