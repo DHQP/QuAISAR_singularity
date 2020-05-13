@@ -145,7 +145,7 @@ Check_source() {
 # Function to pull info from ANI output
 do_ANI() {
 	source="ANI"
-	#echo "${source}"
+	echo "${source}"
 
 	. ./get_latest_DBs.sh
 	refseq_ANI_date=get_ANI_REFSEQ_Date
