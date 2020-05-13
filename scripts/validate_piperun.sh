@@ -87,7 +87,7 @@ fi
 raw_length_R1=-1
 raw_length_R2=-1
 if [[ -s "${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq" ]] && [[ -s "${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
-	echo "Trying to get bp count on ${SAMPDATADIR}/FASTQs/${1}_R[1&2]_001.fastq"
+	#echo "Trying to get bp count on ${SAMPDATADIR}/FASTQs/${1}_R[1&2]_001.fastq"
 	raw_length_R1=$(cat ${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	raw_length_R2=$(cat ${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	if [[ "${raw_length_R1}" -gt 0 ]] && [[ "${raw_length_R2}" -gt 0 ]]; then
@@ -568,21 +568,26 @@ if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" 
 	# If there are no reads at the domain level, then report no classified reads
 	echo 2
 	if (( $(echo "${domain} <= 0" | bc -l) )); then
+		echo 3
 		printf "%-20s: %-8s : %s\\n" "post Classify" "FAILED" "There are no classified reads (Did post assembly kraken fail too?)"
 		status="FAILED"
 	# If there are classified reads then check to see if percent unclassifed falls above the threshold limit. Report warning if too high or success and stats if below
 	else
+		echo 4
 		if (( $(echo "${unclass} > ${unclass_flag}" | bc -l) )); then
+			echo 5
 			printf "%-20s: %-8s : %s\\n" "post Classify" "WARNING" "unclassified reads comprise ${unclass}% of total ${true_unclass}%"
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 				status="WARNING"
 			fi
 		elif (( $(echo "${speiespercent} < 50" | bc -l) )); then
+			echo 6
 			printf "%-20s: %-8s : %s\\n" "post Classify" "WARNING" "${genuspost} ${speciespost} is under 50% (${speciespercent}), possibly contaminated or contigs are weighted unevenly"
 			if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 				status="WARNING"
 			fi
 		else
+			echo 7
 			#printf "%-20s: %-8s : %s\\n" "post Classify" "SUCCESS" "${speciespercent}%${true_speciespercent%} ${genuspost} ${speciespost} with ${unclass}%${true_unclass%} unclassified reads"
 			printf "%-20s: %-8s : %s\\n" "post Classify" "SUCCESS" "${speciespercent}% ${genuspost} ${speciespost} with ${unclass}% unclassified reads"
 		fi
