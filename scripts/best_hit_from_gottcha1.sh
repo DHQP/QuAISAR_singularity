@@ -21,7 +21,7 @@ fi
 #					or 			alt_path-for-output/run_ID/sample_name/gottcha
 # Modules required: None
 #
-# V1.0.1 (05/12/2020)
+# V1.0.2 (05/13/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #

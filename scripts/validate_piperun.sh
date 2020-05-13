@@ -40,7 +40,7 @@ elif [[ "${1}" = "-h" ]]; then
 elif [ -z "$2" ]; then
 	echo "Empty project id supplied to validate_piperun.sh, exiting"
 	exit 1
-elif [ -z "$3" ] || [ ! -d "${3}" ]; then; then
+elif [ -z "$3" ] || [ ! -d "${3}" ]; then
 	echo "Empty database path supplied to validate_piperun.sh, exiting"
 	exit 1
 elif [ ! -z "$4" ]; then
