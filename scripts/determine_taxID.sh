@@ -67,7 +67,7 @@ else
 	databases=${5}
 fi
 
-. ./get_latest_DBs "${5}"
+. ./get_latest_DBs.sh "${5}"
 
 lastest_ANIREFSEQ=get_ANI_REFSEQ
 
