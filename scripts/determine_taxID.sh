@@ -61,6 +61,8 @@ project=${2}
 # Overwrite value from config file
 REFSEQ_date="${3}"
 
+
+
 if [[ -z "${5}" ]]; then
 	databases=${local_DBs}
 else
@@ -147,7 +149,7 @@ do_ANI() {
 	source="ANI"
 	echo "${source}"
 
-	source ./get_latest_DBs.sh
+	source ./get_latest_DBs.sh ${databases}
 	refseq_ANI_date=get_ANI_REFSEQ_Date
 	echo "${refseq_ANI_date}"
 	if [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${refseq_ANI_date}).txt" ]]; then
