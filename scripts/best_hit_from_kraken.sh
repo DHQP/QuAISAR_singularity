@@ -21,7 +21,7 @@ fi
 #												or			alt_path-for-output/run_ID/sample_name/kraken/pre|postAssembly
 # Modules required: None
 #
-# v1.0 (10/3/2019)
+# v1.0.1 (05/13/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -70,8 +70,6 @@ else
 	source="${5}"
 fi
 
-#Sets output folder to the correct path relative to assembly completion
-OUTDATADIR="${output_dir}/${4}/${1}/${5}/${2}Assembly"
 echo "-${OUTDATADIR}-"
 
 #Creates the default values for output in case any calculations are interrupted.
