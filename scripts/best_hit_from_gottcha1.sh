@@ -18,7 +18,7 @@ fi
 # Usage: ./best_hit_from_gottcha1.sh sample_name run_ID [alt_path-for-output]
 #
 # Output location: default_config.sh_output_location/run_ID/sample_name/gottcha/
-#					or 			alt_path-for-output/gottcha
+#					or 			alt_path-for-output/run_ID/sample_name/gottcha
 # Modules required: None
 #
 # V1.0.1 (05/12/2020)
@@ -40,7 +40,7 @@ elif [ -z "$2" ]; then
 elif [ "$1" = "-h" ]; then
 	echo "Usage is ./best_hit_from_gottcha1.sh   sample_name   run_ID [alt_path-for-output]"
 	echo "Output is saved to ${processed}/miseq_run_ID/sample_name/gottcha/"
-	echo "			or		 			alt_path-for-output/gottcha"
+	echo "			or		 			alt_path-for-output/run_ID/sample_name/gottcha"
 	exit 0
 elif [ -z "${3}" ]; then
 	echo "Using default path (${processed})"

@@ -15,7 +15,7 @@ fi
 #
 # Description: Checking to see if all standard reported sections of a sample have completed successfully
 #
-# Usage: ./validate_piprun.sh   sample_name run_ID [-alt_project_path]
+# Usage: ./validate_piprun.sh   sample_name run_ID path_to_databases [-alt_project_path]
 #
 # Output location: default_config.sh_output_location/run_ID/1/
 #
@@ -40,16 +40,22 @@ elif [[ "${1}" = "-h" ]]; then
 elif [ -z "$2" ]; then
 	echo "Empty project id supplied to validate_piperun.sh, exiting"
 	exit 1
-elif [ ! -z "$3" ]; then
-	if [[ -d "${3}/${2}/${1}" ]]; then
-		OUTDATADIR="${3}/${2}/${1}"
+elif [ -z "$3" ] || [ ! -d "${3}" ]; then; then
+	echo "Empty database path supplied to validate_piperun.sh, exiting"
+	exit 1
+elif [ ! -z "$4" ]; then
+	if [[ -d "${4}/${2}/${1}" ]]; then
+		OUTDATADIR="${4}/${2}/${1}"
 	else
 		echo "Alternate location ${3}/${2}/${1} does not exist, exiting"
 		exit
 	fi
 else
-	OUTDATADIR=${processed}/${2}/${1}
+	OUTDATADIR="${processed}/${2}/${1}"
+	local_DBs="${3}"
 fi
+
+
 
 # Creates and prints header info for the sample being processed
 today=$(date)

@@ -18,7 +18,7 @@ fi
 # Usage: ./best_hit_from_kraken.sh sample_name pre/post(relative to assembly) paired|assembled(source_type) run_ID kraken|kraken2(source) [alt_path-for-output]
 #
 # Output location: default_config.sh_output_location/run_ID/sample_name/kraken/pre|post-Assembly/
-#												or			alt_path-for-output/kraken/pre|postAssembly
+#												or			alt_path-for-output/run_ID/sample_name/kraken/pre|postAssembly
 # Modules required: None
 #
 # v1.0 (10/3/2019)
@@ -36,7 +36,7 @@ elif [ -z "$1" ]; then
 elif [[ "$1" = "-h" ]]; then
 	echo "Usage is ./best_hit_from_kraken.sh  sample_name  pre|post paired|assembled run_ID	kraken|kraken2 [alt_path-for-output]"
 	echo "Output is saved to ${processed}/run_ID_id/sample_name/kraken/(pre/post)assembly/sample_name_kraken_summary_(paired/assembled)"
-	echo " or					  		alt_path-for-output/kraken/pre|postAssembly"
+	echo " or					  		alt_path-for-output/run_ID/sample_name/kraken/pre|postAssembly"
 	exit 0
 elif [ -z "$2" ]; then
 	echo "Empty assembly relativity supplied to $0, exiting"
