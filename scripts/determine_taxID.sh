@@ -16,7 +16,7 @@ fi
 # Description: Creates a single file that attempts to pull the best taxonomic information from the isolate. Currently, it operates in a linear fashion, e.g. 1.ANI, 2.16s, 3.kraken, 4.Gottcha
 # 	The taxon is chosen based on the highest ranked classifier first
 #
-# Usage: ./determine_texID.sh sample_name project_ID [alternate_database_location]
+# Usage: ./determine_texID.sh sample_name project_ID path-to-project_ID [alternate_database_location, must give path-to-project_ID also]
 #
 # Modules required: None
 #
@@ -30,7 +30,7 @@ if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
 elif [[ "${1}" = "-h" ]]; then
-	echo "Usage: ./determine_texID.sh sample_name project_ID [alternate_database_location]"
+	echo "Usage: ./determine_texID.sh sample_name project_ID [path-to-project_ID] [alternate_database_location]"
 	exit 1
 elif [[ -z "${1}" ]]; then
 	echo "Empty sample_id supplied to determine_taxID.sh, exiting"
@@ -42,19 +42,34 @@ elif [[ "${1}" = "-h" ]]; then
 elif [[ -z "${2}" ]]; then
 	echo "Empty run_ID supplied to determine_taxID.sh, exiting"
 	exit 1
-elif [[ ! -z "${3}" ]] && [[ ! -d "${3}" ]]; then
-	echo "Empty database location supplied to determine_taxID.sh, exiting"
+elif [[ -z "${3}" ]]; then
+	echo "REFSEQ_DATE is empty, exiting"
+	exit 3
+elif [[ -z "${4}" ]]; then
+	echo "Empty Path supplied to determine_taxID.sh, exiting"
+	echo "Using default path ${output_dir}"
 	exit 1
+else
+	echo "Using given path ${4}"
+	output_dir="${4}"
 fi
+
 
 # Set default values after setting variables
 sample=${1}
 project=${2}
-if [[ -z "${3}" ]]; then
+# Overwrite value from config file
+REFSEQ_date="${3}"
+
+if [[ -z "${5}" ]]; then
 	databases=${local_DBs}
 else
-	databases=${3}
+	databases=${5}
 fi
+
+. ./get_latest_DBs "${5}"
+
+lastest_ANIREFSEQ=get_ANI_REFSEQ
 
 # Set default values for a ll taxonomic levels
 Domain="Not_assigned"
@@ -74,6 +89,7 @@ Check_source() {
 	start_at="${1}"
 	if [[ "${start_at}" -le 1 ]]; then
 		for f in ${output_dir}/${project}/${sample}/ANI/*; do
+			echo $f
 			if [[ "${f}" = *"best_ANI_hits_ordered"* ]]; then
 				header=$(head -n1 ${f})
 				if [[ ${header} != "No matching ANI database found for"* ]] && [[ ${header} != "0.00%"* ]] ; then
@@ -145,22 +161,26 @@ do_ANI() {
 			fi
 		done
 	fi
-	header=$(head -n 1 "${source_file}")
-	echo "${header}"
-	Genus=$(echo "${header}" | cut -d' ' -f1 | cut -d'-' -f3)
-	species=$(echo "${header}" | cut -d' ' -f2 | cut -d'(' -f1 | sed 's/[][]//g')
-	confidence_index=$(echo "${header}" | cut -d' ' -f1 | cut -d'-' -f1,2)
-	#echo "${Genus}-${species}"
+	if [[ -f "${source_file}" ]]; then
+		header=$(head -n 1 "${source_file}")
+		echo "${header}"
+		Genus=$(echo "${header}" | cut -d' ' -f1 | cut -d'-' -f3)
+		species=$(echo "${header}" | cut -d' ' -f2 | cut -d'(' -f1 | sed 's/[][]//g')
+		confidence_index=$(echo "${header}" | cut -d' ' -f1 | cut -d'-' -f1,2)
+		#echo "${Genus}-${species}"
+	else
+		Check_source 2
+	fi
 }
 
 # Function to pull best info from 16s output (largest vs highest bit score)
 do_16s() {
+	source_file="${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt"
 	if [[ "${1}" = "largest" ]]; then
-		source_file="${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt"
 		line=$(tail -n 1 "${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
 		source="16s_largest"
-		if [[ -f "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN.sorted" ]]; then
-			confidence_index=$(head -n1 "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN.sorted" | cut -d'	' -f3)
+		if [[ -f "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN_all.sorted" ]]; then
+			confidence_index=$(head -n1 "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN_all.sorted" | cut -d'	' -f3)
 			confidence_index="${confidence_index}"
 		else
 			confidence_index=0
@@ -168,8 +188,8 @@ do_16s() {
 	elif [[ "${1}" = "best" ]]; then
 		line=$(head -n 1 "${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
 		source="16s_best"
-		if [[ -f "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN.sorted" ]]; then
-			confidence_index=$(head -n1 "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN.sorted" | cut -d'	' -f3)
+		if [[ -f "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN_all" ]]; then
+			confidence_index=$(head -n1 "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN_all" | cut -d'	' -f3)
 			confidence_index="${confidence_index}"
 		else
 			confidence_index=0
@@ -211,7 +231,7 @@ do_Kraken() {
 		# Grab first letter of line (indicating taxonomic level)
 		first=${line::1}
 		# Assign taxonomic level value from 4th value in line (1st-classification level,2nd-% by kraken, 3rd-true % of total reads, 4th-identifier)
-		if [ "${first}" = "S" ]
+		if [ "${first}" = "s" ]
 		then
 			species=$(echo "${line}" | awk -F ' ' '{print $4}')
 		elif [ "${first}" = "G" ]
