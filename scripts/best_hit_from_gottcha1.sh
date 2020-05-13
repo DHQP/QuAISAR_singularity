@@ -44,13 +44,13 @@ elif [ "$1" = "-h" ]; then
 	exit 0
 elif [ -z "${3}" ]; then
 	echo "Using default path (${processed})"
-	OUTDATADIR="${processed}/${2}/${1}/gottcha"
+	OUTDATADIR="${processed}/${2}/${1}"
 elif [ -d "${3}" ]; then
 	echo "Using given full path - ${3}"
-	OUTDATADIR="${3}/${2}/${1}/gottcha"
+	OUTDATADIR="${3}/${2}/${1}"
 else
 	echo "Path does not exist - ${3} using default (${processed}) "
-	OUTDATADIR="${processed}/${2}/${1}/gottcha"
+	OUTDATADIR="${processed}/${2}/${1}"
 fi
 
 #Sets many of the values of percents/descriptions to default values to guard against null/unset values if a failure occurs during processing
@@ -80,8 +80,8 @@ genus_reads=0
 species_reads=0
 
 # If the source TSV produced from gottcha does not exist then the script will exit with error code 1
-if [[ ! -s "${OUTDATADIR}/gottcha_S/${1}.gottcha.tsv" ]]; then
-	echo "GOTTCHA output (${OUTDATADIR}/gottcha_S/${1}.gottcha.tsv) does not exist , exiting..."
+if [[ ! -s "${OUTDATADIR}/gottcha/gottcha_S/${1}.gottcha.tsv" ]]; then
+	echo "GOTTCHA output (${OUTDATADIR}/gottcha/gottcha_S/${1}.gottcha.tsv) does not exist , exiting..."
 	exit 1
 fi
 
@@ -159,11 +159,11 @@ while IFS='	' read -r -a line  || [ -n "$line" ]; do
 			species_reads="${reads}"
 		fi
 	fi
-done < "${OUTDATADIR}/gottcha_S/${1}.gottcha.tsv"
+done < "${OUTDATADIR}/gottcha/gottcha_S/${1}.gottcha.tsv"
 
 # Calculate % of unclassified reads using sum of highest taxon level reads against total reads found in QC counts
 # Checks for the existence of the trimmed_counts file for the sample. If found true % classification is performed
-if [[ -s "${output_dir}/${2}/${1}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
+if [[ -s "${OUTDATADIR}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
 	# The total reads is determined by pulling from the trimmed_counts
 	qc_reads=$(tail -n 1 "${output_dir}/${2}/${1}/preQCcounts/${1}_trimmed_counts.txt" | cut -d'	' -f13)
 	qc_reads=$((qc_reads/2))
@@ -181,7 +181,7 @@ if [[ -s "${output_dir}/${2}/${1}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
 	species_percent_total=$( echo "${species_reads} ${qc_reads}" | awk '{ printf "%2.2f", ($1*100)/$2 }' )
 # If the trimmed_counts file is not found all true % applied percentages are lableled as unknown
 else
-	echo "Cant find ${output_dir}/${2}/${1}/preQCcounts/${1}_trimmed_counts.txt. Continuing without true % reads used..."
+	echo "Cant find ${OUTDATADIR}/preQCcounts/${1}_trimmed_counts.txt. Continuing without true % reads used..."
 	unclass_percent="UNK"
 	u_percent="UNK"
 	unclass_reads="UNK"
@@ -195,7 +195,7 @@ else
 fi
 
 #Prints the final best taxon identification output (using species output from gottcha) to the gottcha directory for the sample
-echo -e "U: ${unclass_percent} (${u_percent}%-${unclass_reads}) unclassified\\nD: ${domain_percent} (${domain_percent_total}) ${domain}\\nP: ${phylum_percent} (${phylum_percent_total}) ${phylum}\\nC: ${class_percent} (${class_percent_total}) ${class}\\nO: ${order_percent} (${order_percent_total}) ${order}\\nF: ${family_percent} (${family_percent_total}) ${family}\\nG: ${genus_percent} (${genus_percent_total}) ${genus}\\ns: ${species_percent} (${species_percent_total}) ${species}" > "${OUTDATADIR}/${1}_gottcha_species_summary.txt"
+echo -e "U: ${unclass_percent} (${u_percent}%-${unclass_reads}) unclassified\\nD: ${domain_percent} (${domain_percent_total}) ${domain}\\nP: ${phylum_percent} (${phylum_percent_total}) ${phylum}\\nC: ${class_percent} (${class_percent_total}) ${class}\\nO: ${order_percent} (${order_percent_total}) ${order}\\nF: ${family_percent} (${family_percent_total}) ${family}\\nG: ${genus_percent} (${genus_percent_total}) ${genus}\\ns: ${species_percent} (${species_percent_total}) ${species}" > "${OUTDATADIR}/gottcha/${1}_gottcha_species_summary.txt"
 
 #Script exited gracefully (unless something else inside failed...working on finding all possible failure points!)
 exit 0
