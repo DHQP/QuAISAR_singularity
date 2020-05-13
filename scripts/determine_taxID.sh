@@ -67,11 +67,6 @@ else
 	databases=${5}
 fi
 
-. ./get_latest_DBs.sh "${5}"
-
-latest_ANIREFSEQ=$(get_ANI_REFSEQ)
-
-echo ":${latest_ANIREFSEQ}:"
 
 # Set default values for a ll taxonomic levels
 Domain="Not_assigned"
@@ -151,8 +146,9 @@ Check_source() {
 do_ANI() {
 	source="ANI"
 	#echo "${source}"
-	if [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${REFSEQ_date}).txt" ]]; then
-		source_file="${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${REFSEQ_date}).txt"
+	refseq_ANI_date=$(get_ANI_REFSEQ_Date)
+	if [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${refseq_ANI_date}).txt" ]]; then
+		source_file="${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${refseq_ANI_date}).txt"
 	elif [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_OSII).txt" ]]; then
 		source_file="${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_OSII).txt"
 	else
