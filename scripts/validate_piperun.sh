@@ -555,6 +555,7 @@ else
 	status="FAILED"
 fi
 #Check extraction and unclassified values for kraken post assembly
+echo 1
 if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" ]]; then
 	# Extracts many elements of the summary file to report unclassified and species classified reads and percentages
 	unclass=$(head -n 1 "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" | cut -d' ' -f2)
@@ -590,6 +591,7 @@ else
 	printf "%-20s: %-8s : %s\\n" "post Classify" "FAILED" "/kraken/postAssembly/${1}_kraken_summary_assembled.txt not found"
 	status="FAILED"
 fi
+echo 2
 #Check weighted kraken on assembly
 kraken_weighted_success=false
 if [[ ! -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled_BP.kraken" ]]; then
