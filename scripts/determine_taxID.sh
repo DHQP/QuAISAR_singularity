@@ -71,7 +71,7 @@ fi
 
 latest_ANIREFSEQ=$(get_ANI_REFSEQ)
 
-echo "${latest_ANIREFSEQ}"
+echo ":${latest_ANIREFSEQ}:"
 
 # Set default values for a ll taxonomic levels
 Domain="Not_assigned"
