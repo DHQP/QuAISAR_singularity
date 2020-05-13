@@ -163,7 +163,7 @@ do_ANI() {
 	fi
 	if [[ -f "${source_file}" ]]; then
 		header=$(head -n 1 "${source_file}")
-		echo "${header}"
+		#echo "${header}"
 		Genus=$(echo "${header}" | cut -d' ' -f1 | cut -d'-' -f3)
 		species=$(echo "${header}" | cut -d' ' -f2 | cut -d'(' -f1 | sed 's/[][]//g')
 		confidence_index=$(echo "${header}" | cut -d' ' -f1 | cut -d'-' -f1,2)
