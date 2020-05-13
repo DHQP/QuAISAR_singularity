@@ -142,7 +142,6 @@ for ((i=1 ; i <= nopts ; i++)); do
 			ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
 			REFSEQ=$(find ${local_DBs}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 			REFSEQ_date=$(echo ${REFSEQ} | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1)
-			echo "Testing names - ${ResGANNCBI_srst2} - ${REFSEQ}"
 			exit
 			shift 2
 			;;

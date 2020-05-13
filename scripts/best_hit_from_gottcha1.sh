@@ -15,13 +15,13 @@ fi
 #
 # Description: Grabs the best species match based on read hits (not relative abundance) from the gottcha tool run
 #
-# Usage: ./best_hit_from_gottcha1.sh sample_name run_ID
+# Usage: ./best_hit_from_gottcha1.sh sample_name run_ID [alt_path-for-output]
 #
 # Output location: default_config.sh_output_location/run_ID/sample_name/gottcha/
-#
+#					or 			alt_path-for-output/gottcha
 # Modules required: None
 #
-# V1.0
+# V1.0.1 (05/12/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -37,10 +37,20 @@ elif [ -z "$2" ]; then
 	echo "Empty project_id supplied to $0, exiting"
 	exit 1
 # command line version of usage for script
-elif [[ "$1" = "-h" ]]; then
-	echo "Usage is ./best_hit_from_gottcha1.sh   sample_name   run_ID"
-	echo "Output is saved to ${output_dir}/miseq_run_ID/sample_name/gottcha/"
+elif [ "$1" = "-h" ]; then
+	echo "Usage is ./best_hit_from_gottcha1.sh   sample_name   run_ID [alt_path-for-output]"
+	echo "Output is saved to ${processed}/miseq_run_ID/sample_name/gottcha/"
+	echo "			or		 			alt_path-for-output/gottcha"
 	exit 0
+elif [ -z "${3}" ]; then
+	echo "Using default path (${processed})"
+	OUTDATADIR="${processed}/${2}/${1}/gottcha"
+elif [ -d "${3}" ]; then
+	echo "Using given full path - ${3}"
+	OUTDATADIR="${3}/${2}/${1}/gottcha"
+else
+	echo "Path does not exist - ${3} using default (${processed}) "
+	OUTDATADIR="${processed}/${2}/${1}/gottcha"
 fi
 
 #Sets output directory to the gottcha folder of sample ID that was passed. Sample ID folder is found under processed samples in MMB_Data folder
