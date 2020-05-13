@@ -61,3 +61,9 @@ function get_srst2_filename {
 	ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
 	echo "${ResGANNCBI_srst2_filename}"
 }
+
+
+get_ANI_REFSEQ
+get_ANI_REFSEQ_Date
+get_srst2
+get_srst2_filename
