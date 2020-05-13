@@ -36,6 +36,8 @@ elif [[ "${1}" = "-h" ]]; then
 	exit 0
 fi
 
+echo "Using ${1} as database"
+
 function get_ANI_REFSEQ {
 	REFSEQ="NOT_FOUND"
 	REFSEQ=$(find ${1}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
