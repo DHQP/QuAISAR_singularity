@@ -566,6 +566,7 @@ if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" 
 	speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" | cut -d' ' -f2)
 	#true_speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
 	# If there are no reads at the domain level, then report no classified reads
+	echo 2
 	if (( $(echo "${domain} <= 0" | bc -l) )); then
 		printf "%-20s: %-8s : %s\\n" "post Classify" "FAILED" "There are no classified reads (Did post assembly kraken fail too?)"
 		status="FAILED"
@@ -591,7 +592,7 @@ else
 	printf "%-20s: %-8s : %s\\n" "post Classify" "FAILED" "/kraken/postAssembly/${1}_kraken_summary_assembled.txt not found"
 	status="FAILED"
 fi
-echo 2
+
 #Check weighted kraken on assembly
 kraken_weighted_success=false
 if [[ ! -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled_BP.kraken" ]]; then
