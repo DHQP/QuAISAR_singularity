@@ -146,7 +146,7 @@ Check_source() {
 do_ANI() {
 	source="ANI"
 	#echo "${source}"
-	refseq_ANI_date=$(get_ANI_REFSEQ_Date)
+	refseq_ANI_date=get_ANI_REFSEQ_Date
 	if [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${refseq_ANI_date}).txt" ]]; then
 		source_file="${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${refseq_ANI_date}).txt"
 	elif [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_OSII).txt" ]]; then
