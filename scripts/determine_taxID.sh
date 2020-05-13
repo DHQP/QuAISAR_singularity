@@ -25,6 +25,11 @@ fi
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
+### -------------------------------------------------------------------------- ###
+#           REALLY NEED TO MAKE AN ARG PARSER IN HERE VERY SOON                  #
+### -------------------------------------------------------------------------- ###
+
+
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
@@ -43,31 +48,23 @@ elif [[ -z "${2}" ]]; then
 	echo "Empty run_ID supplied to determine_taxID.sh, exiting"
 	exit 1
 elif [[ -z "${3}" ]]; then
-	echo "REFSEQ_DATE is empty, exiting"
-	exit 3
-elif [[ -z "${4}" ]]; then
 	echo "Empty Path supplied to determine_taxID.sh, exiting"
 	echo "Using default path ${output_dir}"
 	exit 1
 else
-	echo "Using given path ${4}"
-	output_dir="${4}"
+	echo "Using given path ${3}"
+	output_dir="${3}"
 fi
 
+if [[ -z "${4}" ]]; then
+	databases=${local_DBs}
+else
+	databases=${4}
+fi
 
 # Set default values after setting variables
 sample=${1}
 project=${2}
-# Overwrite value from config file
-REFSEQ_date="${3}"
-
-
-
-if [[ -z "${5}" ]]; then
-	databases=${local_DBs}
-else
-	databases=${5}
-fi
 
 
 # Set default values for a ll taxonomic levels
@@ -147,11 +144,11 @@ Check_source() {
 # Function to pull info from ANI output
 do_ANI() {
 	source="ANI"
-	echo "${source}"
+	#echo "${source}"
 
 	source ./get_latest_DBs.sh ${databases}
 	refseq_ANI_date=$(get_ANI_REFSEQ_Date)
-	echo "${refseq_ANI_date}"
+	#echo "${refseq_ANI_date}"
 	if [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${refseq_ANI_date}).txt" ]]; then
 		source_file="${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${refseq_ANI_date}).txt"
 	elif [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_OSII).txt" ]]; then

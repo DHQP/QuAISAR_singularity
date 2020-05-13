@@ -37,7 +37,7 @@ elif [[ "${1}" = "-h" ]]; then
 fi
 
 databases="${1}"
-echo "Using ${1} as database location"
+#echo "Using ${1} as database location"
 
 function get_ANI_REFSEQ {
 	REFSEQ="NOT_FOUND"

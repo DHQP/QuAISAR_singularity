@@ -40,9 +40,6 @@ elif [[ "${1}" = "-h" ]]; then
 elif [ -z "$2" ]; then
 	echo "Empty project id supplied to validate_piperun.sh, exiting"
 	exit 1
-elif [ -z "$3" ] || [ ! -d "${3}" ]; then
-	echo "Empty database path supplied to validate_piperun.sh, exiting"
-	exit 1
 elif [ ! -z "$4" ]; then
 	if [[ -d "${4}/${2}/${1}" ]]; then
 		OUTDIR="${4}"
@@ -54,10 +51,20 @@ elif [ ! -z "$4" ]; then
 else
 	OUTDIR="${processed}"
 	SAMPDATADIR="${processed}/${2}/${1}"
+fi
+
+if [[ -d "${3}" ]]; then
 	local_DBs="${3}"
 fi
 
 
+echo $OUTDIR
+echo $SAMPDATADIR
+echo $local_DBs
+
+. ./get_latest_DBs.sh "${local_DBs}"
+ResGANNCBI_srst2_filename=$(get_srst2_filename)
+REFSEQ_date=$(get_ANI_REFSEQ_Date)
 
 # Creates and prints header info for the sample being processed
 today=$(date)
