@@ -69,7 +69,7 @@ fi
 
 . ./get_latest_DBs.sh "${5}"
 
-latest_ANIREFSEQ=get_ANI_REFSEQ
+latest_ANIREFSEQ=$(get_ANI_REFSEQ)
 
 echo "${latest_ANIREFSEQ}"
 
