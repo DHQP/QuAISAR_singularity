@@ -15,7 +15,7 @@ fi
 #
 # Description: Checking to see if all standard reported sections of a sample have completed successfully
 #
-# Usage: ./validate_piprun.sh   sample_name run_ID path_to_databases [-alt_project_path]
+# Usage: ./validate_piprun.sh   sample_name run_ID path_to_databases [alt_project_path] [gapping] [similarity]
 #
 # Output location: default_config.sh_output_location/run_ID/1/
 #
@@ -25,6 +25,10 @@ fi
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
+
+### -------------------------------------------------------------------------- ###
+#           REALLY NEED TO MAKE AN ARG PARSER IN HERE VERY SOON                  #
+### -------------------------------------------------------------------------- ###
 
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
@@ -957,13 +961,13 @@ fi
 
 #Check c-SSTAR
 if [[ -d "${SAMPDATADIR}/c-sstar/" ]]; then
-	if [[ ! -z "${3}" ]]; then
-	 gapping="${3}"
+	if [[ ! -z "${5}" ]]; then
+	 gapping="${5}"
 	else
 	 gapping="gapped"
 	fi
-	if [[ ! -z "${4}" ]]; then
-		sim="${4}"
+	if [[ ! -z "${6}" ]]; then
+		sim="${6}"
 	else
 		sim="98"
 	fi

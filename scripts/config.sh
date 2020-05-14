@@ -33,7 +33,8 @@ local_DBs="/raid5/QuAISAR_databases"
 procs=12 # Number of processors
 
 if [[ ! -d "${local_DBs}" ]]; then
-  echo "Dtabase folder does not exist, must exit"
+  #echo "Database folder does not exist, please be aware
+  :
 fi
 
 ############# Application Specific Options #############
