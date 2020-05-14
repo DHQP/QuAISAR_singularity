@@ -6,82 +6,83 @@
 #$ -cwd
 #$ -q short.q
 
-# Import the config file with shortcuts and settings
-if [[ ! -f "./config.sh" ]]; then
-	cp ./config_template.sh ./config.sh
-fi
-. ./config.sh
-
 #
 # Description: Checking to see if all standard reported sections of a sample have completed successfully
 #
-# Usage: ./validate_piprun.sh   sample_name run_ID path_to_databases [alt_project_path] [gapping] [similarity]
+# Usage: ./validate_piprun.sh path_to_sample_folder path_to_databases path_to_scripts [gapping] [similarity]
 #
-# Output location: default_config.sh_output_location/run_ID/1/
+# Output location: standard_out
 #
 # Modules required: None
 #
-# v1.0.1 (04/03/2020)
+# v1.0.2 (05/14/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
 ### -------------------------------------------------------------------------- ###
-#           REALLY NEED TO MAKE AN ARG PARSER IN HERE VERY SOON                  #
+#                  NEED TO MAKE AN ARG PARSER IN HERE VERY SOON                  #
 ### -------------------------------------------------------------------------- ###
 
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
-elif [[ -z "${1}" ]]; then
+elif [[ -z "${sample_name}" ]]; then
 	echo "Empty sample name supplied to validate_piperun.sh, exiting"
 	exit 1
-elif [[ "${1}" = "-h" ]]; then
-	echo "Usage is ./validate_piperun.#!/bin/#!/bin/sh   sample_name	run_ID [-alt_project_path]"
+elif [[ ! -d "${sample_name}" ]]; then
+	echo "Sample folder (${sample_name}) does not exist, exiting validate_piperun.sh"
+	exit 1
+elif [[ "${sample_name}" = "-h" ]]; then
+	echo "Usage is ./validate_piperun.sh path_to_sample_folder path_todatabases path_to_scripts [gapping] [similarity]"
+	echo "Optional positional arguments are to match c-SSTAR files run at different thresholds"
 	echo "Output is only printed to screen, Pipe to file if desired"
 	exit 0
 elif [ -z "$2" ]; then
-	echo "Empty project id supplied to validate_piperun.sh, exiting"
+	echo "Database path ($2) not supplied to validate_piperun.sh, exiting"
 	exit 1
-elif [ ! -z "$4" ]; then
-	if [[ -d "${4}/${2}/${1}" ]]; then
-		OUTDIR="${4}"
-		SAMPDATADIR="${4}/${2}/${1}"
-	else
-		echo "Alternate location ${3}/${2}/${1} does not exist, exiting"
-		exit
-	fi
-else
-	OUTDIR="${processed}"
-	SAMPDATADIR="${processed}/${2}/${1}"
-fi
-
-if [[ -d "${3}" ]]; then
-	local_DBs="${3}"
+elif [ ! -d "$2" ]; then
+	echo "Database path ($2) does not exist, exiting validate_piperun.sh"
+	exit 1
+elif [ -z "$3" ]; then
+	echo "Script path ($3) not supplied to validate_piperun.sh, exiting"
+	exit 1
+elif [ ! -d "$3" ]; then
+	echo "Script path ($3) does not exist, exiting validate_piperun.sh"
+	exit 1
 fi
 
 
-echo $OUTDIR
-echo $SAMPDATADIR
-echo $local_DBs
+SAMPDATADIR="${1}"
+# Based upon standard naming protocols pulling last portion of path off should result in proper sample name
+sample_name=$(echo "${SAMPDATADIR}" | rev | cut -d'/' -f1 | rev)
+databases="${2}"
+scripts="${3}"
 
-. ./get_latest_DBs.sh "${local_DBs}"
+
+
+
+#echo $OUTDIR
+#echo $SAMPDATADIR
+#echo $databases
+
+. ${scripts}/get_latest_DBs.sh "${databases}"
 ResGANNCBI_srst2_filename=$(get_srst2_filename)
 REFSEQ_date=$(get_ANI_REFSEQ_Date)
 
 # Creates and prints header info for the sample being processed
 today=$(date)
-echo "----------Checking ${2}/${1} for successful completion on ----------"
-echo "Sample output folder starts at: " "${SAMPDATADIR}/${2}/${1}"
+echo "----------Checking ${2}/${sample_name} for successful completion on ----------"
+echo "Sample output folder starts at: " "${SAMPDATADIR}/${2}/${sample_name}"
 status="SUCCESS"
 # Checks to see if the sample has a time summary file associated with it
 if [[ -s "${SAMPDATADIR}/time_summary.txt" ]]; then
-	mv "${SAMPDATADIR}/time_summary.txt" "${SAMPDATADIR}/${1}_time_summary.txt"
+	mv "${SAMPDATADIR}/time_summary.txt" "${SAMPDATADIR}/${sample_name}_time_summary.txt"
 fi
 printf "%-20s: %-8s : %s\\n" "Summarized" "SUCCESS" "${today}"
-if [[ -s "${SAMPDATADIR}/${1}_time_summary.txt" ]]; then
-	time=$(tail -1 "${SAMPDATADIR}/${1}_time_summary.txt" | cut -d' ' -f3)
+if [[ -s "${SAMPDATADIR}/${sample_name}_time_summary.txt" ]]; then
+	time=$(tail -1 "${SAMPDATADIR}/${sample_name}_time_summary.txt" | cut -d' ' -f3)
 	printf "%-20s: %-8s : %s\\n" "Time" "SUCCESS" "${time} seconds"
 else
 	printf "%-20s: %-8s : %s\\n" "Time" "ALERT" "No time summary file found"
@@ -90,10 +91,10 @@ fi
 #Checking existence of FASTQ files
 raw_length_R1=-1
 raw_length_R2=-1
-if [[ -s "${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq" ]] && [[ -s "${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
-	#echo "Trying to get bp count on ${SAMPDATADIR}/FASTQs/${1}_R[1&2]_001.fastq"
-	raw_length_R1=$(cat ${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	raw_length_R2=$(cat ${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+if [[ -s "${SAMPDATADIR}/FASTQs/${sample_name}_R1_001.fastq" ]] && [[ -s "${SAMPDATADIR}/FASTQs/${sample_name}_R2_001.fastq" ]]; then
+	#echo "Trying to get bp count on ${SAMPDATADIR}/FASTQs/${sample_name}_R[1&2]_001.fastq"
+	raw_length_R1=$(cat ${SAMPDATADIR}/FASTQs/${sample_name}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R2=$(cat ${SAMPDATADIR}/FASTQs/${sample_name}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	if [[ "${raw_length_R1}" -gt 0 ]] && [[ "${raw_length_R2}" -gt 0 ]]; then
 		printf "%-20s: %-8s : %s\\n" "FASTQs" "SUCCESS" "Unzipped - R1: ${raw_length_R1}bps R2: ${raw_length_R2}bps"
 	else
@@ -110,8 +111,8 @@ if [[ -s "${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq" ]] && [[ -s "${SAMPDATADIR}/F
 			printf "%-20s: %-8s : %s\\n" "FASTQs R2" "SUCCESS" "Unzipped - ${raw_length_R2}bps"
 		fi
 	fi
-elif [[ -s "${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq" ]]; then
-	raw_length_R1=$(cat ${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+elif [[ -s "${SAMPDATADIR}/FASTQs/${sample_name}_R1_001.fastq" ]]; then
+	raw_length_R1=$(cat ${SAMPDATADIR}/FASTQs/${sample_name}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	if [[ "${raw_length_R1}" -le 0 ]]; then
 		printf "%-20s: %-8s : %s\\n" "FASTQs R1" "FAILED" "Unzipped - File has no base pairs"
 		status="FAILED"
@@ -121,8 +122,8 @@ elif [[ -s "${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq" ]]; then
 			status="WARNING"
 		fi
 	fi
-elif [[ -s "${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
-	raw_length_R2=$(cat ${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+elif [[ -s "${SAMPDATADIR}/FASTQs/${sample_name}_R2_001.fastq" ]]; then
+	raw_length_R2=$(cat ${SAMPDATADIR}/FASTQs/${sample_name}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	if [[ "${raw_length_R2}" -le 0 ]]; then
 		printf "%-20s: %-8s : %s\\n" "FASTQs R2" "FAILED" "Unzipped - File has no base pairs"
 		status="FAILED"
@@ -132,12 +133,12 @@ elif [[ -s "${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
 			status="WARNING"
 		fi
 	fi
-elif [[ -s "${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq.gz" ]] && [[ -s "${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq.gz" ]]; then
-	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	raw_length_R2=$(zcat ${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+elif [[ -s "${SAMPDATADIR}/FASTQs/${sample_name}_R1_001.fastq.gz" ]] && [[ -s "${SAMPDATADIR}/FASTQs/${sample_name}_R2_001.fastq.gz" ]]; then
+	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${sample_name}_R1_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	raw_length_R2=$(zcat ${SAMPDATADIR}/FASTQs/${sample_name}_R2_001.fastq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	printf "%-20s: %-8s : %s\\n" "FASTQs" "SUCCESS" "Zipped - R1: ${raw_length_R1}bps R2: ${raw_length_R2}bps"
-elif [[ -s "${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq" ]]; then
-	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+elif [[ -s "${SAMPDATADIR}/FASTQs/${sample_name}_R1_001.fastq" ]]; then
+	raw_length_R1=$(zcat ${SAMPDATADIR}/FASTQs/${sample_name}_R1_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	if [[ "${raw_length_R1}" -le 0 ]]; then
 		printf "%-20s: %-8s : %s\\n" "FASTQs R1" "FAILED" "Zipped - File has no contents"
 		status="FAILED"
@@ -147,8 +148,8 @@ elif [[ -s "${SAMPDATADIR}/FASTQs/${1}_R1_001.fastq" ]]; then
 			status="WARNING"
 		fi
 	fi
-elif [[ -s "${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq" ]]; then
-	raw_length_R2=$(zcat ${SAMPDATADIR}/FASTQs/${1}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+elif [[ -s "${SAMPDATADIR}/FASTQs/${sample_name}_R2_001.fastq" ]]; then
+	raw_length_R2=$(zcat ${SAMPDATADIR}/FASTQs/${sample_name}_R2_001.fastq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	if [[ "${raw_length_R2}" -le 0 ]]; then
 		printf "%-20s: %-8s : %s\\n" "FASTQs R2" "FAILED" "Zipped - File has no contents"
 		status="FAILED"
@@ -163,13 +164,13 @@ else
 	status="FAILED"
 fi
 #Checking QC counts
-if [[ -s "${SAMPDATADIR}/preQCcounts/${1}_counts.txt" ]]; then
-	reads_pre=$(tail -n1 "${SAMPDATADIR}/preQCcounts/${1}_counts.txt" | cut -d'	' -f13)
+if [[ -s "${SAMPDATADIR}/preQCcounts/${sample_name}_counts.txt" ]]; then
+	reads_pre=$(tail -n1 "${SAMPDATADIR}/preQCcounts/${sample_name}_counts.txt" | cut -d'	' -f13)
 	pairs_pre=$((reads_pre/2))
-	Q30_R1=$(tail -n1 "${SAMPDATADIR}/preQCcounts/${1}_counts.txt" | cut -d'	' -f10)
+	Q30_R1=$(tail -n1 "${SAMPDATADIR}/preQCcounts/${sample_name}_counts.txt" | cut -d'	' -f10)
 	Q30_R1_rounded=$(echo "${Q30_R1}"  | cut -d'.' -f2)
 	Q30_R1_rounded=$(echo "${Q30_R1_rounded::2}")
-	Q30_R2=$(tail -n1 "${SAMPDATADIR}/preQCcounts/${1}_counts.txt" | cut -d'	' -f11)
+	Q30_R2=$(tail -n1 "${SAMPDATADIR}/preQCcounts/${sample_name}_counts.txt" | cut -d'	' -f11)
 	Q30_R2_rounded=$(echo "${Q30_R2}"  | cut -d'.' -f2)
 	Q30_R2_rounded=$(echo "${Q30_R2_rounded::2}")
 	if [[ "${reads_pre}" -le 1000000 ]]; then
@@ -195,9 +196,9 @@ if [[ -s "${SAMPDATADIR}/preQCcounts/${1}_counts.txt" ]]; then
 		fi
 	fi
 else
-	printf "%-20s: %-8s : %s\\n" "QC counts" "FAILED" "/preQCcounts/${1}_counts.txt not found"
-	printf "%-20s: %-8s : %s\\n" "Q30_R1%" "FAILED" "/preQCcounts/${1}_counts.txt not found"
-	printf "%-20s: %-8s : %s\\n" "Q30_R2%" "FAILED" "/preQCcounts/${1}_counts.txt not found"
+	printf "%-20s: %-8s : %s\\n" "QC counts" "FAILED" "/preQCcounts/${sample_name}_counts.txt not found"
+	printf "%-20s: %-8s : %s\\n" "Q30_R1%" "FAILED" "/preQCcounts/${sample_name}_counts.txt not found"
+	printf "%-20s: %-8s : %s\\n" "Q30_R2%" "FAILED" "/preQCcounts/${sample_name}_counts.txt not found"
 	status="FAILED"
 fi
 
@@ -260,57 +261,57 @@ fi
 #Checking Trimmomatic output folder
 remAdapt_length_R1=-3
 remAdapt_length_R2=-3
-if [[ -s "${SAMPDATADIR}/trimmed/${1}_R1_001.paired.fq" ]] && [[ -s "${SAMPDATADIR}/trimmed/${1}_R2_001.paired.fq" ]]; then
-	remAdapt_length_R1=$(cat ${SAMPDATADIR}/trimmed/${1}_R1_001.paired.fq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	remAdapt_length_R2=$(cat ${SAMPDATADIR}/trimmed/${1}_R2_001.paired.fq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+if [[ -s "${SAMPDATADIR}/trimmed/${sample_name}_R1_001.paired.fq" ]] && [[ -s "${SAMPDATADIR}/trimmed/${sample_name}_R2_001.paired.fq" ]]; then
+	remAdapt_length_R1=$(cat ${SAMPDATADIR}/trimmed/${sample_name}_R1_001.paired.fq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	remAdapt_length_R2=$(cat ${SAMPDATADIR}/trimmed/${sample_name}_R2_001.paired.fq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	remAdapt_R1_diff=$(( nophi_length_R1 - remAdapt_length_R1 ))
 	remAdapt_R2_diff=$(( nophi_length_R2 - remAdapt_length_R2 ))
 	printf "%-20s: %-8s : %s\\n" "Trimming" "SUCCESS" "Unzipped - R1: ${remAdapt_length_R1}bps (${R1_adapt_percent_loss}% loss)  R2: ${remAdapt_length_R2}bps (${R2_adapt_percent_loss}% loss)"
-elif [[ -s "${SAMPDATADIR}/trimmed/${1}_R1_001.paired.fq.gz" ]] && [[ -s "${SAMPDATADIR}/trimmed/${1}_R2_001.paired.fq.gz" ]]; then
-	remAdapt_length_R1=$(zcat ${SAMPDATADIR}/trimmed/${1}_R1_001.paired.fq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
-	remAdapt_length_R2=$(zcat ${SAMPDATADIR}/trimmed/${1}_R2_001.paired.fq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+elif [[ -s "${SAMPDATADIR}/trimmed/${sample_name}_R1_001.paired.fq.gz" ]] && [[ -s "${SAMPDATADIR}/trimmed/${sample_name}_R2_001.paired.fq.gz" ]]; then
+	remAdapt_length_R1=$(zcat ${SAMPDATADIR}/trimmed/${sample_name}_R1_001.paired.fq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+	remAdapt_length_R2=$(zcat ${SAMPDATADIR}/trimmed/${sample_name}_R2_001.paired.fq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	remAdapt_R1_diff=$(( nophi_length_R1 - remAdapt_length_R1 ))
 	remAdapt_R2_diff=$(( nophi_length_R2 - remAdapt_length_R2 ))
 	R1_adapt_percent_loss=$(( remAdapt_R1_diff * 100 / ${nophi_length_R1} ))
 	R2_adapt_percent_loss=$(( remAdapt_R2_diff * 100 / ${nophi_length_R2} ))
 	#echo "${raw_length_R1}-${nophi_length_R1}-${remAdapt_length_R1} ${raw_length_R2}-${nophi_length_R2}-${remAdapt_length_R2}"
 	printf "%-20s: %-8s : %s\\n" "Trimming" "SUCCESS" "Zipped - R1: ${remAdapt_length_R1}bps (${R1_adapt_percent_loss}% loss)  R2: ${remAdapt_length_R2}bps (${R2_adapt_percent_loss}% loss)"
-elif [[ -s "${SAMPDATADIR}/trimmed/${1}_R1_001.paired.fq" ]]; then
-	remAdapt_length_R1=$(cat ${SAMPDATADIR}/trimmde/${1}_R1_001.paired.fq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+elif [[ -s "${SAMPDATADIR}/trimmed/${sample_name}_R1_001.paired.fq" ]]; then
+	remAdapt_length_R1=$(cat ${SAMPDATADIR}/trimmde/${sample_name}_R1_001.paired.fq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	R1_adapt_percent_loss=$(( remAdapt_R1_diff * 100 / ${nophi_length_R1} ))
 	printf "%-20s: %-8s : %s\\n" "Trimming" "WARNING" "Unzipped - R1: ${remAdapt_length_R1}bps (${R1_adapt_percent_loss}% loss)"
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
-elif [[ -s "${SAMPDATADIR}/trimmed/${1}_R2_001.paired.fq" ]]; then
-	remAdapt_length_R2=$(cat ${SAMPDATADIR}/trimmed/${1}_R2_001.paired.fq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+elif [[ -s "${SAMPDATADIR}/trimmed/${sample_name}_R2_001.paired.fq" ]]; then
+	remAdapt_length_R2=$(cat ${SAMPDATADIR}/trimmed/${sample_name}_R2_001.paired.fq | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	R2_adapt_percent_loss=$(( remAdapt_R2_diff * 100 / ${nophi_length_R2} ))
 	printf "%-20s: %-8s : %s\\n" "Trimming" "WARNING" "Unzipped - R2: ${remAdapt_length_R2}bps (${R2_adapt_percent_loss}% loss)"
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
-elif [[ -s "${SAMPDATADIR}/trimmed/${1}_R1_001.paired.fq.gz" ]]; then
-	remAdapt_length_R1=$(zcat ${SAMPDATADIR}/trimmed/${1}_R1_001.paired.fq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+elif [[ -s "${SAMPDATADIR}/trimmed/${sample_name}_R1_001.paired.fq.gz" ]]; then
+	remAdapt_length_R1=$(zcat ${SAMPDATADIR}/trimmed/${sample_name}_R1_001.paired.fq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	R1_adapt_percent_loss=$(( remAdapt_R1_diff * 100 / ${nophi_length_R1} ))
 	printf "%-20s: %-8s : %s\\n" "Trimming" "WARNING" "Zipped - R1: ${remAdapt_length_R1}bps (${R1_adapt_percent_loss}% loss)"
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
-elif [[ -s "${SAMPDATADIR}/trimmed/${1}_R2_001.paired.fq.gz" ]]; then
-	remAdapt_length_R2=$(zcat ${SAMPDATADIR}/trimmed/${1}_R2_001.paired.fq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
+elif [[ -s "${SAMPDATADIR}/trimmed/${sample_name}_R2_001.paired.fq.gz" ]]; then
+	remAdapt_length_R2=$(zcat ${SAMPDATADIR}/trimmed/${sample_name}_R2_001.paired.fq.gz | paste - - - - | cut -f2 |tr -d '\n' | wc -c)
 	R2_adapt_percent_loss=$(( remAdapt_R2_diff * 100 / ${nophi_length_R2} ))
 	printf "%-20s: %-8s : %s\\n" "Trimming" "WARNING" "Zipped - R2: ${remAdapt_length_R2}bps (${R2_adapt_percent_loss}% loss)"
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
 else
-	printf "%-20s: %-8s : %s\\n" "Trimming" "FAILED" "/trimmed/${1}_R1_001.paired.fq(.gz) & /trimmed/${1}_R2_001.paired.fq(.gz) not found"
+	printf "%-20s: %-8s : %s\\n" "Trimming" "FAILED" "/trimmed/${sample_name}_R1_001.paired.fq(.gz) & /trimmed/${sample_name}_R2_001.paired.fq(.gz) not found"
 	status="FAILED"
 fi
 
 #Checking QC counts after trimming
-if [[ -s "${SAMPDATADIR}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
-	reads_post=$(tail -n1 "${SAMPDATADIR}/preQCcounts/${1}_trimmed_counts.txt" | cut -d'	' -f13)
+if [[ -s "${SAMPDATADIR}/preQCcounts/${sample_name}_trimmed_counts.txt" ]]; then
+	reads_post=$(tail -n1 "${SAMPDATADIR}/preQCcounts/${sample_name}_trimmed_counts.txt" | cut -d'	' -f13)
 	pairs_post=$((reads_post/2))
 	loss=$(echo "scale=2; 100*(${reads_pre} - ${reads_post}) / ${reads_pre}" | bc )
 	if [[ "${reads_post}" -le 500000 ]]; then
@@ -320,28 +321,28 @@ if [[ -s "${SAMPDATADIR}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
 		printf "%-20s: %-8s : %s\\n" "QC count after trim" "SUCCESS" "${reads_post} individual reads (${pairs_post} paired reads) after trim. ${loss}% loss"
 	fi
 else
-	printf "%-20s: %-8s : %s\\n" "QC count after trim" "FAILED" "/preQCcounts/${1}_trimmed_counts.txt not found"
+	printf "%-20s: %-8s : %s\\n" "QC count after trim" "FAILED" "/preQCcounts/${sample_name}_trimmed_counts.txt not found"
 	status="FAILED"
 fi
 
 
 #Check kraken on preAssembly
 kraken_pre_success=false
-if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${1}_paired.kraken" ]] || [[ -s "${SAMPDATADIR}/kraken/preAssembly/${1}_paired.kraken.gz" ]]; then
+if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_paired.kraken" ]] || [[ -s "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_paired.kraken.gz" ]]; then
 	#printf "%-20s: %-8s : %s\\n" "kraken preassembly" "SUCCESS" "Found"
 	kraken_pre_success=true
 else
-	printf "%-20s: %-8s : %s\\n" "kraken preassembly" "FAILED" "/kraken/preAssembly/${1}_paired.kraken not found"
+	printf "%-20s: %-8s : %s\\n" "kraken preassembly" "FAILED" "/kraken/preAssembly/${sample_name}_paired.kraken not found"
 	status="FAILED"
 fi
 
 #Check Krona output
 if [[ "${kraken_pre_success}" = true ]]; then
-	if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${1}_paired.krona" ]] && [[ -s "${SAMPDATADIR}/kraken/preAssembly/${1}_paired.html" ]]; then
+	if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_paired.krona" ]] && [[ -s "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_paired.html" ]]; then
 		#printf "%-20s: %-8s : %s\\n" "krona-kraken-preasmb" "SUCCESS" "Found"
 		:
 	else
-		printf "%-20s: %-8s : %s\\n" "krona-kraken-preasmb" "FAILED" "/kraken/preAssembly/${1}_paired.krona &&|| /kraken/preAssembly/${1}_paired.html not found"
+		printf "%-20s: %-8s : %s\\n" "krona-kraken-preasmb" "FAILED" "/kraken/preAssembly/${sample_name}_paired.krona &&|| /kraken/preAssembly/${sample_name}_paired.html not found"
 		status="FAILED"
 	fi
 else
@@ -350,15 +351,15 @@ else
 fi
 
 #Check extraction and unclassified value
-if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${1}_kraken_summary_paired.txt" ]]; then
+if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_kraken_summary_paired.txt" ]]; then
 	# Extracts many elements of the summary file to report unclassified and species classified reads and percentages
-	unclass=$(head -n 1 "${SAMPDATADIR}/kraken/preAssembly/${1}_kraken_summary_paired.txt" | cut -d' ' -f2)
-	#true_unclass=$(head -n 1 "${SAMPDATADIR}/kraken/preAssembly/${1}_kraken_summary_paired.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
-	domain=$(sed -n '2p' "${SAMPDATADIR}/kraken/preAssembly/${1}_kraken_summary_paired.txt" | cut -d' ' -f2)
-	genuspre=$(sed -n '7p' "${SAMPDATADIR}/kraken/preAssembly/${1}_kraken_summary_paired.txt" | cut -d' ' -f4)
-	speciespre=$(sed -n '8p' "${SAMPDATADIR}/kraken/preAssembly/${1}_kraken_summary_paired.txt" | cut -d' ' -f4)
-	speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/preAssembly/${1}_kraken_summary_paired.txt" | cut -d' ' -f2)
-	#true_speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/preAssembly/${1}_kraken_summary_paired.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
+	unclass=$(head -n 1 "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_kraken_summary_paired.txt" | cut -d' ' -f2)
+	#true_unclass=$(head -n 1 "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_kraken_summary_paired.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
+	domain=$(sed -n '2p' "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_kraken_summary_paired.txt" | cut -d' ' -f2)
+	genuspre=$(sed -n '7p' "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_kraken_summary_paired.txt" | cut -d' ' -f4)
+	speciespre=$(sed -n '8p' "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_kraken_summary_paired.txt" | cut -d' ' -f4)
+	speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_kraken_summary_paired.txt" | cut -d' ' -f2)
+	#true_speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_kraken_summary_paired.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
 	# If there are no reads at the domain level, then report no classified reads
 	if (( $(echo "${domain} <= 0" | bc -l) )); then
 		printf "%-20s: %-8s : %s\\n" "Pre Classify" "FAILED" "There are no classified reads (Did pre assembly kraken fail too?)"
@@ -377,12 +378,12 @@ if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${1}_kraken_summary_paired.txt" ]]; 
 	fi
 # If no summary file was found
 else
-	printf "%-20s: %-8s : %s\\n" "Pre Classify" "FAILED" "${SAMPDATADIR}/kraken/preAssembly/${1}_kraken_summary_paired.txt not found"
+	printf "%-20s: %-8s : %s\\n" "Pre Classify" "FAILED" "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_kraken_summary_paired.txt not found"
 	status="FAILED"
 fi
 
 # Quick separate check for contamination by finding # of species above ${contamination_threshold} in list file from kraken
-if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${1}_paired.list" ]]; then
+if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_paired.list" ]]; then
 	number_of_species=0
 	while IFS= read -r line; do
 		arrLine=(${line})
@@ -396,7 +397,7 @@ if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${1}_paired.list" ]]; then
 			#echo "Adding ${arrLine[5]}-${percent_integer}-${contamination_threshold} to list"
 			number_of_species=$(( number_of_species + 1 ))
 		fi
-	done < ${SAMPDATADIR}/kraken/preAssembly/${1}_paired.list
+	done < ${SAMPDATADIR}/kraken/preAssembly/${sample_name}_paired.list
 	if [[ "${number_of_species}" -gt 1 ]]; then
 		printf "%-20s: %-8s : %s\\n" "pre Class Contam." "WARNING" "${number_of_species} species have been found above the ${contamination_threshold}% threshold"
 		if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
@@ -411,34 +412,34 @@ if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${1}_paired.list" ]]; then
 fi
 
 #Check gottcha_S output for TSV ouput and the krona file
-if [[ -s "${SAMPDATADIR}/gottcha/gottcha_S/${1}.gottcha_full.tsv" ]] && [[ -s "${SAMPDATADIR}/gottcha/${1}_species.krona.html" ]]; then
+if [[ -s "${SAMPDATADIR}/gottcha/gottcha_S/${sample_name}.gottcha_full.tsv" ]] && [[ -s "${SAMPDATADIR}/gottcha/${sample_name}_species.krona.html" ]]; then
 	#printf "%-20s: %-8s : %s\\n" "GOTTCHA_S" "SUCCESS" "Found"
 	:
-elif [[ -s "${SAMPDATADIR}/gottcha/gottcha_S/${1}.gottcha_full.tsv" ]]; then
+elif [[ -s "${SAMPDATADIR}/gottcha/gottcha_S/${sample_name}.gottcha_full.tsv" ]]; then
 	printf "%-20s: %-8s : %s\\n" "GOTTCHA_S" "WARNING" "No Krona output found"
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
-elif [[ -s "${SAMPDATADIR}/gottcha/${1}_species.krona.html" ]]; then
+elif [[ -s "${SAMPDATADIR}/gottcha/${sample_name}_species.krona.html" ]]; then
 	printf "%-20s: %-8s : %s\\n" "GOTTCHA_S" "WARNING" "No TSV file found"
 	if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 		status="WARNING"
 	fi
 else
-	printf "%-20s: %-8s : %s\\n" "GOTTCHA_S" "FAILED" "/gottcha/gottcha_S/${1}.gottcha_full.tsv & /gottcha/${1}_species.krona.html not found"
+	printf "%-20s: %-8s : %s\\n" "GOTTCHA_S" "FAILED" "/gottcha/gottcha_S/${sample_name}.gottcha_full.tsv & /gottcha/${sample_name}_species.krona.html not found"
 	status="FAILED"
 fi
 
 #Check extraction of gottcha id
-if [[ -s "${SAMPDATADIR}/gottcha/${1}_gottcha_species_summary.txt" ]]; then
+if [[ -s "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" ]]; then
 	# Extracts many elements of the summary file to report unclassified and species classified reads and percentages
-	unclass=$(head -n 1 "${SAMPDATADIR}/gottcha/${1}_gottcha_species_summary.txt" | cut -d' ' -f2)
-	#true_unclass=$(head -n 1 "${SAMPDATADIR}/gottcha/${1}_gottcha_species_summary.txt" | cut -d' ' -f3) # | sed -r 's/[)]+/%)/g')
-	phylumpercent=$(sed -n '3p' "${SAMPDATADIR}/gottcha/${1}_gottcha_species_summary.txt" | cut -d' ' -f2)
-	genuspre=$(sed -n '7p' "${SAMPDATADIR}/gottcha/${1}_gottcha_species_summary.txt"| cut -d' ' -f4)
-	speciespre=$(sed -n '8p' "${SAMPDATADIR}/gottcha/${1}_gottcha_species_summary.txt" | cut -d' ' -f5)
-	speciespercent=$(sed -n '8p' "${SAMPDATADIR}/gottcha/${1}_gottcha_species_summary.txt" | cut -d' ' -f2)
-	true_speciespercent=$(sed -n '8p' "${SAMPDATADIR}/gottcha/${1}_gottcha_species_summary.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
+	unclass=$(head -n 1 "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" | cut -d' ' -f2)
+	#true_unclass=$(head -n 1 "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" | cut -d' ' -f3) # | sed -r 's/[)]+/%)/g')
+	phylumpercent=$(sed -n '3p' "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" | cut -d' ' -f2)
+	genuspre=$(sed -n '7p' "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt"| cut -d' ' -f4)
+	speciespre=$(sed -n '8p' "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" | cut -d' ' -f5)
+	speciespercent=$(sed -n '8p' "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" | cut -d' ' -f2)
+	true_speciespercent=$(sed -n '8p' "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
 	# Gottcha only classifies up to phylum and therefore if no phylum reads, there are no reads
 	if (( $(echo "${phylumpercent} <= 0" | bc -l) )); then
 		printf "%-20s: %-8s : %s\\n" "GottchaV1 Classifier" "FAILED" "There are no classified reads"
@@ -456,12 +457,12 @@ if [[ -s "${SAMPDATADIR}/gottcha/${1}_gottcha_species_summary.txt" ]]; then
 	fi
 # If the summary file does not exist, report as such
 else
-	printf "%-20s: %-8s : %s\\n" "GottchaV1 Classifier" "FAILED" "${SAMPDATADIR}/gottcha/${1}_gottcha_species_summary.txt not found"
+	printf "%-20s: %-8s : %s\\n" "GottchaV1 Classifier" "FAILED" "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt not found"
 	status="FAILED"
 fi
 
 # Quick separate check for contamination by finding # of species above ${contamination_threshold} in list file from kraken
-if [[ -s "${SAMPDATADIR}/gottcha/gottcha_S/${1}.gottcha.tsv" ]]; then
+if [[ -s "${SAMPDATADIR}/gottcha/gottcha_S/${sample_name}.gottcha.tsv" ]]; then
 	number_of_species=0
 	while IFS= read -r line; do
 		# Convert the perfect match to proper format from 1.00 to 100
@@ -481,7 +482,7 @@ if [[ -s "${SAMPDATADIR}/gottcha/gottcha_S/${1}.gottcha.tsv" ]]; then
 		if [[ "${classification}" == "s" ]] && (( percent_integer > contamination_threshold )); then
 			number_of_species=$(( number_of_species + 1 ))
 		fi
-	done < ${SAMPDATADIR}/gottcha/gottcha_S/${1}.gottcha.tsv
+	done < ${SAMPDATADIR}/gottcha/gottcha_S/${sample_name}.gottcha.tsv
 	if [[ $number_of_species -gt 1 ]]; then
 		# Holding off on putting a cutoff here, as we cant tell what is an acceptable value to use
 		#printf "%-20s: %-8s : %s\\n" "gottcha Contam." "WARNING" "${number_of_species} species have been found above the ${contamination_threshold}% threshold"
@@ -513,10 +514,10 @@ fi
 
 
 #Check short scaffolds reduction script
-if [[ -s "${SAMPDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta" ]]; then
+if [[ -s "${SAMPDATADIR}/Assembly/${sample_name}_scaffolds_trimmed.fasta" ]]; then
 	# Count the number of '>' still remaining after trimming the contig file
 	full_longies=">"
-	full_longies=$(grep -c ${full_longies} "${SAMPDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta")
+	full_longies=$(grep -c ${full_longies} "${SAMPDATADIR}/Assembly/${sample_name}_scaffolds_trimmed.fasta")
 	# Calculate the number of lost (short) scaffolds
 	full_shorties=$(( full_scaffolds - full_longies ))
 	if [ -z ${full_shorties} ]; then
@@ -532,26 +533,26 @@ if [[ -s "${SAMPDATADIR}/Assembly/${1}_scaffolds_trimmed.fasta" ]]; then
 		fi
 	fi
 else
-	printf "%-20s: %-8s : %s\\n" "Contig Trim" "FAILED" "/Assembly/${1}_scaffolds_trimmed.fasta not found"
+	printf "%-20s: %-8s : %s\\n" "Contig Trim" "FAILED" "/Assembly/${sample_name}_scaffolds_trimmed.fasta not found"
 	status="FAILED"
 fi
 
 #Check kraken on assembly
 kraken_post_success=false
-if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled.kraken" ]] || [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled.kraken.gz" ]]; then
+if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_assembled.kraken" ]] || [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_assembled.kraken.gz" ]]; then
 	#printf "%-20s: %-8s : %s\\n" "kraken postassembly" "SUCCESS" "Found"
 	kraken_post_success=true
 else
-	printf "%-20s: %-8s : %s\\n" "kraken postassembly" "FAILED" "/kraken/postAssembly/${1}_assembled.kraken not found"
+	printf "%-20s: %-8s : %s\\n" "kraken postassembly" "FAILED" "/kraken/postAssembly/${sample_name}_assembled.kraken not found"
 	status="FAILED"
 fi
 #Check Krona output of assembly
 if [[ "${kraken_post_success}" = true ]]; then
-	if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled.krona" ]] && [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled.html" ]]; then
+	if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_assembled.krona" ]] && [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_assembled.html" ]]; then
 		#printf "%-20s: %-8s : %s\\n" "krona-kraken-pstasmb" "SUCCESS" "Found"
 		:
 	else
-		printf "%-20s: %-8s : %s\\n" "krona-kraken-pstasmb" "FAILED" "/kraken/postAssembly/${1}_assembled.krona &&|| /kraken/postAssembly/${1}_assembled.html not found"
+		printf "%-20s: %-8s : %s\\n" "krona-kraken-pstasmb" "FAILED" "/kraken/postAssembly/${sample_name}_assembled.krona &&|| /kraken/postAssembly/${sample_name}_assembled.html not found"
 		status="FAILED"
 	fi
 else
@@ -559,15 +560,15 @@ else
 	status="FAILED"
 fi
 #Check extraction and unclassified values for kraken post assembly
-if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" ]]; then
+if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled.txt" ]]; then
 	# Extracts many elements of the summary file to report unclassified and species classified reads and percentages
-	unclass=$(head -n 1 "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" | cut -d' ' -f2)
-	#true_unclass=$(head -n 1 "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
-	domain=$(sed -n '2p' "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" | cut -d' ' -f2)
-	genuspost=$(sed -n '7p' "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" | cut -d' ' -f4)
-	speciespost=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" | cut -d' ' -f4)
-	speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" | cut -d' ' -f2)
-	#true_speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
+	unclass=$(head -n 1 "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled.txt" | cut -d' ' -f2)
+	#true_unclass=$(head -n 1 "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
+	domain=$(sed -n '2p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled.txt" | cut -d' ' -f2)
+	genuspost=$(sed -n '7p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled.txt" | cut -d' ' -f4)
+	speciespost=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled.txt" | cut -d' ' -f4)
+	speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled.txt" | cut -d' ' -f2)
+	#true_speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
 	# If there are no reads at the domain level, then report no classified reads
 	if (( $(echo "${domain} <= 0" | bc -l) )); then
 		printf "%-20s: %-8s : %s\\n" "post Classify" "FAILED" "There are no classified reads (Did post assembly kraken fail too?)"
@@ -591,20 +592,12 @@ if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" 
 	fi
 # If no summary file was found
 else
-	printf "%-20s: %-8s : %s\\n" "post Classify" "FAILED" "/kraken/postAssembly/${1}_kraken_summary_assembled.txt not found"
+	printf "%-20s: %-8s : %s\\n" "post Classify" "FAILED" "/kraken/postAssembly/${sample_name}_kraken_summary_assembled.txt not found"
 	status="FAILED"
 fi
 
-#Check weighted kraken on assembly
-kraken_weighted_success=false
-if [[ ! -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled_BP.kraken" ]]; then
-	if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled.kraken" ]]; then
-		${shareScript}/run_kraken.sh "${1}" "post" "assembled" "${2}"
-	fi
-fi
-
 # Quick separate check for contamination by finding # of species above ${contamination_threshold} in list file from kraken
-if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled.list" ]]; then
+if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_assembled.list" ]]; then
 	number_of_species=0
 	while IFS= read -r line; do
 		arrLine=(${line})
@@ -617,7 +610,7 @@ if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled.list" ]]; then
 		if [[ "${classification}" == "S" ]] && (( percent_integer > contamination_threshold )); then
 			number_of_species=$(( number_of_species + 1 ))
 		fi
-	done < ${SAMPDATADIR}/kraken/postAssembly/${1}_assembled.list
+	done < ${SAMPDATADIR}/kraken/postAssembly/${sample_name}_assembled.list
 	if [[ $number_of_species -gt 1 ]]; then
 		printf "%-20s: %-8s : %s\\n" "post Class Contam." "ALERT" "${number_of_species} species have been found above the ${contamination_threshold}% threshold"
 		if [[ "${status}" == "SUCCESS" ]]; then
@@ -636,20 +629,20 @@ fi
 
 
 
-if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled_BP.kraken" ]]; then
+if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_assembled_BP.kraken" ]]; then
 	#printf "%-20s: %-8s : %s\\n" "kraken weighted" "SUCCESS" "Found"
 	kraken_weighted_success=true
 else
-	printf "%-20s: %-8s : %s\\n" "kraken weighted" "FAILED" "${1}_assembled_BP.kraken not found"
+	printf "%-20s: %-8s : %s\\n" "kraken weighted" "FAILED" "${sample_name}_assembled_BP.kraken not found"
 	status="FAILED"
 fi
 #Check Krona output of weighted assembly
 if [[ "${kraken_weighted_success}" = true ]]; then
-	if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled_weighted.krona" ]] && [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled_weighted_BP_krona.html" ]]; then
+	if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_assembled_weighted.krona" ]] && [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_assembled_weighted_BP_krona.html" ]]; then
 		#printf "%-20s: %-8s : %s\\n" "krona-kraken-weight" "SUCCESS" "Found"
 		:
 	else
-		printf "%-20s: %-8s : %s\\n" "krona-kraken-weight" "FAILED" "/kraken/postAssembly/${1}_assembled_weighted.krona &&|| /kraken/postAssembly/${1}_assembled_weighted_BP_krona.html not found"
+		printf "%-20s: %-8s : %s\\n" "krona-kraken-weight" "FAILED" "/kraken/postAssembly/${sample_name}_assembled_weighted.krona &&|| /kraken/postAssembly/${sample_name}_assembled_weighted_BP_krona.html not found"
 		status="FAILED"
 	fi
 else
@@ -657,15 +650,15 @@ else
 	status="FAILED"
 fi
 #Check extraction and unclassified values for weighted kraken post assembly
-if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled_BP.txt" ]]; then
+if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" ]]; then
 	# Extracts many elements of the summary file to report unclassified and species classified reads and percentages
-	unclass=$(head -n 1 "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled_BP.txt" | cut -d' ' -f2)
-	#true_unclass=$(head -n 1 "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled_BP.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
-	domain=$(sed -n '2p' "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled_BP.txt" | cut -d' ' -f2)
-	genusweighted=$(sed -n '7p' "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled_BP.txt" | cut -d' ' -f4)
-	speciesweighted=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled_BP.txt" | cut -d' ' -f4)
-	speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled_BP.txt" | cut -d' ' -f2)
-	#true_speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled_BP.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
+	unclass=$(head -n 1 "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f2)
+	#true_unclass=$(head -n 1 "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
+	domain=$(sed -n '2p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f2)
+	genusweighted=$(sed -n '7p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f4)
+	speciesweighted=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f4)
+	speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f2)
+	#true_speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
 	# If there are no reads at the domain level, then report no classified reads
 	if (( $(echo "${domain} <= 0" | bc -l) )); then
 		printf "%-20s: %-8s : %s\\n" "weighted Classify" "FAILED" "There are no classified reads (Did post assembly kraken fail too?)"
@@ -687,12 +680,12 @@ if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_kraken_summary_assembled_BP.tx
 	fi
 # If no summary file was found
 else
-	printf "%-20s: %-8s : %s\\n" "weighted Classify" "FAILED" "/kraken/postAssembly/${1}_kraken_summary_assembled_BP.txt not found"
+	printf "%-20s: %-8s : %s\\n" "weighted Classify" "FAILED" "/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt not found"
 	status="FAILED"
 fi
 
 # Quick separate check for contamination by finding # of species above ${contamination_threshold} in list file from kraken
-if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled_BP.list" ]]; then
+if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_assembled_BP.list" ]]; then
 	number_of_species=0
 	while IFS= read -r line; do
 		arrLine=(${line})
@@ -705,7 +698,7 @@ if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${1}_assembled_BP.list" ]]; then
 			#echo "Adding ${line} because its S and greater than ${contamination_threshold}... ${percent_integer}"
 			number_of_species=$(( number_of_species + 1 ))
 		fi
-	done < ${SAMPDATADIR}/kraken/postAssembly/${1}_assembled_BP.list
+	done < ${SAMPDATADIR}/kraken/postAssembly/${sample_name}_assembled_BP.list
 	if [[ $number_of_species -gt 1 ]]; then
 		printf "%-20s: %-8s : %s\\n" "weighted Contam." "FAILED" "${number_of_species} species have been found above the ${contamination_threshold}% threshold"
 		status="FAILED"
@@ -720,12 +713,12 @@ fi
 
 
 #Check QUAST
-if [[ -s "${SAMPDATADIR}/Assembly_Stats/${1}_report.tsv" ]]; then
+if [[ -s "${SAMPDATADIR}/Assembly_Stats/${sample_name}_report.tsv" ]]; then
 	# Extract the useful bits and report (to compare to Toms)
-	contig_num=$(sed -n '14p' "${SAMPDATADIR}/Assembly_Stats/${1}_report.tsv"| sed -r 's/[\t]+/ /g' | cut -d' ' -f3 )
-	assembly_length=$(sed -n '16p' "${SAMPDATADIR}/Assembly_Stats/${1}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
-	N50=$(sed -n '18p' "${SAMPDATADIR}/Assembly_Stats/${1}_report.tsv"  | sed -r 's/[\t]+/ /g'| cut -d' ' -f2)
-	GC_con=$(sed -n '17p' "${SAMPDATADIR}/Assembly_Stats/${1}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
+	contig_num=$(sed -n '14p' "${SAMPDATADIR}/Assembly_Stats/${sample_name}_report.tsv"| sed -r 's/[\t]+/ /g' | cut -d' ' -f3 )
+	assembly_length=$(sed -n '16p' "${SAMPDATADIR}/Assembly_Stats/${sample_name}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
+	N50=$(sed -n '18p' "${SAMPDATADIR}/Assembly_Stats/${sample_name}_report.tsv"  | sed -r 's/[\t]+/ /g'| cut -d' ' -f2)
+	GC_con=$(sed -n '17p' "${SAMPDATADIR}/Assembly_Stats/${sample_name}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
 	printf "%-20s: %-8s : %s\\n" "QUAST" "SUCCESS" "#-${contig_num} length-${assembly_length} n50-${N50} %GC-${GC_con}"
 else
 	printf "%-20s: %-8s : %s\\n" "QUAST" "FAILED" "/Assembly_Stats/report.tsv does not exist"
@@ -733,11 +726,11 @@ else
 fi
 
 # Get determinde taxonomy
-if [[ ! -s "${src}/${1}.tax" ]]; then
-	"${src}/determine_taxID.sh" "${1}" "${2}" "${OUTDIR}" "${local_DBs}"
+if [[ ! -s "${SAMPDATADIR}/${sample_name}.tax" ]]; then
+	"${src}/determine_taxID.sh" "${SAMPDATA}" "${databases}"
 fi
 
-source_call=$(head -n1 "${SAMPDATADIR}/${1}.tax")
+source_call=$(head -n1 "${SAMPDATADIR}/${sample_name}.tax")
 while IFS= read -r line; do
 	# Grab first letter of line (indicating taxonomic level)
 	first=${line:0:1}
@@ -752,7 +745,7 @@ while IFS= read -r line; do
 	then
 		dec_family=$(echo "${line}" | awk -F ' ' '{print $2}')
 	fi
-done < "${SAMPDATADIR}/${1}.tax"
+done < "${SAMPDATADIR}/${sample_name}.tax"
 
 if [[ "$dec_genus" != "Not_assigned" ]] && [[ "$dec_species" != "Not_assigned" ]]; then
 	printf "%-20s: %-8s : %s\\n" "Taxa" "SUCCESS" "${dec_genus} ${dec_species}"
@@ -773,7 +766,7 @@ while IFS= read -r bug_lines || [ -n "$bug_lines" ]; do
 	bug_name=$(echo "${bug_lines}" | cut -d'	' -f3)
 	#echo "Should be adding ${bug_size} for ${bug_name}"
 	mmb_bugs["${bug_name}"]="${bug_size}"
-done < ${local_DBs}/MMB_Bugs.txt
+done < ${databases}/MMB_Bugs.txt
 genus_initial="${dec_genus:0:1}"
 assembly_ID="${genus_initial}.${dec_species}"
 #echo "${mmb_bugs[@]}"
@@ -798,8 +791,8 @@ else
 fi
 
 # check coverage
-if [[ -s "${SAMPDATADIR}/preQCcounts/${1}_counts.txt" ]]; then
-	line=$(tail -n1 "${SAMPDATADIR}/preQCcounts/${1}_counts.txt")
+if [[ -s "${SAMPDATADIR}/preQCcounts/${sample_name}_counts.txt" ]]; then
+	line=$(tail -n1 "${SAMPDATADIR}/preQCcounts/${sample_name}_counts.txt")
 	IFS='	' read -r -a qcs <<< "${line}"
 	read_qc_info=${qcs[@]:1}
 	# Extract q30 reads from qcCounts to calculate average coverage as q30_reads/assembly_length
@@ -825,8 +818,8 @@ if [[ -s "${SAMPDATADIR}/preQCcounts/${1}_counts.txt" ]]; then
 		status="FAILED"
 	fi
 fi
-if [[ -s "${SAMPDATADIR}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
-	line=$(tail -n1 "${SAMPDATADIR}/preQCcounts/${1}_trimmed_counts.txt")
+if [[ -s "${SAMPDATADIR}/preQCcounts/${sample_name}_trimmed_counts.txt" ]]; then
+	line=$(tail -n1 "${SAMPDATADIR}/preQCcounts/${sample_name}_trimmed_counts.txt")
 	IFS='	' read -r -a qcs <<< "${line}"
 	read_qc_info=${qcs[@]:1}
 	# Extract q30 reads from qcCounts to calculate average coverage as q30_reads/assembly_length
@@ -854,23 +847,23 @@ if [[ -s "${SAMPDATADIR}/preQCcounts/${1}_trimmed_counts.txt" ]]; then
 fi
 
 # Check prokka
-if [[ -s "${SAMPDATADIR}/prokka/${1}_PROKKA.gbf" ]]; then
+if [[ -s "${SAMPDATADIR}/prokka/${sample_name}_PROKKA.gbf" ]]; then
 	# Counts the number of genes present in the file using the 'CDS' identifier
 	genes="CDS"
-	genes=$(grep -c ${genes} "${SAMPDATADIR}/prokka/${1}_PROKKA.gbf")
+	genes=$(grep -c ${genes} "${SAMPDATADIR}/prokka/${sample_name}_PROKKA.gbf")
 	printf "%-20s: %-8s : %s\\n" "prokka" "SUCCESS" "${genes} genes found"
-elif [[ -s "${SAMPDATADIR}/prokka/${1}_PROKKA.gbk" ]]; then
+elif [[ -s "${SAMPDATADIR}/prokka/${sample_name}_PROKKA.gbk" ]]; then
 	# Counts the number of genes present in the file using the 'CDS' identifier
 	genes="CDS"
-	genes=$(grep -c ${genes} "${SAMPDATADIR}/prokka/${1}_PROKKA.gbk")
+	genes=$(grep -c ${genes} "${SAMPDATADIR}/prokka/${sample_name}_PROKKA.gbk")
 	printf "%-20s: %-8s : %s\\n" "prokka" "SUCCESS" "${genes} genes found"
 else
-	printf "%-20s: %-8s : %s\\n" "prokka" "FAILED" "/prokka/${1}_PROKKA.gbf not found"
+	printf "%-20s: %-8s : %s\\n" "prokka" "FAILED" "/prokka/${sample_name}_PROKKA.gbf not found"
 	status="FAILED"
 fi
 
 #Check BUSCO
-if [[ -s "${SAMPDATADIR}/BUSCO/short_summary_${1}.txt" ]]; then
+if [[ -s "${SAMPDATADIR}/BUSCO/short_summary_${sample_name}.txt" ]]; then
 	# Reads each line of the busco output file to extract the 3 that contain summary data to report
 	while IFS= read -r line; do
 		# If the line contains info for found buscos, total buscos, or database info grab it
@@ -887,7 +880,7 @@ if [[ -s "${SAMPDATADIR}/BUSCO/short_summary_${1}.txt" ]]; then
 			#echo "L-"${line}
 			db=$(echo "${line}" | awk -F ' ' '{print $6}')
 		fi
-	done < "${SAMPDATADIR}/BUSCO/short_summary_${1}.txt"
+	done < "${SAMPDATADIR}/BUSCO/short_summary_${sample_name}.txt"
 	percent_BUSCO_present=$(bc<<<"${found_buscos}*100/${total_buscos}")
 	if [[ "${percent_BUSCO_present}" -gt 90 ]]; then
 		printf "%-20s: %-8s : %s\\n" "BUSCO" "SUCCESS" "${percent_BUSCO_present}% (${found_buscos}/${total_buscos}) against ${db}"
@@ -897,15 +890,15 @@ if [[ -s "${SAMPDATADIR}/BUSCO/short_summary_${1}.txt" ]]; then
 	fi
 # If the busco summary file does not exist
 else
-	printf "%-20s: %-8s : %s\\n" "BUSCO" "FAILED" "/BUSCO/short_summary_${1}.txt not found"
+	printf "%-20s: %-8s : %s\\n" "BUSCO" "FAILED" "/BUSCO/short_summary_${sample_name}.txt not found"
 	status="FAILED"
 fi
 #Check ANI
 ani_found=false
 #Check ANI REFSEQ. Not fully implemented yet, so not causing a failure in reporting
-if [[ -f "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_REFSEQ_${REFSEQ_date}).txt" ]]; then
+if [[ -f "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${sample_name}_vs_REFSEQ_${REFSEQ_date}).txt" ]]; then
 	#echo "ALL"
-	ani_info=$(head -n 1 "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_REFSEQ_${REFSEQ_date}).txt")
+	ani_info=$(head -n 1 "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${sample_name}_vs_REFSEQ_${REFSEQ_date}).txt")
 	percent_match=$(echo "${ani_info}" | cut -d'.' -f1)
 	coverage_match=$(echo "${ani_info}" | cut -d'-' -f2 | cut -d'.' -f1)
 	#echo "${percent_match--}"
@@ -926,8 +919,8 @@ if [[ -f "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_REFSEQ_${REFSEQ_date}
 	fi
 else
 	# Old version found, should still be good, but would mark as an ALERT, maybe Warning
-	if [[ -f "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_REFSEQ*).txt" ]]; then
-		old_ani_file=$(find ${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${1}_vs_REFSEQ*).txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n)
+	if [[ -f "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${sample_name}_vs_REFSEQ*).txt" ]]; then
+		old_ani_file=$(find ${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${sample_name}_vs_REFSEQ*).txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n)
 		old_ani_date=$(echo "${old_ani_file}" | rev | cut -d'_' -f1,2 | rev | cut -d'.' -f1)
 		old_ani_info=$(head -n1 "${old_ani_file}")
 		percent_match=$(echo "${old_ani_info}" | cut -d'.' -f1)
@@ -971,7 +964,7 @@ if [[ -d "${SAMPDATADIR}/c-sstar/" ]]; then
 	else
 		sim="98"
 	fi
-	csstar_file=$(find ${SAMPDATADIR}/c-sstar/${1}.ResGANNCBI*.${gapping}_${sim}_sstar_summary.txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+	csstar_file=$(find ${SAMPDATADIR}/c-sstar/${sample_name}.ResGANNCBI*.${gapping}_${sim}_sstar_summary.txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 	if [[ -z "${csstar_file}" ]]; then
 		printf "%-20s: %-8s : %s\\n" "c-SSTAR" "FAILED" "/c-sstar/ does not have an sstar_summary file"
 		status="FAILED"
@@ -1005,7 +998,7 @@ fi
 
 #Check GAMA
 if [[ -d "${SAMPDATADIR}/GAMA/" ]]; then
-	GAMA_file=$(find ${SAMPDATADIR}/GAMA -maxdepth 1 -type f -name "${1}.ResGANNCBI*.GAMA"   -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+	GAMA_file=$(find ${SAMPDATADIR}/GAMA -maxdepth 1 -type f -name "${sample_name}.ResGANNCBI*.GAMA"   -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 	if [[ -z "${GAMA_file}" ]]; then
 		printf "%-20s: %-8s : %s\\n" "GAMA" "FAILED" "/GAMA/ does not have a .GAMA file"
 		status="FAILED"
@@ -1036,7 +1029,7 @@ fi
 
 # check SRST2 output
 if [[ -d "${SAMPDATADIR}/srst2/" ]]; then
-	ResGANNCBI_srst2_file=$(find ${SAMPDATADIR}/srst2/${1}__genes__ResGANNCBI*_srst2__results.txt -maxdepth 1 -type f -printf '%p\n' | sort -k6,6 -rt '_' -n | head -n 1)
+	ResGANNCBI_srst2_file=$(find ${SAMPDATADIR}/srst2/${sample_name}__genes__ResGANNCBI*_srst2__results.txt -maxdepth 1 -type f -printf '%p\n' | sort -k6,6 -rt '_' -n | head -n 1)
 	#echo ${ResGANNCBI_srst2_file}
 	if [[ -s "${ResGANNCBI_srst2_file}" ]]; then
 		ResGANNCBI_srst2_DB=$(echo "${ResGANNCBI_srst2_file}" | rev | cut -d'_' -f4,5 | rev)
@@ -1076,15 +1069,15 @@ fi
 
 # check MLST
 if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
-	if [[ -s "${SAMPDATADIR}/MLST/${1}_Pasteur.mlst" ]] || [[ -s "${SAMPDATADIR}/MLST/${1}.mlst" ]]; then
-		if [[ -f "${SAMPDATADIR}/MLST/${1}.mlst" ]]; then
-			mv "${SAMPDATADIR}/MLST/${1}.mlst" "${SAMPDATADIR}/MLST/${1}_Pasteur.mlst"
+	if [[ -s "${SAMPDATADIR}/MLST/${sample_name}_Pasteur.mlst" ]] || [[ -s "${SAMPDATADIR}/MLST/${sample_name}.mlst" ]]; then
+		if [[ -f "${SAMPDATADIR}/MLST/${sample_name}.mlst" ]]; then
+			mv "${SAMPDATADIR}/MLST/${sample_name}.mlst" "${SAMPDATADIR}/MLST/${sample_name}_Pasteur.mlst"
 		fi
-		if [[ -f "${SAMPDATADIR}/MLST/${1}_ecoli_2.mlst" ]]; then
-			mv "${SAMPDATADIR}/MLST/${1}_Pasteur.mlst" "${SAMPDATADIR}/MLST/${1}_Achtman.mlst"
-			mv "${SAMPDATADIR}/MLST/${1}_ecoli_2.mlst" "${SAMPDATADIR}/MLST/${1}_Pasteur.mlst"
+		if [[ -f "${SAMPDATADIR}/MLST/${sample_name}_ecoli_2.mlst" ]]; then
+			mv "${SAMPDATADIR}/MLST/${sample_name}_Pasteur.mlst" "${SAMPDATADIR}/MLST/${sample_name}_Achtman.mlst"
+			mv "${SAMPDATADIR}/MLST/${sample_name}_ecoli_2.mlst" "${SAMPDATADIR}/MLST/${sample_name}_Pasteur.mlst"
 		fi
-		info=$(head -n 1 "${SAMPDATADIR}/MLST/${1}_Pasteur.mlst")
+		info=$(head -n 1 "${SAMPDATADIR}/MLST/${sample_name}_Pasteur.mlst")
 		mlstype=$(echo "${info}" | cut -d'	' -f3)
 		mlstdb=$(echo "${info}" | cut -d'	' -f2)
 		#echo "'${mlstdb}:${mlstype}'"
@@ -1111,15 +1104,15 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 			printf "%-20s: %-8s : %s\\n" "MLST" "SUCCESS" "TYPE is ${mlstype} from ${mlstdb}"
 		fi
 	else
-		printf "%-20s: %-8s : %s\\n" "MLST" "FAILED" "${1}.mlst does not exist"
+		printf "%-20s: %-8s : %s\\n" "MLST" "FAILED" "${sample_name}.mlst does not exist"
 		status="FAILED"
 	fi
 	if [[ "${dec_genus}" = "Acinetobacter" ]]; then
-		if [[ -s "${SAMPDATADIR}/MLST/${1}_abaumannii.mlst" ]] || [[ -s "${SAMPDATADIR}/MLST/${1}_Oxford.mlst" ]]; then
-			if [[ -s "${SAMPDATADIR}/MLST/${1}_abaumannii.mlst" ]]; then
-				mv "${SAMPDATADIR}/MLST/${1}_abaumannii.mlst" "${SAMPDATADIR}/MLST/${1}_Oxford.mlst"
+		if [[ -s "${SAMPDATADIR}/MLST/${sample_name}_abaumannii.mlst" ]] || [[ -s "${SAMPDATADIR}/MLST/${sample_name}_Oxford.mlst" ]]; then
+			if [[ -s "${SAMPDATADIR}/MLST/${sample_name}_abaumannii.mlst" ]]; then
+				mv "${SAMPDATADIR}/MLST/${sample_name}_abaumannii.mlst" "${SAMPDATADIR}/MLST/${sample_name}_Oxford.mlst"
 			fi
-			info=$(tail -n 1 "${SAMPDATADIR}/MLST/${1}_Oxford.mlst")
+			info=$(tail -n 1 "${SAMPDATADIR}/MLST/${sample_name}_Oxford.mlst")
 			mlstype=$(echo "${info}" | cut -d'	' -f3)
 			mlstdb=$(echo "${info}" | cut -d'	' -f2)
 			#echo "'${mlstdb}:${mlstype}'"
@@ -1142,8 +1135,8 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 		fi
 	fi
 	if [[ "${dec_genus}" = "Escherichia" ]]; then
-		if [[ -s "${SAMPDATADIR}/MLST/${1}_Achtman.mlst" ]]; then
-			info=$(tail -n 1 "${SAMPDATADIR}/MLST/${1}_Achtman.mlst")
+		if [[ -s "${SAMPDATADIR}/MLST/${sample_name}_Achtman.mlst" ]]; then
+			info=$(tail -n 1 "${SAMPDATADIR}/MLST/${sample_name}_Achtman.mlst")
 			mlstype=$(echo "${info}" | cut -d'	' -f3)
 			mlstdb=$(echo "${info}" | cut -d'	' -f2)
 			#echo "'${mlstdb}:${mlstype}'"
@@ -1170,7 +1163,7 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 	num_srst2_mlsts=$(find ${SAMPDATADIR}/MLST -type f -name "*_srst2_*.mlst" | wc -l)
 	#echo "${num_srst2_mlsts}"
 	if [[ "${num_srst2_mlsts}" -eq 0 ]]; then
-		#echo "No mlst srst2 was attempted on this isolate (${1})"
+		#echo "No mlst srst2 was attempted on this isolate (${sample_name})"
 		:
 	elif [[ "${num_srst2_mlsts}" -eq 1 ]]; then
 		srst_mlst=$(find ${SAMPDATADIR}/MLST -type f -name "*_srst2_*.mlst")
@@ -1195,8 +1188,8 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 		fi
 	elif [[ "${num_srst2_mlsts}" -eq 2 ]]; then
 		if [[ "${dec_genus}" = "Acinetobacter" ]]; then
-			if [[ -f "${SAMPDATADIR}/MLST/${1}_srst2_Acinetobacter_baumannii#1-Oxford.mlst" ]]; then
-				srst_mlst="${SAMPDATADIR}/MLST/${1}_srst2_Acinetobacter_baumannii#1-Oxford.mlst"
+			if [[ -f "${SAMPDATADIR}/MLST/${sample_name}_srst2_Acinetobacter_baumannii#1-Oxford.mlst" ]]; then
+				srst_mlst="${SAMPDATADIR}/MLST/${sample_name}_srst2_Acinetobacter_baumannii#1-Oxford.mlst"
 				mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 				mlstdb="abaumannii(Oxford)"
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
@@ -1212,8 +1205,8 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "SUCCESS" "TYPE is ${mlstype} from ${mlstdb}"
 				fi
 			fi
-			if [[ -f "${SAMPDATADIR}/MLST/${1}_srst2_Acinetobacter_baumannii#2-Pasteur.mlst" ]]; then
-				srst_mlst="${SAMPDATADIR}/MLST/${1}_srst2_Acinetobacter_baumannii#2-Pasteur.mlst"
+			if [[ -f "${SAMPDATADIR}/MLST/${sample_name}_srst2_Acinetobacter_baumannii#2-Pasteur.mlst" ]]; then
+				srst_mlst="${SAMPDATADIR}/MLST/${sample_name}_srst2_Acinetobacter_baumannii#2-Pasteur.mlst"
 				mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 				mlstdb="abaumannii_2(Pasteur)"
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
@@ -1230,8 +1223,8 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 				fi
 			fi
 		elif [[ "${dec_genus}" = "Escherichia" ]]; then
-			if [[ -f "${SAMPDATADIR}/MLST/${1}_srst2_Escherichia_coli#1-Achtman.mlst" ]]; then
-				srst_mlst="${SAMPDATADIR}/MLST/${1}_srst2_Escherichia_coli#1-Achtman.mlst"
+			if [[ -f "${SAMPDATADIR}/MLST/${sample_name}_srst2_Escherichia_coli#1-Achtman.mlst" ]]; then
+				srst_mlst="${SAMPDATADIR}/MLST/${sample_name}_srst2_Escherichia_coli#1-Achtman.mlst"
 				mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 				mlstdb="ecoli(Achtman)"
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
@@ -1247,8 +1240,8 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "SUCCESS" "TYPE is ${mlstype} from ${mlstdb}"
 				fi
 			fi
-			if [[ -f "${SAMPDATADIR}/MLST/${1}_srst2_Escherichia_coli#2-Pasteur.mlst" ]]; then
-				srst_mlst="${SAMPDATADIR}/MLST/${1}_srst2_Escherichia_coli#2-Pasteur.mlst"
+			if [[ -f "${SAMPDATADIR}/MLST/${sample_name}_srst2_Escherichia_coli#2-Pasteur.mlst" ]]; then
+				srst_mlst="${SAMPDATADIR}/MLST/${sample_name}_srst2_Escherichia_coli#2-Pasteur.mlst"
 				mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 				mlstdb="ecoli_2(Pasteur)"
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
@@ -1283,8 +1276,8 @@ else
 fi
 # check 16s Identification
 if [[ -d "${SAMPDATADIR}/16s/" ]]; then
-	if [[ -s "${SAMPDATADIR}/16s/${1}_16s_blast_id.txt" ]]; then
-		info_b=$(head -n 1 "${SAMPDATADIR}/16s/${1}_16s_blast_id.txt")
+	if [[ -s "${SAMPDATADIR}/16s/${sample_name}_16s_blast_id.txt" ]]; then
+		info_b=$(head -n 1 "${SAMPDATADIR}/16s/${sample_name}_16s_blast_id.txt")
 		genus_b=$(echo ${info_b} | cut -d' ' -f3)
 		species_b=$(echo ${info_b} | cut -d' ' -f4-)
 		IFS=' ' read -r -a id_array <<< "${info_b}"
@@ -1321,11 +1314,11 @@ if [[ -d "${SAMPDATADIR}/16s/" ]]; then
 			report_info=$(echo "${info_b}" | cut -d' ' -f2-)
 			status="FAILED"
 		else
-			printf "%-20s: %-8s : %s\\n" "16s_best_hit" "FAILED" "Nothing found in ${1}_16s_blast_id.txt,"
+			printf "%-20s: %-8s : %s\\n" "16s_best_hit" "FAILED" "Nothing found in ${sample_name}_16s_blast_id.txt,"
 			report_info=$(echo "${info_l}" | cut -d' ' -f2-)
 			status="FAILED"
 		fi
-		info_l=$(tail -n 1 "${SAMPDATADIR}/16s/${1}_16s_blast_id.txt")
+		info_l=$(tail -n 1 "${SAMPDATADIR}/16s/${sample_name}_16s_blast_id.txt")
 		genus_l=$(echo ${info_l} | cut -d' ' -f3)
 		species_l=$(echo ${info_l} | cut -d' ' -f4-)
 		IFS=' ' read -r -a id_array <<< "${info_l}"
@@ -1361,12 +1354,12 @@ if [[ -d "${SAMPDATADIR}/16s/" ]]; then
 			report_info=$(echo "${info_l}" | cut -d' ' -f2-)
 			status="FAILED"
 		else
-			printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "FAILED" "nothing found in ${1}_16s_blast_id.txt,"
+			printf "%-20s: %-8s : %s\\n" "16s_largest_hit" "FAILED" "nothing found in ${sample_name}_16s_blast_id.txt,"
 			report_info=$(echo "${info_l}" | cut -d' ' -f2-)
 			status="FAILED"
 		fi
 	else
-		printf "%-20s: %-8s : %s\\n" "16s" "FAILED" "${1}_16s_blast_id.txt does not exist"
+		printf "%-20s: %-8s : %s\\n" "16s" "FAILED" "${sample_name}_16s_blast_id.txt does not exist"
 		status="FAILED"
 	fi
 # No 16s folder exists (pipeline must have failed as it would create a default one otherwise)
@@ -1377,7 +1370,7 @@ fi
 
 # check plasmids
 if [[ -d "${SAMPDATADIR}/plasmidFinder/" ]]; then
-	if [[ -s "${SAMPDATADIR}/plasmidFinder/${1}_results_table_summary.txt" ]]; then
+	if [[ -s "${SAMPDATADIR}/plasmidFinder/${sample_name}_results_table_summary.txt" ]]; then
 		number_of_plasmids=0
 		while read line_in; do
 			line_in=$(echo ${line_in} | cut -d' ' -f1)
@@ -1386,7 +1379,7 @@ if [[ -d "${SAMPDATADIR}/plasmidFinder/" ]]; then
 			else
 				number_of_plasmids=$(( number_of_plasmids + 1 ))
 			fi
-		done < "${SAMPDATADIR}/plasmidFinder/${1}_results_table_summary.txt"
+		done < "${SAMPDATADIR}/plasmidFinder/${sample_name}_results_table_summary.txt"
 		printf "%-20s: %-8s : %s\\n" "plasmidFinder" "SUCCESS" "${number_of_plasmids} replicons were found in the full scaffold"
 	else
 		printf "%-20s: %-8s : %s\\n" "plasmidFinder" "FAILED" "results_table_summary.txt does not exist"
@@ -1402,10 +1395,10 @@ fi
 # #Check plasFlow plasmid assembly
 plasmidsFoundviaplasFlow=0
 if [[ -d "${SAMPDATADIR}/plasFlow" ]]; then
-	if [[ -s "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_original.fasta" ]]; then
+	if [[ -s "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${sample_name}_uni_assembly/${sample_name}_plasmid_assembly_original.fasta" ]]; then
 		# Count the number of '>' in the assembly file before trimming
 		plas_scaffolds=">"
-		plas_scaffolds=$(grep -c ${plas_scaffolds} "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_original.fasta")
+		plas_scaffolds=$(grep -c ${plas_scaffolds} "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${sample_name}_uni_assembly/${sample_name}_plasmid_assembly_original.fasta")
 		if [ -z ${plas_scaffolds} ]; then
 			plas_scaffolds=0
 		fi
@@ -1435,10 +1428,10 @@ fi
 #Check short scaffolds reduction script for plasmid assembly
 #echo "${plasmidsFoundviaplasFlow}-Found?"
 if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
-	if [[ -s "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta" ]]; then
+	if [[ -s "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${sample_name}_uni_assembly/${sample_name}_plasmid_assembly_trimmed.fasta" ]]; then
 		# Count the number of '>' still remaining after trimming the contig file
 		plas_longies=">"
-		plas_longies=$(grep -c ${plas_longies} "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta")
+		plas_longies=$(grep -c ${plas_longies} "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${sample_name}_uni_assembly/${sample_name}_plasmid_assembly_trimmed.fasta")
 		# Calculate the number of lost (short) scaffolds
 		plas_shorties=$(( plas_scaffolds - plas_longies ))
 		if [ -z ${plas_shorties} ]; then
@@ -1449,20 +1442,20 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 		else
 			printf "%-20s: %-8s : %s\\n" "plasFlow contig Trim" "SUCCESS" "No plasmid scaffold found"
 		fi
-	elif [[ -f "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta" ]]; then
+	elif [[ -f "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${sample_name}_uni_assembly/${sample_name}_plasmid_assembly_trimmed.fasta" ]]; then
 		printf "%-20s: %-8s : %s\\n" "plasFlow contig Trim" "SUCCESS" "No plasmid scaffolds found"
 	else
-		printf "%-20s: %-8s : %s\\n" "plasFlow contig Trim" "FAILED" "plasFlow/Unicycler_assemblies/${1}_uni_assembly/${1}_plasmid_assembly_trimmed.fasta not found"
+		printf "%-20s: %-8s : %s\\n" "plasFlow contig Trim" "FAILED" "plasFlow/Unicycler_assemblies/${sample_name}_uni_assembly/${sample_name}_plasmid_assembly_trimmed.fasta not found"
 		status="FAILED"
 	fi
 
 	# Check quality of plasmid Assembly
-	if [[ -s "${SAMPDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv" ]]; then
+	if [[ -s "${SAMPDATADIR}/Assembly_Stats_plasFlow/${sample_name}_report.tsv" ]]; then
 		# Extract the useful bits and report (to compare to Toms)
-		contig_num_plas=$(sed -n '14p' "${SAMPDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv"| sed -r 's/[\t]+/ /g' | cut -d' ' -f3 )
-		assembly_length_plas=$(sed -n '16p' "${SAMPDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
-		N50_plas=$(sed -n '18p' "${SAMPDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv"  | sed -r 's/[\t]+/ /g'| cut -d' ' -f2)
-		GC_con_plas=$(sed -n '17p' "${SAMPDATADIR}/Assembly_Stats_plasFlow/${1}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
+		contig_num_plas=$(sed -n '14p' "${SAMPDATADIR}/Assembly_Stats_plasFlow/${sample_name}_report.tsv"| sed -r 's/[\t]+/ /g' | cut -d' ' -f3 )
+		assembly_length_plas=$(sed -n '16p' "${SAMPDATADIR}/Assembly_Stats_plasFlow/${sample_name}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
+		N50_plas=$(sed -n '18p' "${SAMPDATADIR}/Assembly_Stats_plasFlow/${sample_name}_report.tsv"  | sed -r 's/[\t]+/ /g'| cut -d' ' -f2)
+		GC_con_plas=$(sed -n '17p' "${SAMPDATADIR}/Assembly_Stats_plasFlow/${sample_name}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
 		printf "%-20s: %-8s : %s\\n" "QUAST_plasFlow" "SUCCESS" "#-${contig_num_plas} length-${assembly_length_plas} n50-${N50_plas} %GC-${GC_con_plas}"
 	else
 		printf "%-20s: %-8s : %s\\n" "QUAST_plasFlow" "FAILED" "/Assembly_Stats_plasFlow/report.tsv does not exist"
@@ -1481,10 +1474,10 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 		else
 			sim="40"
 		fi
-		csstar_plasFlow_file=$(find ${SAMPDATADIR}/c-sstar_plasFlow/${1}.ResGANNCBI*.${gapping}_${sim}_sstar_summary.txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+		csstar_plasFlow_file=$(find ${SAMPDATADIR}/c-sstar_plasFlow/${sample_name}.ResGANNCBI*.${gapping}_${sim}_sstar_summary.txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 		if [[ -z "${csstar_plasFlow_file}" ]]; then
 			printf "%-20s: %-8s : %s\\n" "c-SSTAR_plasFlow" "FAILED" "/c-sstar_plasFlow/ does not have an sstar_summary file"
-			echo "Looking for ${SAMPDATADIR}/c-sstar_plasFlow/${1}.ResGANNCBI.${gapping}_${sim}_sstar_summary.txt"
+			echo "Looking for ${SAMPDATADIR}/c-sstar_plasFlow/${sample_name}.ResGANNCBI.${gapping}_${sim}_sstar_summary.txt"
 			status="FAILED"
 		else
 			header=$(head -n1 "${csstar_plasFlow_file}")
@@ -1521,7 +1514,7 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 
 	if [[ -d  "${SAMPDATADIR}/GAMA_plasFlow" ]]; then
 		#Check c-SSTAR
-		GAMA_plasFlow_file=$(find ${SAMPDATADIR}/GAMA_plasFlow -maxdepth 1 -type f -name "${1}.ResGANNCBI*.GAMA"   -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+		GAMA_plasFlow_file=$(find ${SAMPDATADIR}/GAMA_plasFlow -maxdepth 1 -type f -name "${sample_name}.ResGANNCBI*.GAMA"   -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 		if [[ -z "${GAMA_plasFlow_file}" ]]; then
 			printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "FAILED" "/GAMA_plasFlow/ does not have a .GAMA file"
 			status="FAILED"
@@ -1552,7 +1545,7 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 
 	# check plasmids (on plasmidAssembly)
 	if [[ -d "${SAMPDATADIR}/plasmidFinder_on_plasFlow/" ]]; then
-		if [[ -s "${SAMPDATADIR}/plasmidFinder_on_plasFlow/${1}_results_table_summary.txt" ]]; then
+		if [[ -s "${SAMPDATADIR}/plasmidFinder_on_plasFlow/${sample_name}_results_table_summary.txt" ]]; then
 			number_of_plasmids=0
 			while read line_in; do
 				line_in=$(echo ${line_in} | cut -d' ' -f1)
@@ -1561,7 +1554,7 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 				else
 					number_of_plasmids=$(( number_of_plasmids + 1 ))
 				fi
-			done < "${SAMPDATADIR}/plasmidFinder/${1}_results_table_summary.txt"
+			done < "${SAMPDATADIR}/plasmidFinder/${sample_name}_results_table_summary.txt"
 			printf "%-20s: %-8s : %s\\n" "plasmidFndr-plasFlow" "SUCCESS" "${number_of_plasmids} replicons were found in the plasmid scaffold"
 		else
 			printf "%-20s: %-8s : %s\\n" "plasmidFndr-plasFlow" "FAILED" "results_table_summary.txt does not exist"
@@ -1574,7 +1567,7 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 	fi
 fi
 
-echo "---------- ${1} completed as ${status} ----------"
+echo "---------- ${sample_name} completed as ${status} ----------"
 
 #Script exited gracefully (unless something else inside failed)
 exit 0
