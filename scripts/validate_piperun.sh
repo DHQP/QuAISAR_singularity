@@ -29,7 +29,7 @@ if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
 elif [[ "${1}" = "-h" ]]; then
-	echo "Usage is ./validate_piperun.sh path_to_sample_folder path_todatabases path_to_scripts [gapping] [similarity]"
+	echo "Usage is ./validate_piperun.sh path_to_sample_folder path_to_databases path_to_scripts [gapping] [similarity]"
 	echo "Optional positional arguments are to match c-SSTAR files run at different thresholds"
 	echo "Output is only printed to screen, Pipe to file if desired"
 	exit 0
@@ -649,12 +649,18 @@ fi
 #Check extraction and unclassified values for weighted kraken post assembly
 if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" ]]; then
 	# Extracts many elements of the summary file to report unclassified and species classified reads and percentages
+	echo 1
 	unclass=$(head -n 1 "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f2)
 	#true_unclass=$(head -n 1 "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
+	echo 2
 	domain=$(sed -n '2p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f2)
+	echo 3
 	genusweighted=$(sed -n '7p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f4)
+	echo 4
 	speciesweighted=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f4)
+	echo 5
 	speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f2)
+	echo 6
 	#true_speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
 	# If there are no reads at the domain level, then report no classified reads
 	if (( $(echo "${domain} <= 0" | bc -l) )); then
