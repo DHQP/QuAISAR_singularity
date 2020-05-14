@@ -1250,7 +1250,7 @@ for isolate in "${isolate_list[@]}"; do
 		# Run busco
 		# Odd and annoying personal fix for BUSCO strange behaviour
 		current_dir=$(pwd)
-		cd (${src})
+		cd ${src}
 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}/BUSCO:/DATABASES docker://quay.io/biocontainers/busco:3.0.2--py35_4 run_BUSCO.py -i /SAMPDIR/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l /DATABASES/${buscoDB} -m prot
 		echo -e "BUSCO:3.0.2 -- run_BUSCO.py -i ${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l ${local_DBs}/BUSCO/${buscoDB} -m prot\n" >> "${command_log_file}"
 		if [ ! -d "${SAMPDATADIR}/BUSCO" ]; then  #create outdir if absent
