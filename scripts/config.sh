@@ -24,11 +24,11 @@ host=$(echo "${hostname}" | cut -d'.' -f1)
 
 ############# General Options #############
 #shortcut to processed samples folder
-output_dir="/raid5/MiSeqAnalysisFiles"
+output_dir=""
 # Locations of all scripts and necessary accessory files
-src="$(pwd)"
+src=""
 # Local databases that are necessary for pipeline...ANI, BUSCO, star, adapters, phiX
-local_DBs="/raid5/QuAISAR_databases"
+local_DBs=""
 # Number of processors requested by numerous applications within the pipeline
 procs=12 # Number of processors
 
