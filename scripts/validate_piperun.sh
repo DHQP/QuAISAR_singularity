@@ -28,13 +28,13 @@
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
-elif [[ -z "${sample_name}" ]]; then
+elif [[ -z "${1}" ]]; then
 	echo "Empty sample name supplied to validate_piperun.sh, exiting"
 	exit 1
-elif [[ ! -d "${sample_name}" ]]; then
-	echo "Sample folder (${sample_name}) does not exist, exiting validate_piperun.sh"
+elif [[ ! -d "${1}" ]]; then
+	echo "Sample folder (${1}) does not exist, exiting validate_piperun.sh"
 	exit 1
-elif [[ "${sample_name}" = "-h" ]]; then
+elif [[ "${1}" = "-h" ]]; then
 	echo "Usage is ./validate_piperun.sh path_to_sample_folder path_todatabases path_to_scripts [gapping] [similarity]"
 	echo "Optional positional arguments are to match c-SSTAR files run at different thresholds"
 	echo "Output is only printed to screen, Pipe to file if desired"
@@ -954,13 +954,13 @@ fi
 
 #Check c-SSTAR
 if [[ -d "${SAMPDATADIR}/c-sstar/" ]]; then
-	if [[ ! -z "${5}" ]]; then
-	 gapping="${5}"
+	if [[ ! -z "${4}" ]]; then
+	 gapping="${4}"
 	else
 	 gapping="gapped"
 	fi
-	if [[ ! -z "${6}" ]]; then
-		sim="${6}"
+	if [[ ! -z "${5}" ]]; then
+		sim="${5}"
 	else
 		sim="98"
 	fi
@@ -1464,13 +1464,13 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 
 	#Check c-SSTAR of plasmid assembly
 	if [[ -d "${SAMPDATADIR}/c-sstar_plasFlow/" ]]; then
-		if [[ ! -z "${3}" ]]; then
-			gapping="${3}"
+		if [[ ! -z "${4}" ]]; then
+			gapping="${4}"
 		else
 			gapping="gapped"
 		fi
-		if [[ ! -z "${4}" ]]; then
-			sim="${4}"
+		if [[ ! -z "${5}" ]]; then
+			sim="${5}"
 		else
 			sim="40"
 		fi
