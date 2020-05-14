@@ -6,22 +6,16 @@
 #$ -cwd
 #$ -q short.q
 
-#Import the config file with shortcuts and settings
-if [[ ! -f "./config.sh" ]]; then
-	cp ./config_template.sh ./config.sh
-fi
-. ./config.sh
-
 #
 # Description: Helper for the main quaisar script to allow easy visualization of progress of run
 #
-# Usage ./quaisar-progress.sh full_path_to_run_ID
+# Usage ./quaisar-progress.sh path_to_run_folder
 #
 # Output loction: screen
 #
 # Modules required: None
 #
-# v1.0 (03/19/2019)
+# v1.0.1 (05/14/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -37,17 +31,17 @@ printf '\e[2t' && sleep 1 && printf '\e[1t'
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
-elif [[ -z "${1}" ]]; then
-	echo "Empty run_ID supplied to quaisar-progress.sh, exiting"
-	exit 1
 elif [[ "${1}" = "-h" ]]; then
-	echo "Usage is ./run_sum.sh path_to_run_folder"
-	echo "Output is saved to ${output_dir}/miseq_run_ID"
+	echo "Usage is ./quaisar_progress.sh path_to_run_folder"
+	echo "Output is saved to path_to_run_folder"
 	exit 0
+elif [[ ! -d "${1}" ]]; then
+	echo "Path (${1}) does not exist, exiting quaisar-progress.sh"
+	exit 2
 fi
 
-run_to_check=${1}
-run_name=$(basename ${run_to_check})
+run_path=${1}
+run_name=$(echo "${run_path}" | rev | cut -d'/' -f1 | rev)
 BAR_length=100
 BAR_character='#'
 BAR=$(printf "[%${BAR_length}s]" | tr ' ' $BAR_character)
@@ -58,12 +52,12 @@ declare -a run_AA=('Copying Reads/Assemblies to project directory' 'Inverting li
 declare -a iso_AA=('Prepping FASTQ folder' 'Raw Read Quality count' 'BBDUK PhiX' 'Trimmomatic' 'Trimmed Read Quality Count' 'Kraken on reads' 'GOTTCHA' 'SRST2 AR' 'SPAdes Assembling' 'Trimming Assemmbly' 'Kraken on Assembly' '16s Identification' 'Assembly QC' 'PROKKA' 'Rename Contig Headers' 'ANI' 'Taxon classification' 'BUSCO' 'c-SSTAR' 'GAMA' 'MLST' 'plasmidFinder' 'plasFlow' 'Check plasFlow assembly' 'c-SSTAR on plasFlow' 'plasmidFinder on PlasFlow' 'GAMA on plasFlow' 'Summarize isolate' 'Cleaning isolate')
 
 while true; do
-	pro_run_task_id=$(head -n1 ${run_to_check}/progress.txt | cut -d':' -f2)
-	pro_Isolate_count=$(head -n2 ${run_to_check}/progress.txt | tail -n1 | cut -d':' -f2)
-	current_Isolate_number=$(head -n3 ${run_to_check}/progress.txt | tail -n1 | cut -d':' -f2)
+	pro_run_task_id=$(head -n1 ${run_path}/progress.txt | cut -d':' -f2)
+	pro_Isolate_count=$(head -n2 ${run_path}/progress.txt | tail -n1 | cut -d':' -f2)
+	current_Isolate_number=$(head -n3 ${run_path}/progress.txt | tail -n1 | cut -d':' -f2)
 	isolate_index=$((current_Isolate_number + 1))
-	current_Isolate_name=$(head -n${isolate_index} ${run_to_check}/${run_name}_list.txt | tail -n1 | cut -d'/' -f2)
-	pro_Isolate_task_number=$(tail -n1 ${run_to_check}/progress.txt | cut -d':' -f2)
+	current_Isolate_name=$(head -n${isolate_index} ${run_path}/${run_name}_list.txt | tail -n1 | cut -d'/' -f2)
+	pro_Isolate_task_number=$(tail -n1 ${run_path}/progress.txt | cut -d':' -f2)
 	total_jobs=$(( run_tasks + pro_Isolate_count * tasks_per_isolate ))
 	#echo -e "${pro_Isolate_task_number}	${tasks_per_isolate}\n\n\n"
 	current_Isolate_progress=$(( 100 * pro_Isolate_task_number / tasks_per_isolate ))

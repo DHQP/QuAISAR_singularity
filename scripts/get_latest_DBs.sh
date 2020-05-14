@@ -25,15 +25,12 @@
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
-elif [[ -z "${1}" ]]; then
-	echo "Empty database location supplied to get_latest_DBs, exiting"
-	exit 1
-elif [[ ! -d "${1}" ]]; then
-	echo "Database location (${1}) does not exist, exiting"
-	exit 1
 elif [[ "${1}" = "-h" ]]; then
 	echo "Usage is ./get_latest_DBs.sh path_to_database_folder"
 	exit 0
+elif [[ ! -d "${1}" ]]; then
+	echo "Database location (${1}) does not exist, exiting"
+	exit 2
 fi
 
 databases="${1}"

@@ -6,26 +6,19 @@
 #$ -cwd
 #$ -q short.q
 
-#Import the config file with shortcuts and settings
-if [[ ! -f "./config.sh" ]]; then
-	cp ./config_template.sh ./config.sh
-fi
-. ./config.sh
-
 #
 # Description: Script uses Gulviks SPAdes cleaner along with general folder cleanup to decrease footprint of samples after processing
 #
-# Usage ./sample_cleaner.sh   sample_name   run_ID
+# Usage ./sample_cleaner.sh   path_to_sample_folder
 #
 # Output location: No output created
 #
 # Modules required: None
 #
-# v1.0 (10/3/2019)
+# v1.0.1 (05/14/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
-
 
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
@@ -34,22 +27,17 @@ if [[ $# -eq 0 ]]; then
 # Shows a brief uasge/help section if -h option used as first argument
 elif [[ "$1" = "-h" ]]; then
 	echo "Usage is ./sample_cleaner.sh  sample_name MiSeq_Run_ID"
-	echo "Will clean ${output_dir}/${2}/${1} folder"
+	echo "Will clean ${1} folder"
 	exit 0
-elif [[ ! -d "${output_dir}/${2}" ]] || [[ ! -d "${output_dir}/${2}/${1}" ]]; then
-	if [ ! -d "${output_dir}/${2}" ]; then
-		echo "Project ${output_dir}/${2} does not exist"
-	elif [ ! -d "${output_dir}/${2}/${1}" ]; then
-		echo "Isolate ${output_dir}/${2}/${1} does not exist"
-	fi
-	echo "EXITING..."
-	exit 1
+elif [[ ! -d "${1}" ]]; then
+	echo "Sample folder (${1}) does not exist"
+	exit 2
 else
-	echo "Cleaning ${output_dir}/${2}/${1}"
+	echo "Cleaning ${1}"
 fi
 
 # Set main sample folder to clean
-sample_folder="${output_dir}/${2}/${1}"
+sample_folder="${1}"
 echo "Source - ${sample_folder}"
 sample_name=$(echo "${sample_folder}" | rev | cut -d'/' -f1 | rev)
 echo "Sample_ID - ${sample_name}"
@@ -297,4 +285,4 @@ if [[ -f "${sample_folder}/trimmed/${sample_name}_R2_001.paired.fq.gz" ]] && [[ 
 	clumpify in1="${sample_folder}/trimmed/${sample_name}_R1_001.paired.fq.gz" in2="${sample_folder}/trimmed/${sample_name}_R2_001.paired.fq.gz" out1="${sample_folder}/trimmed/${sample_name}_R1_001.paired.fq.clumped.gz" out2="${sample_folder}/trimmed/${sample_name}_R2_001.paired.fq.clumped.gz" reorder
 fi
 
-echo "Sample ${2}/${1} should now be clean" >> "${output_dir}/cleaned_sample_list.txt"
+echo "Sample ${1} should now be clean" >> "${output_dir}/cleaned_sample_list.txt"

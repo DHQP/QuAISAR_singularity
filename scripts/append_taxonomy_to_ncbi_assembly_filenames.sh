@@ -6,16 +6,10 @@
 #$ -cwd
 #$ -q short.q
 
-#Import the config file with shortcuts and settings
-. ./config.sh
-#Import the module file that loads all necessary mods
-#. "${mod_changers}/pipeline_mods"
-
 #
 # Usage ./append_taxonomy_to_ncbi_assembly_filenames.sh path_to_list
 # The list needs to have project/old_name:new_name
 #
-
 
 # Checks for proper argumentation
 if [[ $# -eq 0 ]]; then
@@ -24,7 +18,10 @@ if [[ $# -eq 0 ]]; then
 # Shows a brief uasge/help section if -h option used as first argument
 elif [[ "$1" = "-h" ]]; then
 	echo "Usage is ./append_taxonomy_to_ncbi_assembly_filenames.sh path_to_folder_of_assemblies"
-		exit 0
+	exit 0
+elif [[ ! -d "$1" ]]; then
+	echo "Directory ($1) does not exist, exiting"
+	exit 1
 fi
 
 # Loop through and act on each sample name in the passed/provided list

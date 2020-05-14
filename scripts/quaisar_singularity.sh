@@ -9,7 +9,7 @@
 #
 # Description: The full QuAISAR-H pipeline start to end serially
 #
-# Usage: ./quaisar_singularity.sh -i Absolute_path_to_reads/assemblies 1|2|3|4 -o path_to_output_folder -p name_of_project [-s] [-r] [-d]"
+# Usage: ./quaisar_singularity.sh -i Absolute_path_to_reads/assemblies 1|2|3|4 -o path_to_output_folder -p name_of_project [-s] [-r] [-d] [-c]"
 #		filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz 5: Asssemblies (.fasta)"
 #
 # Output location: default_config.sh_output_location
@@ -45,7 +45,7 @@ function write_Progress() {
 # Checking for proper number of arguments from command line
 if [[ $# -lt 1  || $# -gt 12 ]]; then
 	echo "If reads are in default location set in config file then"
-  echo "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o name_of_output_folder -p project_name [-s location_to_script_folder] [-r] [-d database location, if not in default installed location]"
+  echo "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o name_of_output_folder -p project_name [-s location_to_script_folder] [-r] [-d database location] [-c config.sh location]"
 	echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz 5: .fasta (Assemblies only)"
   echo "You have used $# args"
   exit 3
@@ -74,18 +74,18 @@ for ((i=1 ; i <= nopts ; i++)); do
 			echo -e "\\n\\n\\n"
 			exit 0
 			;;
-		# #Import the config file to set other minor locations to be used within the script
-		# -c | --config)
-		# 	config_file="$2"
-		# 	if [ -f "${config_file}" ]; then
-		# 		. "${config_file}"
-		# 		BASEDIR="${output_dir}"
-		# 	else
-		# 		echo "Can not find config file, $2"
-		# 		exit 22
-		# 	fi
-		# 	shift 2
-		# 	;;
+		#Import the config file to set other minor locations to be used within the script
+		-c | --config)
+			config_file="$2"
+			if [ -f "${config_file}" ]; then
+				. "${config_file}"
+				BASEDIR="${output_dir}"
+			else
+				echo "Can not find config file, $2"
+				exit 22
+			fi
+			shift 2
+			;;
 		#Gets name of folder that FASTA files will be in
 		-i | --in-dir)
 			INDATADIR="$2"
@@ -114,34 +114,16 @@ for ((i=1 ; i <= nopts ; i++)); do
 			echo "Setting output directory as: ${2}"
 			output_dir="$2"
 			shift 2
-			#echo "${output_dir}"
-			list_path="${output_dir}/${PROJECT}/${PROJECT}_list.txt"
-			if [[ ! -d ${output_dir} ]]; then
-				mkdir -p ${output_dir}
-			fi
 			;;
 			#Gets output directory name of folder that all output files will be stored
 		-p | --project_name)
-		echo "Setting project name as: ${2}"
+			echo "Setting project name as: ${2}"
 			PROJECT="$2"
 			shift 2
-			# Not needed anymore
-			#echo "output_dir=${BASEDIR}" >> "${src}/config.sh"
-			#echo "${output_dir}"
-			list_path="${output_dir}/${PROJECT}/${PROJECT}_list.txt"
-			if [[ ! -d ${output_dir}/${PROJECT} ]]; then
-				mkdir -p ${output_dir}
-			fi
 			;;
 		-d | --database)
 			echo "Setting database location as: ${2}"
 			local_DBs="$2"
-			resGANNCBI_previous_srst2=$(find ${local_DBs}/star -maxdepth 1 -name "ResGANNCBI_*_srst2.fasta" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 2 | tail -n 1)
-			resGANNOT_srst2_filename=$(echo "${resGANNOT_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
-			ResGANNCBI_srst2=$(find ${local_DBs}/star -maxdepth 1 -name "ResGANNCBI_*_srst2.fasta" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-			ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
-			REFSEQ=$(find ${local_DBs}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-			REFSEQ_date=$(echo ${REFSEQ} | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1)
 			shift 2
 			;;
 		-s | --scripts_location)
@@ -161,6 +143,7 @@ for ((i=1 ; i <= nopts ; i++)); do
 			;;
 	esac
 done
+
 
 # Check if specific conda environment exists
 # Havent found command yet
@@ -252,6 +235,36 @@ if [[ "${prereqs}" = "false" ]]; then
 else
 	echo "Everything is preinstalled and ready to run"
 fi
+
+
+list_path="${output_dir}/${PROJECT}/${PROJECT}_list.txt"
+if [[ ! -d ${output_dir} ]]; then
+	mkdir -p ${output_dir}
+fi
+
+# Set database names to use
+. "${src}/get_latest_DBs.sh"
+ResGANNCBI_srst2=$(get_srst2)
+ResGANNCBI_srst2_filename==$(get_srst2_filename)
+REFSEQ==$(get_ANI_REFSEQ)
+REFSEQ_date=$(get_ANI_REFSEQ_Date)
+
+if [[ -z "${ResGANNCBI_srst2_filename}" ]]; then
+	echo "ResGANNCBI_srst2_filename (db version) is empty, cant perform c-SSTAR, srst2, or GAMA AR analysis"
+fi
+
+if [[ -z "${ResGANNCBI_srst2}" ]]; then
+	echo "ResGANNCBI_srst2_filename is empty, cant perform c-SSTAR, srst2, or GAMA AR analysis"
+fi
+
+if [[ -z "${REFSEQ_date}" ]]; then
+	echo "REFSEQ_date (db version) is empty, cant perform c-SSTAR, srst2, or GAMA AR analysis"
+fi
+
+if [[ -z "${REFSEQ}" ]]; then
+	echo "REFSEQ ANI Database is empty, cant perform ANI"
+fi
+
 
 # Short print out summary of run settings
 echo -e "Source folder: ${INDATADIR}\\nOutput folder: ${output_dir}\\nList based analysis:  ${list_path}"
@@ -656,7 +669,7 @@ for isolate in "${isolate_list[@]}"; do
 		echo -e"krona:2.7 -- ktImportText ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.krona -o ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.html\n" >> "${command_log_file}"
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.list"
 		echo -e "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.kraken > ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.list\n" >> "${command_log_file}"
-		"${src}/best_hit_from_kraken.sh" "${isolate_name}" "pre" "paired" "${PROJECT}" "kraken" "${output_dir}"
+		"${src}/best_hit_from_kraken.sh" "${SAMPDATADIR}" "pre" "paired" "${PROJECT}" "kraken"
 		# Get end time of kraken on reads and calculate run time and append to time summary (and sum to total time used)
 		end=$SECONDS
 		timeKrak=$((end - start))
@@ -676,7 +689,7 @@ for isolate in "${isolate_list[@]}"; do
 		echo -e "krona:2.7 -- ktImportText ${SAMPDATADIR}/gottcha/gottcha_S/${isolate_name}_temp/${isolate_name}.lineage.tsv -o ${SAMPDATADIR}/gottcha/${isolate_name}_species.krona.html\n" >> "${command_log_file}"
 
 		#Create a best hit from gottcha1 file
-		"${src}/best_hit_from_gottcha1.sh" "${isolate_name}" "${PROJECT}" "${output_dir}"
+		"${src}/best_hit_from_gottcha1.sh" "${SAMPDATADIR}"
 		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
 		end=$SECONDS
 		timeGott=$((end - start))
@@ -792,7 +805,7 @@ for isolate in "${isolate_list[@]}"; do
 	echo -e "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list\n" >> "${command_log_file}"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted.krona -o /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted_BP_krona.html
 	echo -e "krona:2.7 -- ktImportText ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.krona -o ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted_BP_krona.html\n" >> "${command_log_file}"
-	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled_BP" "${PROJECT}" "kraken" "${output_dir}"
+	"${src}/best_hit_from_kraken.sh" "${SAMPDATADIR}" "post" "assembled_BP" "${PROJECT}" "kraken"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
 	echo -e "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/${isolate_name}_assembled.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list\n" >> "${command_log_file}"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa"
@@ -802,7 +815,7 @@ for isolate in "${isolate_list[@]}"; do
 	echo -e "krona:2.7 -- ktImportText ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.krona -o ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.html\n" >> "${command_log_file}"
 	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
 	echo -e "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list\n" >> "${command_log_file}"
-	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled" "${PROJECT}" "kraken" "${output_dir}"
+	"${src}/best_hit_from_kraken.sh" "${SAMPDATADIR}" "post" "assembled" "${PROJECT}" "kraken"
 	# Get end time of kraken on assembly and calculate run time and append to time summary (and sum to total time used)
 	end=$SECONDS
 	timeKrakAss=$((end - start))
@@ -1158,12 +1171,12 @@ for isolate in "${isolate_list[@]}"; do
 	echo -e "${best_percent}%ID-${best_coverage}%COV-${best_organism_guess}(${best_file}.fna)\\n$(cat "${SAMPDATADIR}/ANI/best_hits_ordered.txt")" > "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${isolate_name}_vs_REFSEQ_${REFSEQ_date}).txt"
 
 	#Removes the transient hit files
-	if [ -s "${OUTDATADIR}/ANI/best_hits.txt" ]; then
-		rm "${OUTDATADIR}/ANI/best_hits.txt"
+	if [ -s "${SAMPDATADIR}/ANI/best_hits.txt" ]; then
+		rm "${SAMPDATADIR}/ANI/best_hits.txt"
 	#	echo "1"
 	fi
-	if [ -s "${OUTDATADIR}/ANI/best_hits_ordered.txt" ]; then
-		rm "${OUTDATADIR}/ANI/best_hits_ordered.txt"
+	if [ -s "${SAMPDATADIR}/ANI/best_hits_ordered.txt" ]; then
+		rm "${SAMPDATADIR}/ANI/best_hits_ordered.txt"
 	#	echo "2"
 	fi
 
@@ -1176,7 +1189,7 @@ for isolate in "${isolate_list[@]}"; do
 	# Task: Get taxonomy from currently available files (Only ANI, has not been run...yet, will change after discussions)
 	write_Progress
 	task_number=17
-	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}" "${output_dir}" "${local_DBs}"
+	"${src}/determine_taxID.sh" "${SAMPDATADIR}" "${local_DBs}"
 	# Capture the anticipated taxonomy of the sample using kraken on assembly output
 	echo "----- Extracting Taxonomy from Taxon Summary -----"
 	# Checks to see if the kraken on assembly completed successfully
@@ -1773,12 +1786,12 @@ for isolate in "${isolate_list[@]}"; do
 	# Task: Create stats file
 	write_Progress
 	task_number=28
-	"${src}/validate_piperun.sh" "${isolate_name}" "${PROJECT}" "${output_dir}" "${local_DBs}"> "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt"
+	"${src}/validate_piperun.sh" "${SAMPDATADIR}" "${local_DBs}" "${src}" "${csstar_gapping}" "${csim}" > "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt"
 
 	# Task: Clean sample folder
 	write_Progress
 	task_number=29
-	"${src}/sample_cleaner.sh" "${isolate_name}" "${PROJECT}"
+	"${src}/sample_cleaner.sh" "${SAMPDATADIR}"
 
 	rm -r "${src}/tmp"
 
@@ -2023,7 +2036,7 @@ done < ${list_path}
 write_Progress
 run_task_id=10
 runsumdate=$(date "+%m_%d_%Y_at_%Hh_%Mm")
-${src}/run_sum.sh ${PROJECT}
+${src}/run_sum.sh ${PROJDATADIR}
 
 # Task: Copy config file to run folder to show configuration used in the run
 write_Progress

@@ -6,22 +6,16 @@
 #$ -cwd
 #$ -q short.q
 
-#Import the config file with shortcuts and settings
-if [[ ! -f "./config.sh" ]]; then
-	cp ./config_template.sh ./config.sh
-fi
-. ./config.sh
-
 #
 # Description: Creates a summary file for the run and prints out a one word status and a short description of each step being reported
 #
-# Usage ./run_sum.sh run_ID
+# Usage ./run_sum.sh path_to_run_folder path_to_scripts_folder path_to_database_folder
 #
-# Output loction: default_config.sh_output_location/run_ID/
+# Output loction: path_to_run_folder/run_name_run_summary_at_time.sum
 #
 # Modules required: None
 #
-# v1.0 (10/3/2019)
+# v1.0b (05/14/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -30,54 +24,52 @@ fi
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
-elif [[ -z "${1}" ]]; then
-	echo "Empty run_ID supplied to run_sum.sh, exiting"
-	exit 1
 elif [[ "${1}" = "-h" ]]; then
 	echo "Usage is ./run_sum.sh miseq_run_ID -vo(optional)"
-	echo "Output is saved to ${output_dir}/miseq_run_ID"
+	echo "Output is saved to path_to_run_folder/run_name_run_summary_at_time.sum"
 	exit 0
+elif [[ ! -d "${1}" ]]; then
+	echo "Path ($1) does not exit, exiting run_sum.sh"
+	exit 2
+elif [[ -z "${2}" ]]; then
+	echo "Empty script path supplied, exiting run_sum.sh"
+	exit 3
+elif [[ ! -d "${3}" ]]; then
+	echo "Script path ($2) does not exsit, exiting run_sum.sh"
+	exit 4
+elif [[ ! -f "${3}/validate_piperun.sh" ]]; then
+	echo "validate_piperun.sh does not exist in $2, exiting run_sum.sh"
+	exit 5
+elif [[ -z "${2}" ]]; then
+	echo "Empty database pathsupplied, exiting run_sum.sh"
+	exit 6
+elif [[ ! -d "${2}" ]]; then
+	echo "Database path ($2) does not exsit, exiting run_sum.sh"
+	exit 7
 fi
 
-echo "Checking for ${output_dir}/${1}/${1}_list(_ordered).txt"
+OUTDATADIR="${1}"
+# Based upon standard naming protocols pulling 2nd to last portion of path off should result in proper project name
+project_name=$(echo "${OUTDATADIR}" | rev | cut -d'/' -f1 | rev)
+databases=${2}
 
-# Checks for existence of list files in specific order
-if [[ -z ${2} ]]; then
-	if [[ -f ${output_dir}/${1}/${1}_list_ordered.txt ]]; then
-		list="${output_dir}/${1}/${1}_list_ordered.txt"
-	elif [[ -f ${output_dir}/${1}/${1}_list.txt ]]; then
-		list="${output_dir}/${1}/${1}_list.txt"
-	else
-		echo "No list file exists, cannot do a summary, unless I add in an automagic creator later"
-		exit
-	fi
-	type="project"
+echo "Checking for ${OUTDATADIR}/${project_name}/${project_name}_list(_ordered).txt"
+if [[ -f "${OUTDATADIR}/${project_name}/${project_name}_list_ordered.txt" ]]; then
+	list="${OUTDATADIR}/${project_name}/${project_name}_list_ordered.txt"
+elif [[ -f "${OUTDATADIR}/${project_name}/${project_name}_list.txt" ]]; then
+	list="${OUTDATADIR}/${project_name}/${project_name}_list.txt"
 else
-	type="list"
-	list=${1}
+	echo "No list found (${OUTDATADIR}/${project_name}/${project_name}_list(_ordered).txt)"
 fi
 
 # Gets todays date to show when summary was run
 runsumdate=$(date "+%Y_%m_%d_at_%Hh_%Mm")
 echo "Creating run summary at ${runsumdate}"
-# Status of each individual sample is updated in its own folder and the run_summary file
-if [[ "${type}" = "project" ]]; then
-	sum_name="${1}_run_summary_at_${runsumdate}.sum"
-	echo "named as project"
-else
-	sum_name="list_summary_at_${runsumdate}.sum"
-	echo "named as list"
-fi
 
 # Run validate_piperun.sh on every sample in the list and cat output into one summary file
 while IFS= read -r samples || [ -n "$samples" ]; do
-	echo ${file}
-	file=$(echo "${samples}" | awk -F/ '{ print $2}' | tr -d '[:space:]')
-	proj=$(echo "${samples}" | awk -F/ '{ print $1}' | tr -d '[:space:]')
-	"${src}/validate_piperun.sh" "${file}" "${proj}" > "${output_dir}/${proj}/${file}/${file}_pipeline_stats.txt"
-	if [[ "${type}" = "project" ]]; then
-		cat "${output_dir}/${proj}/${file}/${file}_pipeline_stats.txt" >> "${output_dir}/${proj}/${sum_name}"
-	else
-		cat "${output_dir}/${proj}/${file}/${file}_pipeline_stats.txt" >> "${3}/${sum_name}"
-	fi
+	sample_name=$(echo "${samples}" | awk -F/ '{ print $2}' | tr -d '[:space:]')
+	project_name_internal=$(echo "${samples}" | awk -F/ '{ print $1}' | tr -d '[:space:]')
+	if [[ "${project_name}" == "${project_name_internal}" ]]; then
+	"${3}/validate_piperun.sh" "${OUTDATADIR}/${sample_name}" > "${OUTDATADIR}/${sample_name}/${sample_name}_pipeline_stats.txt"
 done < ${list}

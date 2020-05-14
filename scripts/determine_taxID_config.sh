@@ -6,17 +6,21 @@
 #$ -cwd
 #$ -q short.q
 
+#Import the config file with shortcuts and settings
+if [[ ! -f "./config.sh" ]]; then
+	cp ./config_template.sh ./config.sh
+fi
+. ./config.sh
+
 #
 # Description: Creates a single file that attempts to pull the best taxonomic information from the isolate. Currently, it operates in a linear fashion, e.g. 1.ANI, 2.16s, 3.kraken, 4.Gottcha
 # 	The taxon is chosen based on the highest ranked classifier first
 #
-# Usage: ./determine_texID.sh path_to_sample_folder path_to_databases
-#
-# Output: path_to_sample_folder/sample_name.tax
+# Usage: ./determine_texID.sh sample_name project_ID path-to-project_ID [alternate_database_location, must give path-to-project_ID also]
 #
 # Modules required: None
 #
-# v1.0.6b (05/12/2020)
+# v1.0.6 (05/12/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -31,28 +35,36 @@ if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
 elif [[ "${1}" = "-h" ]]; then
-	echo "Usage is ./determine_taxID.sh path_to_sample_folder path_to_databases"
-	echo "Output is saved to path_to_sample_folder/sample_name.tax"
-	exit 0
-elif [[ ! -d "${1}" ]]; then
-	echo "Path (${1}) does not exist, exiting determine_taxID.sh"
-	exit 2
-elif [[ -z "${2}" ]]; then
+	echo "Usage: ./determine_texID.sh sample_name project_ID [path-to-project_ID] [alternate_database_location]"
+	exit 1
+elif [[ -z "${1}" ]]; then
 	echo "Empty sample_id supplied to determine_taxID.sh, exiting"
-	exit 3
-elif [[ ! -d "${2}" ]]; then
-	echo "Database path (${2}) does not exist, exiting determine_taxID.sh"
-	exit 4
-elif [[ ! -f "${2}/taxes.csv" ]]; then
-	echo "Database path (${2}) does not contain taxes.csv, upper classifcation can not be performed"
+	exit 1
+elif [[ "${1}" = "-h" ]]; then
+	echo "Usage is ./determine_taxID.sh sample_ID run_ID"
+	echo "Output is saved to ${output_dir}/run_ID/sample_ID/taxonomy.csv"
+	exit 0
+elif [[ -z "${2}" ]]; then
+	echo "Empty run_ID supplied to determine_taxID.sh, exiting"
+	exit 1
+elif [[ -z "${3}" ]]; then
+	#echo "Empty Path supplied to determine_taxID.sh, exiting"
+	#echo "Using default path ${output_dir}"
+	:
+else
+	#echo "Using given path ${3}"
+	output_dir="${3}"
 fi
 
-OUTDATADIR="${1}"
-databases="${2}"
-# Based upon standard naming protocols pulling last portion of path off should result in proper sample name
-sample_name=$(echo "${OUTDATADIR}" | rev | cut -d'/' -f1 | rev)
-# Based upon standard naming protocols pulling 2nd to last portion of path off should result in proper project name
-project_name=$(echo "${OUTDATADIR}" | rev | cut -d'/' -f2 | rev)
+if [[ -z "${4}" ]]; then
+	databases=${local_DBs}
+else
+	databases=${4}
+fi
+
+# Set default values after setting variables
+sample=${1}
+project=${2}
 
 
 # Set default values for a ll taxonomic levels
@@ -72,7 +84,7 @@ source_file="Not_assigned"
 Check_source() {
 	start_at="${1}"
 	if [[ "${start_at}" -le 1 ]]; then
-		for f in ${OUTDATADIR}/ANI/*; do
+		for f in ${output_dir}/${project}/${sample}/ANI/*; do
 			#echo $f
 			if [[ "${f}" = *"best_ANI_hits_ordered"* ]]; then
 				header=$(head -n1 ${f})
@@ -86,9 +98,9 @@ Check_source() {
 		done
 	fi
 	if [[ "${start_at}" -le 2 ]]; then
-		if [[ -s "${OUTDATADIR}/16s/${sample_name}_16s_blast_id.txt" ]]; then
-			best_line=$(head -n1 "${OUTDATADIR}/16s/${sample_name}_16s_blast_id.txt")
-			largest_line=$(tail -n1 "${OUTDATADIR}/16s/${sample_name}_16s_blast_id.txt")
+		if [[ -s "${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt" ]]; then
+			best_line=$(head -n1 "${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
+			largest_line=$(tail -n1 "${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
 			IFS='	' read -r -a best_array <<< "$best_line"
 			IFS='	' read -r -a largest_array <<< "$largest_line"
 			best_arr_size="${#best_array[@]}"
@@ -115,13 +127,13 @@ Check_source() {
 		fi
 	fi
 	if [[ "${start_at}" -le 3 ]];then
-		if [[ -s "${OUTDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" ]]; then
+		if [[ -s "${output_dir}/${project}/${sample}/gottcha/${sample}_gottcha_species_summary.txt" ]]; then
 			do_GOTTCHA
 			return
 		fi
 	fi
 	if [[ "${start_at}" -le 4 ]]; then
-		if [[ -s "${OUTDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" ]]; then
+		if [[ -s "${output_dir}/${project}/${sample}/kraken/postAssembly/${sample}_kraken_summary_assembled_BP.txt" ]]; then
 			do_Kraken
 		return
 		fi
@@ -137,14 +149,14 @@ do_ANI() {
 	source ./get_latest_DBs.sh ${databases}
 	refseq_ANI_date=$(get_ANI_REFSEQ_Date)
 	#echo "${refseq_ANI_date}"
-	if [[ -f "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${sample_name}_vs_REFSEQ_${refseq_ANI_date}).txt" ]]; then
-		source_file="${OUTDATADIR}/ANI/best_ANI_hits_ordered(${sample_name}_vs_REFSEQ_${refseq_ANI_date}).txt"
-	elif [[ -f "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${sample_name}_vs_OSII).txt" ]]; then
-		source_file="${OUTDATADIR}/ANI/best_ANI_hits_ordered(${sample_name}_vs_OSII).txt"
+	if [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${refseq_ANI_date}).txt" ]]; then
+		source_file="${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${refseq_ANI_date}).txt"
+	elif [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_OSII).txt" ]]; then
+		source_file="${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_OSII).txt"
 	else
-		for file in "${OUTDATADIR}/ANI/*"; do
+		for file in "${output_dir}/${project}/${sample}/ANI/*"; do
 			# Not being very specific here due to lack of interest in files that are not the ones being found above
-			if [[ "${file}" == "${OUTDATADIR}/ANI/best_ANI_hits_ordered(${sample_name}_vs_"* ]]; then
+			if [[ "${file}" == "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_"* ]]; then
 				source_file="${file}"
 			fi
 		done
@@ -163,21 +175,21 @@ do_ANI() {
 
 # Function to pull best info from 16s output (largest vs highest bit score)
 do_16s() {
-	source_file="${OUTDATADIR}/16s/${sample_name}_16s_blast_id.txt"
+	source_file="${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt"
 	if [[ "${1}" = "largest" ]]; then
-		line=$(tail -n 1 "${OUTDATADIR}/16s/${sample_name}_16s_blast_id.txt")
+		line=$(tail -n 1 "${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
 		source="16s_largest"
-		if [[ -f "${OUTDATADIR}/16s/${sample_name}.nt.RemoteBLASTN_all.sorted" ]]; then
-			confidence_index=$(head -n1 "${OUTDATADIR}/16s/${sample_name}.nt.RemoteBLASTN_all.sorted" | cut -d'	' -f3)
+		if [[ -f "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN_all.sorted" ]]; then
+			confidence_index=$(head -n1 "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN_all.sorted" | cut -d'	' -f3)
 			confidence_index="${confidence_index}"
 		else
 			confidence_index=0
 		fi
 	elif [[ "${1}" = "best" ]]; then
-		line=$(head -n 1 "${OUTDATADIR}/16s/${sample_name}_16s_blast_id.txt")
+		line=$(head -n 1 "${output_dir}/${project}/${sample}/16s/${sample}_16s_blast_id.txt")
 		source="16s_best"
-		if [[ -f "${OUTDATADIR}/16s/${sample_name}.nt.RemoteBLASTN_all" ]]; then
-			confidence_index=$(head -n1 "${OUTDATADIR}/16s/${sample_name}.nt.RemoteBLASTN_all" | cut -d'	' -f3)
+		if [[ -f "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN_all" ]]; then
+			confidence_index=$(head -n1 "${output_dir}/${project}/${sample}/16s/${sample}.nt.RemoteBLASTN_all" | cut -d'	' -f3)
 			confidence_index="${confidence_index}"
 		else
 			confidence_index=0
@@ -192,7 +204,7 @@ do_16s() {
 # Function to pull info from gottcha output
 do_GOTTCHA() {
 	source="GOTTCHA"
-	source_file="${OUTDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt"
+	source_file="${output_dir}/${project}/${sample}/gottcha/${sample}_gottcha_species_summary.txt"
 	#echo "${source}"
 	while IFS= read -r line  || [ -n "$line" ]; do
 		# Grab first letter of line (indicating taxonomic level)
@@ -207,13 +219,13 @@ do_GOTTCHA() {
 		fi
 		confidence_index=$(tail -n1 "${source_file}" | cut -d' ' -f2)
 		confidence_index="${confidence_index}"
-	done < "${OUTDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt"
+	done < "${output_dir}/${project}/${sample}/gottcha/${sample}_gottcha_species_summary.txt"
 }
 
 # Function to pull info from kraken output based on assembly
 do_Kraken() {
 	source="Kraken"
-	source_file="${OUTDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt"
+	source_file="${output_dir}/${project}/${sample}/kraken/postAssembly/${sample}_kraken_summary_assembled_BP.txt"
 	#echo "${source}"
 	while IFS= read -r line  || [ -n "$line" ]; do
 		# Grab first letter of line (indicating taxonomic level)
@@ -226,7 +238,7 @@ do_Kraken() {
 		then
 			Genus=$(echo "${line}" | awk -F ' ' '{print $4}')
 		fi
-	done < "${OUTDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt"
+	done < "${output_dir}/${project}/${sample}/kraken/postAssembly/${sample}_kraken_summary_assembled_BP.txt"
 	confidence_index=$(tail -n1 "${source_file}" | cut -d' ' -f2)
 	confidence_index="${confidence_index}"
 }
@@ -265,4 +277,4 @@ while IFS= read -r line  || [ -n "$line" ]; do
 done < "${databases}/taxes.csv"
 
 # Print output to tax file for sample
-echo -e "(${source})-${confidence_index}%-${source_file}\nD:	${Domain}\nP:	${Phylum}\nC:	${Class}\nO:	${Order}\nF:	${Family}\nG:	${Genus}\ns:	${species}\n" > "${OUTDATADIR}/${sample_name}.tax"
+echo -e "(${source})-${confidence_index}%-${source_file}\nD:	${Domain}\nP:	${Phylum}\nC:	${Class}\nO:	${Order}\nF:	${Family}\nG:	${Genus}\ns:	${species}\n" > "${output_dir}/${project}/${sample}/${sample}.tax"

@@ -6,22 +6,16 @@
 #$ -cwd
 #$ -q short.q
 
-#Import the config file with shortcuts and settings
-if [[ ! -f "./config.sh" ]]; then
-	cp ./config_template.sh ./config.sh
-fi
-. ./config.sh
-
 #
 # Description: Parses through summary file for the run and prints out a one word status for each sample in the run
 #
-# Usage: ./run_sum.sh run_ID
+# Usage: ./view_sum.sh path_to_run_folder
 #
 # Output location: standard out
 #
 # Modules required: None
 #
-# v1.0 (10/3/2019)
+# v1.0.1 (05/14/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -30,57 +24,46 @@ fi
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
-elif [[ -z "${1}" ]]; then
-	echo "Empty run_ID supplied to run_sum.sh, exiting"
-	exit 1
 elif [[ "${1}" = "-h" ]]; then
-	echo "Usage is ./run_sum.sh miseq_run_ID -l(optional, if using a list instead of project)"
-	echo "Output is saved to ${output_dir}/miseq_run_ID"
+	echo "Usage is ./view_sum.sh path_to_run_folder"
 	exit 0
+elif [[ ! -d "${1}" ]]; then
+	echo "Folder path (${1}) does not exist, exiting view_sum.sh"
+	exit 2
 fi
 
+OUTDATADIR="${1}"
+project_name=$(echo "${OUTDATADIR}" | rev | cut -d'/' -f1 | rev)
+
 # Finds the newest summary file to use when parsing out info
-if [[ -z "${2}" ]]; then
-	proj="${1}"
-	for summary in ${output_dir}/${proj}/*.sum; do
-		third=$(echo "${summary}" | rev | cut -d'_' -f4 | rev)
-		second=$(echo "${summary}" | rev | cut -d'_' -f5 | rev)
-		first=$(echo "${summary}" | rev | cut -d'_' -f6 | rev)
-		post_info=$(echo "${summary}" | rev | cut -d'_' -f1,2,3 | rev)
-		pre_info=$(echo "${summary}" | rev | cut -d'_' -f7- | rev)
-		#echo "Pre-${pre_info}"
-		#echo "Post-${post_info}"
-		#echo "1st-${first}"
-		#echo "2nd-${second}"
-		#echo "3rd-${third}"
-		if [[ "${third}" = "201"* ]]; then
-			new_name="${pre_info}_${third}_${first}_${second}_${post_info}"
-			mv ${summary} ${new_name}
-			echo "Tried moving ${summary} to ${new_name}"
-		fi
-	done
-	sum_name=$(find ${output_dir}/${proj}/*.sum -maxdepth 1 -type f -printf '%p\n' | sort -rt '\0' -n | head -n 1)
-	#sum_name=$(find ${output_dir}/${proj}/*.sum -maxdepth 1 -type f -printf '%h\0%d\0%p\n' | sort -rt '\0' -n)
-	echo "${sum_name}"
-	sum_name=$(basename ${sum_name})
-	sum_file="${output_dir}/${1}/${sum_name}"
-	if [[ -f "${output_dir}/${1}/${sum_name}" ]]; then
-		echo -e "\n\nSummary found: ${sum_name}\n"
-	else
-		echo "No summary file detected, please execute run_sum.sh ${1} to create it"
+for summary in ${OUTDATADIR}/${project_name}/*.sum; do
+	third=$(echo "${summary}" | rev | cut -d'_' -f4 | rev)
+	second=$(echo "${summary}" | rev | cut -d'_' -f5 | rev)
+	first=$(echo "${summary}" | rev | cut -d'_' -f6 | rev)
+	post_info=$(echo "${summary}" | rev | cut -d'_' -f1,2,3 | rev)
+	pre_info=$(echo "${summary}" | rev | cut -d'_' -f7- | rev)
+	#echo "Pre-${pre_info}"
+	#echo "Post-${post_info}"
+	#echo "1st-${first}"
+	#echo "2nd-${second}"
+	#echo "3rd-${third}"
+	if [[ "${third}" = "201"* ]]; then
+		new_name="${pre_info}_${third}_${first}_${second}_${post_info}"
+		mv ${summary} ${new_name}
+		echo "Tried moving ${summary} to ${new_name}"
 	fi
+done
+sum_name=$(find ${OUTDATADIR}/${project_name} -maxdepth 1 -name "*.sum" -type f -printf '%p\n' | sort -rt '\0' -n | head -n 1)
+echo "${sum_name}"
+sum_name=$(basename ${sum_name})
+sum_file="${OUTDATADIR}/${project_name}/${sum_name}"
+
+if [[ -f "${OUTDATADIR}/${project_name}/${sum_name}" ]]; then
+	echo -e "\n\nSummary found: ${sum_name}\n"
 else
-	runsumdate=$(date "+%m_%d_%Y_at_%Hh_%Mm")
-	echo "Creating run summary at ${runsumdate}"
-	# Status of each individual sample is updated in its own folder and the run_summary file
-	sum_name="${1}"
-	if [[ -f "${1}" ]]; then
-		sum_file="${1}"
-		echo -e "\n\nSummary found: ${1}\n"
-	else
-		echo "Summary file not found: ${1}"
-	fi
+	echo "No summary file detected, please execute run_sum.sh ${1} to create it"
 fi
+
 
 #Full run overview status file is created for quick view
 # The full run log is searched and single word status is returned for each sample in the log as SUCCESSFUL,WARNING, or FAILED
@@ -91,8 +74,8 @@ warning_flags=""
 warnings=0
 failure_flags=""
 failures=0
-genus="unk"
-species="unk"
+genus="UNK"
+species="UNK"
 sample_name=""
 #echo "TEST-${proj}:::::${sum_name}"
 while IFS= read -r var || [ -n "$var" ]; do
@@ -210,10 +193,10 @@ while IFS= read -r var || [ -n "$var" ]; do
 	elif [[ "${tool_status}" == "WARNING" ]]; then
 		#echo "Found warning"
 		if [[ "${tool}" == "FASTQs" ]]; then
-			if [[ ! -s "${output_dir}/${1}/${sample_name}/FASTQs/${1}_R1_001.fastq" ]]; then
+			if [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/FASTQs/${1}_R1_001.fastq" ]]; then
 				warning_flags="${warning_flags}-Missing_R1_reads_file"
 				warnings=$(( warnings + 1 ))
-			elif [[ ! -s "${output_dir}/${1}/${sample_name}/FASTQs/${1}_R2_001.fastq" ]]; then
+			elif [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/FASTQs/${1}_R2_001.fastq" ]]; then
 				warning_flags="${warning_flags}-Missing_R2_reads_file"
 				warnings=$(( warnings + 1 ))
 			fi
@@ -221,10 +204,10 @@ while IFS= read -r var || [ -n "$var" ]; do
 			warning_flags="${warning_flags}-Raw_read_count_below_1000000"
 			warnings=$(( warning_flags + 1 ))
 		elif [[ "${tool}" == "Trimming" ]]; then
-			if [[ ! -s "${output_dir}/${1}/${sample_name}/trimmed/${1}_R1_001.paired.fq" ]]; then
+			if [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/trimmed/${1}_R1_001.paired.fq" ]]; then
 				warning_flags="${warning_flags}-Missing_R1_trimmed_reads_file"
 				warnings=$(( warnings + 1 ))
-			elif [[ ! -s "${output_dir}/${1}/${sample_name}/trimmed/${1}_R2_001.paired.fq" ]]; then
+			elif [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/trimmed/${1}_R2_001.paired.fq" ]]; then
 				warning_flags="${warning_flags}-Missing_R2_trimmed_reads_file"
 				warnings=$(( warnings + 1 ))
 			fi
@@ -245,10 +228,10 @@ while IFS= read -r var || [ -n "$var" ]; do
 			warning_flags="${warning_flags}-High_#_unclassified_reads_kraken(pre)"
 			warnings=$(( warnings + 1 ))
 		elif [[ "${tool}" == "Gottcha_S" ]]; then
-			if [[ ! -s "${output_dir}/${1}/${sample_name}/gottcha/gottcha_S/${sample_name}.gottcha_full.tsv" ]]; then
+			if [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/gottcha/gottcha_S/${sample_name}.gottcha_full.tsv" ]]; then
 				warning_flags="${warning_flags}-Missing_tsv_file"
 				warnings=$(( warnings + 1 ))
-			elif [[ ! -s "${output_dir}/${1}/${sample_name}/gottcha/gottcha_S/${sample_name}_species.krona.html" ]]; then
+			elif [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/gottcha/gottcha_S/${sample_name}_species.krona.html" ]]; then
 				warning_flags="${warning_flags}-Missing_HTML_file"
 				warnings=$(( warnings + 1 ))
 			fi
@@ -326,7 +309,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 			failure_flags="${failure_flags}-Missing_merged_reads"
 			failures=$(( failures + 1 ))
 		elif [[ "${tool}" == "PreClassify" ]]; then
-			if [[ -s "${output_dir}/${1}/${sample_name}/kraken/preAssembly/${1}_kraken_summary_paired.txt" ]]; then
+			if [[ -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/preAssembly/${1}_kraken_summary_paired.txt" ]]; then
 				failure_flags="${failure_flags}-NO_classified_reads(pre)"
 				failures=$(( failures + 1 ))
 			else
@@ -334,13 +317,13 @@ while IFS= read -r var || [ -n "$var" ]; do
 				failures=$(( failures + 1 ))
 			fi
 		elif [[ "${tool}" == "krona-kraken-preasmb" ]]; then
-			if [[ ! -s "${output_dir}/${1}/${sample_name}/kraken/preAssembly/${1}_paired.krona" ]] && [[ ! -s "${output_dir}/${1}/${sample_name}/kraken/preAssembly/${1}_paired.html" ]]; then
+			if [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/preAssembly/${1}_paired.krona" ]] && [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/preAssembly/${1}_paired.html" ]]; then
 				failure_flags="${failure_flags}-NO_HTML_or_krona_file(pre)"
 				failures=$(( failures + 1 ))
-			elif [[ ! -s "${output_dir}/${1}/${sample_name}/kraken/preAssembly/${1}_paired.html" ]]; then
+			elif [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/preAssembly/${1}_paired.html" ]]; then
 				failure_flags="${failure_flags}-NO_HTML_file(pre)"
 				failures=$(( failures + 1 ))
-			elif [[ ! -s "${output_dir}/${1}/${sample_name}/kraken/preAssembly/${1}_paired.krona" ]]; then
+			elif [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/preAssembly/${1}_paired.krona" ]]; then
 				failure_flags="${failure_flags}-NO_krona_file(pre)"
 				failures=$(( failures + 1 ))
 			else
@@ -351,7 +334,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 			failure_flags="${failure_flags}-Missing_intermediate_gottcha_files (TSV AND HTML)"
 			failures=$(( failures + 1 ))
 		elif [[ "${tool}" == "GottchaV1Classifier" ]]; then
-			if [[ -s "${output_dir}/${1}/${sample_name}/gottcha/${1}_gottcha_species_summary.txt" ]]; then
+			if [[ -s "${OUTDATADIR}/${project_name}/${sample_name}/gottcha/${1}_gottcha_species_summary.txt" ]]; then
 				failure_flags="${failure_flags}-NO_classified_reads"
 				failures=$(( failures + 1 ))
 			else
@@ -368,13 +351,13 @@ while IFS= read -r var || [ -n "$var" ]; do
 			failure_flags="${failure_flags}-NO_kraken_file(post)"
 			failures=$(( failures + 1 ))
 		elif [[ "${tool}" == "krona-kraken-pstasmb" ]]; then
-			if [[ ! -s "${output_dir}/${1}/${sample_name}/kraken/postAssembly/${1}_assembled.krona" ]] && [[ ! -s "${output_dir}/${1}/${sample_name}/kraken/postAssembly/${1}_assembled.html" ]]; then
+			if [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/postAssembly/${1}_assembled.krona" ]] && [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/postAssembly/${1}_assembled.html" ]]; then
 				failure_flags="${failure_flags}-NO_HTML_or_krona_file(post)"
 				failures=$(( failures + 1 ))
-			elif [[ ! -s "${output_dir}/${1}/${sample_name}/kraken/postAssembly/${1}_assembled.html" ]]; then
+			elif [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/postAssembly/${1}_assembled.html" ]]; then
 				failure_flags="${failure_flags}-NO_HTML_file(post)"
 				failures=$(( failures + 1 ))
-			elif [[ ! -s "${output_dir}/${1}/${sample_name}/kraken/postAssembly/${1}_assembled.krona" ]]; then
+			elif [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/postAssembly/${1}_assembled.krona" ]]; then
 				failure_flags="${failure_flags}-NO_krona_file(post)"
 				failures=$(( failures + 1 ))
 			else
@@ -382,7 +365,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 				failures=$(( failures + 1 ))
 			fi
 		elif [[ "${tool}" == "postClassify" ]]; then
-			if [[ -s "${output_dir}/${1}/${sample_name}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" ]]; then
+			if [[ -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/postAssembly/${1}_kraken_summary_assembled.txt" ]]; then
 				failure_flags="${failure_flags}-NO_classified_reads(post)"
 				failures=$(( failures + 1 ))
 			else
@@ -396,13 +379,13 @@ while IFS= read -r var || [ -n "$var" ]; do
 			failure_flags="${failure_flags}-NO_kraken_file(weighted)"
 			failures=$(( failures + 1 ))
 		elif [[ "${tool}" == "krona-kraken-weight" ]]; then
-			if [[ ! -s "${output_dir}/${1}/${sample_name}/kraken/postAssembly/${1}_assembled_weighted.krona" ]] && [[ ! -s "${output_dir}/${1}/${sample_name}/kraken/postAssembly/${1}_assembled_weighted_BP_krona.html" ]]; then
+			if [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/postAssembly/${1}_assembled_weighted.krona" ]] && [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/postAssembly/${1}_assembled_weighted_BP_krona.html" ]]; then
 				failure_flags="${failure_flags}-NO_HTML_or_krona_file(weighted)"
 				failures=$(( failures + 1 ))
-			elif [[ ! -s "${output_dir}/${1}/${sample_name}/kraken/postAssembly/${1}_assembled_weighted_BP_krona.html" ]]; then
+			elif [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/postAssembly/${1}_assembled_weighted_BP_krona.html" ]]; then
 				failure_flags="${failure_flags}-NO_HTML_file(weighted)"
 				failures=$(( failures + 1 ))
-			elif [[ ! -s "${output_dir}/${1}/${sample_name}/kraken/postAssembly/${1}_assembled_weighted.krona" ]]; then
+			elif [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/postAssembly/${1}_assembled_weighted.krona" ]]; then
 				failure_flags="${failure_flags}-NO_krona_file(weighted)"
 				failures=$(( failures + 1 ))
 			else
@@ -410,7 +393,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 				failures=$(( failures + 1 ))
 			fi
 		elif [[ "${tool}" == "weightedClassify" ]]; then
-			if [[ -s "${output_dir}/${1}/${sample_name}/kraken/postAssembly/${1}_kraken_summary_assembled_BP.txt" ]]; then
+			if [[ -s "${OUTDATADIR}/${project_name}/${sample_name}/kraken/postAssembly/${1}_kraken_summary_assembled_BP.txt" ]]; then
 				failure_flags="${failure_flags}-NO_classified_reads(post)"
 				failures=$(( failures + 1 ))
 			else
@@ -435,8 +418,8 @@ while IFS= read -r var || [ -n "$var" ]; do
 			failure_flags="${failure_flags}-NO_PROKKA_GBF_file"
 			failures=$(( failures + 1 ))
 		elif [[ "${tool}" == "BUSCO" ]]; then
-			#echo "${output_dir}/${1}/${sample_name}/BUSCO/short_summary_${sample_name}.txt"
-			if [[ -s "${output_dir}/${1}/${sample_name}/BUSCO/short_summary_${sample_name}.txt" ]]; then
+			#echo "${OUTDATADIR}/${project_name}/${sample_name}/BUSCO/short_summary_${sample_name}.txt"
+			if [[ -s "${OUTDATADIR}/${project_name}/${sample_name}/BUSCO/short_summary_${sample_name}.txt" ]]; then
 				failure_flags="${failure_flags}-BUSCO_<90%"
 				failures=$(( failures + 1 ))
 			else
@@ -456,7 +439,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 			failure_flags="${failure_flags}-NO_c-SSTAR_summary"
 			failures=$(( failures + 1 ))
 		elif [[ "${tool}" == "MLST" ]]; then
-			if [[ -s "${output_dir}/${1}/${sample_name}/MLST/${1}_Pasteur.mlst" ]]; then
+			if [[ -s "${OUTDATADIR}/${project_name}/${sample_name}/MLST/${1}_Pasteur.mlst" ]]; then
 				failure_flags="${failure_flags}-NO_SCHEME-Check_that_pubMLST_has_${genus^}_${species})"
 				failures=$(( failures + 1 ))
 			else
@@ -464,7 +447,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 				failures=$(( failures + 1 ))
 			fi
 		elif [[ "${tool}" == "16s_best_hit" ]]; then
-			if [[ -s "${output_dir}/${1}/${sample_name}/16s/${sample_name}_16s_blast_id.txt" ]]; then
+			if [[ -s "${OUTDATADIR}/${project_name}/${sample_name}/16s/${sample_name}_16s_blast_id.txt" ]]; then
 				failure_flags="${failure_flags}-No_taxonomy_assigned_in_16s_best"
 				failures=$(( failures + 1 ))
 			else
@@ -472,7 +455,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 				failures=$(( failures + 1 ))
 			fi
 		elif [[ "${tool}" == "16s_largest_hit" ]]; then
-			if [[ -s "${output_dir}/${1}/${sample_name}/16s/${sample_name}_16s_blast_id.txt" ]]; then
+			if [[ -s "${OUTDATADIR}/${project_name}/${sample_name}/16s/${sample_name}_16s_blast_id.txt" ]]; then
 				failure_flags="${failure_flags}-No_taxonomy_assigned_in_16s_largest"
 				failures=$(( failures + 1 ))
 			else
@@ -483,7 +466,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 			failure_flags="${failure_flags}-NO_16s"
 			failures=$(( failures + 1 ))
 		elif [[ "${tool}" == "plasmidFinder" ]]; then
-			if [[ -d "${output_dir}/${1}/${sample_name}/plasmidFinder/" ]]; then
+			if [[ -d "${OUTDATADIR}/${project_name}/${sample_name}/plasmidFinder/" ]]; then
 				failure_flags="${failure_flags}-NO_plasmidFinder_summary_file"
 				failures=$(( failures + 1 ))
 			else
@@ -494,7 +477,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 			failure_flags="${failure_flags}-NO_trimmed_plasmid_assembly_file"
 			failures=$(( failures + 1 ))
 		elif [[ "${tool}" == "plasmidFndr-plasFlow" ]]; then
-			if [[ -d "${output_dir}/${1}/${sample_name}/plasmidFinder_on_plasFlow/" ]]; then
+			if [[ -d "${OUTDATADIR}/${project_name}/${sample_name}/plasmidFinder_on_plasFlow/" ]]; then
 				failure_flags="${failure_flags}-NO_plasmidFinder_summary_file"
 				failures=$(( failures + 1 ))
 			else
@@ -522,6 +505,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 		fi
 	fi
 done < "${sum_file}"
+
 total_samples=$(( success_samples + failed_samples + warning_samples ))
 printf "\n%-20s: %-8s\\n" "Total samples" "${total_samples}"
 printf "%-20s: %-8s\\n" "Successful samples" "${success_samples}"
