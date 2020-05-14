@@ -8,6 +8,7 @@
 
 #
 # Description: Checking to see if all standard reported sections of a sample have completed successfully
+# NB: Since it no longer used the config.sh file. The unclassified threshold for contamination is hard-coded
 #
 # Usage: ./validate_piprun.sh path_to_sample_folder path_to_databases path_to_scripts [gapping] [similarity]
 #
@@ -363,7 +364,7 @@ if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_kraken_summary_paired
 		status="FAILED"
 	# If there are classified reads then check to see if percent unclassifed falls above the threshold limit. Report warning if too high or success and stats if below
 	else
-		if (( $(echo "${unclass} > ${unclass_flag}" | bc -l) )); then
+		if (( $(echo "${unclass} > 30" | bc -l) )); then
 			printf "%-20s: %-8s : %s\\n" "Pre Classify" "WARNING" "unclassified reads comprise ${unclass}% of total"
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 				status="WARNING"
@@ -443,7 +444,7 @@ if [[ -s "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" ]];
 		status="FAILED"
 	# If there are phylum level reads then check to see the percentage. If it falls below the threshold (set in config.sh) report it as a warning, otherwise report all necessary stats
 	else
-		if (( $(echo "${unclass} > ${unclass_flag}" | bc -l) )); then
+		if (( $(echo "${unclass} > 30" | bc -l) )); then
 			printf "%-20s: %-8s : %s\\n" "GottchaV1 Classifier" "WARNING" "unclassified reads comprise ${unclass}% of total"
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 				status="WARNING"
@@ -572,7 +573,7 @@ if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assem
 		status="FAILED"
 	# If there are classified reads then check to see if percent unclassifed falls above the threshold limit. Report warning if too high or success and stats if below
 	else
-		if (( $(echo "${unclass} > ${unclass_flag}" | bc -l) )); then
+		if (( $(echo "${unclass} > 30" | bc -l) )); then
 			printf "%-20s: %-8s : %s\\n" "post Classify" "WARNING" "unclassified reads comprise ${unclass}% of total ${true_unclass}%"
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 				status="WARNING"
@@ -670,7 +671,7 @@ if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assem
 	# If there are classified reads then check to see if percent unclassifed falls above the threshold limit. Report warning if too high or success and stats if below
 	else
 		echo 8
-		if (( $(echo "${unclass} > ${unclass_flag}" | bc -l) )); then
+		if (( $(echo "${unclass} > 30" | bc -l) )); then
 			printf "%-20s: %-8s : %s\\n" "weighted Classify" "WARNING" "unclassified reads comprise ${unclass}% of total ${true_unclass}%"
 			echo 9
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
