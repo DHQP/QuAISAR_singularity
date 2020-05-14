@@ -664,25 +664,31 @@ if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assem
 	#true_speciespercent=$(sed -n '8p' "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
 	# If there are no reads at the domain level, then report no classified reads
 	if (( $(echo "${domain} <= 0" | bc -l) )); then
+		echo 7
 		printf "%-20s: %-8s : %s\\n" "weighted Classify" "FAILED" "There are no classified reads (Did post assembly kraken fail too?)"
 		status="FAILED"
 	# If there are classified reads then check to see if percent unclassifed falls above the threshold limit. Report warning if too high or success and stats if below
 	else
+		echo 8
 		if (( $(echo "${unclass} > ${unclass_flag}" | bc -l) )); then
 			printf "%-20s: %-8s : %s\\n" "weighted Classify" "WARNING" "unclassified reads comprise ${unclass}% of total ${true_unclass}%"
+			echo 9
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 				status="WARNING"
 			fi
 		elif (( $(echo "${speciespercent} < 50" | bc -l) )); then
+			echo 10
 			printf "%-20s: %-8s : %s\\n" "weighted Classify" "FAILED" "${genusweighted} ${speciesweighted} is under 50% (${speciespercent}), likely contaminated"
 			status="FAILED"
 		else
+			echo 11
 			#printf "%-20s: %-8s : %s\\n" "weighted Classify" "SUCCESS" "${speciespercent}%${true_speciespercent%} ${genusweighted} ${speciesweighted} with ${unclass}%${true_unclass%} unclassified reads"
 			printf "%-20s: %-8s : %s\\n" "weighted Classify" "SUCCESS" "${speciespercent}% ${genusweighted} ${speciesweighted} with ${unclass}% unclassified reads"
 		fi
 	fi
 # If no summary file was found
 else
+	echo 12
 	printf "%-20s: %-8s : %s\\n" "weighted Classify" "FAILED" "/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt not found"
 	status="FAILED"
 fi
