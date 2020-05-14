@@ -48,11 +48,11 @@ elif [[ -z "${2}" ]]; then
 	echo "Empty run_ID supplied to determine_taxID.sh, exiting"
 	exit 1
 elif [[ -z "${3}" ]]; then
-	echo "Empty Path supplied to determine_taxID.sh, exiting"
-	echo "Using default path ${output_dir}"
-	exit 1
+	#echo "Empty Path supplied to determine_taxID.sh, exiting"
+	#echo "Using default path ${output_dir}"
+	:
 else
-	echo "Using given path ${3}"
+	#echo "Using given path ${3}"
 	output_dir="${3}"
 fi
 
@@ -85,7 +85,7 @@ Check_source() {
 	start_at="${1}"
 	if [[ "${start_at}" -le 1 ]]; then
 		for f in ${output_dir}/${project}/${sample}/ANI/*; do
-			echo $f
+			#echo $f
 			if [[ "${f}" = *"best_ANI_hits_ordered"* ]]; then
 				header=$(head -n1 ${f})
 				if [[ ${header} != "No matching ANI database found for"* ]] && [[ ${header} != "0.00%"* ]] ; then
