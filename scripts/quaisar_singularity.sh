@@ -656,7 +656,7 @@ for isolate in "${isolate_list[@]}"; do
 		echo -e"krona:2.7 -- ktImportText ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.krona -o ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.html\n" >> "${command_log_file}"
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/preAssembly/${isolate_name}_paired.kraken > "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.list"
 		echo -e "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.kraken > ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.list\n" >> "${command_log_file}"
-		"${src}/best_hit_from_kraken.sh" "${isolate_name}" "pre" "paired" "${PROJECT}" "kraken" "${SAMPDATADIR}"
+		"${src}/best_hit_from_kraken.sh" "${isolate_name}" "pre" "paired" "${PROJECT}" "kraken" "${output_dir}"
 		# Get end time of kraken on reads and calculate run time and append to time summary (and sum to total time used)
 		end=$SECONDS
 		timeKrak=$((end - start))
@@ -676,7 +676,7 @@ for isolate in "${isolate_list[@]}"; do
 		echo -e "krona:2.7 -- ktImportText ${SAMPDATADIR}/gottcha/gottcha_S/${isolate_name}_temp/${isolate_name}.lineage.tsv -o ${SAMPDATADIR}/gottcha/${isolate_name}_species.krona.html\n" >> "${command_log_file}"
 
 		#Create a best hit from gottcha1 file
-		"${src}/best_hit_from_gottcha1.sh" "${isolate_name}" "${PROJECT}" "${SAMPDATADIR}"
+		"${src}/best_hit_from_gottcha1.sh" "${isolate_name}" "${PROJECT}" "${output_dir}"
 		# Get end time of qc count and calculate run time and append to time summary (and sum to total time used)
 		end=$SECONDS
 		timeGott=$((end - start))
@@ -792,7 +792,7 @@ for isolate in "${isolate_list[@]}"; do
 	echo -e "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_BP.list\n" >> "${command_log_file}"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/krona:2.7--0 ktImportText /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted.krona -o /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled_weighted_BP_krona.html
 	echo -e "krona:2.7 -- ktImportText ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted.krona -o ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled_weighted_BP_krona.html\n" >> "${command_log_file}"
-	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled_BP" "${PROJECT}" "kraken" "${SAMPDATADIR}"
+	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled_BP" "${PROJECT}" "kraken" "${output_dir}"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
 	echo -e "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/${isolate_name}_assembled.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list\n" >> "${command_log_file}"
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-mpa-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.mpa"
@@ -802,7 +802,7 @@ for isolate in "${isolate_list[@]}"; do
 	echo -e "krona:2.7 -- ktImportText ${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_paired.krona -o ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.html\n" >> "${command_log_file}"
 	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/kraken:1.0--pl5.22.0_0 kraken-report --db /DATABASES/kraken/${kraken_DB} /SAMPDIR/kraken/postAssembly/${isolate_name}_assembled.kraken > "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list"
 	echo -e "kraken:1.0 -- kraken-report --db ${local_DBs}/${kraken_DB} ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.kraken > ${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_assembled.list\n" >> "${command_log_file}"
-	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled" "${PROJECT}" "kraken" "${SAMPDATADIR}"
+	"${src}/best_hit_from_kraken.sh" "${isolate_name}" "post" "assembled" "${PROJECT}" "kraken" "${output_dir}"
 	# Get end time of kraken on assembly and calculate run time and append to time summary (and sum to total time used)
 	end=$SECONDS
 	timeKrakAss=$((end - start))
@@ -1176,7 +1176,7 @@ for isolate in "${isolate_list[@]}"; do
 	# Task: Get taxonomy from currently available files (Only ANI, has not been run...yet, will change after discussions)
 	write_Progress
 	task_number=17
-	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}" "${local_DBs}"
+	"${src}/determine_taxID.sh" "${isolate_name}" "${PROJECT}" "${output_dir}" "${local_DBs}"
 	# Capture the anticipated taxonomy of the sample using kraken on assembly output
 	echo "----- Extracting Taxonomy from Taxon Summary -----"
 	# Checks to see if the kraken on assembly completed successfully
@@ -1248,6 +1248,9 @@ for isolate in "${isolate_list[@]}"; do
 		# Show which database entry will be used for comparison
 		echo "buscoDB:${buscoDB}"
 		# Run busco
+		# Odd and annoying personal fix for BUSCO strange behaviour
+		current_dir=$(pwd)
+		cd (${src})
 		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}/BUSCO:/DATABASES docker://quay.io/biocontainers/busco:3.0.2--py35_4 run_BUSCO.py -i /SAMPDIR/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l /DATABASES/${buscoDB} -m prot
 		echo -e "BUSCO:3.0.2 -- run_BUSCO.py -i ${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l ${local_DBs}/BUSCO/${buscoDB} -m prot\n" >> "${command_log_file}"
 		if [ ! -d "${SAMPDATADIR}/BUSCO" ]; then  #create outdir if absent
@@ -1261,6 +1264,7 @@ for isolate in "${isolate_list[@]}"; do
 		mv ${SAMPDATADIR}/BUSCO/missing_busco_list_${isolate_name}_BUSCO.tsv ${SAMPDATADIR}/BUSCO/missing_busco_list_${isolate_name}.tsv
 		rm -r ${src}/run_${isolate_name}_BUSCO
 
+		cd "{$current_dir}"
 		# Get end time of busco and calculate run time and append to time summary (and sum to total time used
 		end=$SECONDS
 		timeBUSCO=$((end - start))
