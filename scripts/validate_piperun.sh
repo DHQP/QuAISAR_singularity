@@ -28,29 +28,26 @@
 if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
-elif [[ -z "${1}" ]]; then
-	echo "Empty sample name supplied to validate_piperun.sh, exiting"
-	exit 1
-elif [[ ! -d "${1}" ]]; then
-	echo "Sample folder (${1}) does not exist, exiting validate_piperun.sh"
-	exit 1
 elif [[ "${1}" = "-h" ]]; then
 	echo "Usage is ./validate_piperun.sh path_to_sample_folder path_todatabases path_to_scripts [gapping] [similarity]"
 	echo "Optional positional arguments are to match c-SSTAR files run at different thresholds"
 	echo "Output is only printed to screen, Pipe to file if desired"
 	exit 0
+elif [[ ! -d "${1}" ]]; then
+	echo "Sample folder (${1}) does not exist, exiting validate_piperun.sh"
+	exit 2
 elif [ -z "$2" ]; then
 	echo "Database path ($2) not supplied to validate_piperun.sh, exiting"
-	exit 1
+	exit 3
 elif [ ! -d "$2" ]; then
 	echo "Database path ($2) does not exist, exiting validate_piperun.sh"
-	exit 1
+	exit 4
 elif [ -z "$3" ]; then
 	echo "Script path ($3) not supplied to validate_piperun.sh, exiting"
-	exit 1
+	exit 5
 elif [ ! -d "$3" ]; then
 	echo "Script path ($3) does not exist, exiting validate_piperun.sh"
-	exit 1
+	exit 6
 fi
 
 
