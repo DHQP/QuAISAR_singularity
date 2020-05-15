@@ -10,7 +10,7 @@
 # Description: Checking to see if all standard reported sections of a sample have completed successfully
 # NB: Since it no longer used the config.sh file. The unclassified threshold (unclass_flag, 30) and contamination threshold (contamination_threshold, 25) is hard-coded
 #
-# Usage: ./validate_piprun.sh path_to_sample_folder path_to_databases path_to_scripts [gapping] [similarity]
+# Usage: ./validate_piprun.sh path_to_sample_folder path_to_databases path_to_scripts [gapping] [c_similarity] [p_similarity]
 #
 # Output location: standard_out
 #
@@ -49,6 +49,39 @@ elif [ -z "$3" ]; then
 elif [ ! -d "$3" ]; then
 	echo "Script path ($3) does not exist, exiting validate_piperun.sh"
 	exit 6
+fi
+
+if [[ ! -z ${4} ]]; then
+	if [[ "${4}" == "gapped" ]] || [[ "${4}" == "ungapped" ]]; then
+		gapping="${4}"
+	else
+		echo "gapping parameter must be either gapped or ungapped, exiting validate_piprun.sh"
+		exit
+	fi
+else
+	gapping="gapped"
+fi
+
+if [[ ! -z ${5} ]]; then
+	if [[ "${5}" -ge 40 ]] && [[ "${5}" -le 100 ]]; then
+		csim="${5}"
+	else
+		echo "c_similarity parameter must be either 80,95,98,99, or 100, exiting validate_piprun.sh"
+		exit
+	fi
+else
+	csim=98
+fi
+
+if [[ ! -z ${6} ]]; then
+	if [[ "${6}" -eq 80 ]] || [[ "${6}" -eq 95 ]] || [[ "${6}" -eq 98 ]] || [[ "${6}" -eq 99 ]] || [[ "${6}" -eq 100 ]]; then
+		psim="${5}"
+	else
+		echo "p_similarity parameter must be between 40 and 100, exiting validate_piprun.sh"
+		exit
+	fi
+else
+	psim=40
 fi
 
 
@@ -952,17 +985,7 @@ fi
 
 #Check c-SSTAR
 if [[ -d "${SAMPDATADIR}/c-sstar/" ]]; then
-	if [[ ! -z "${4}" ]]; then
-	 gapping="${4}"
-	else
-	 gapping="gapped"
-	fi
-	if [[ ! -z "${5}" ]]; then
-		sim="${5}"
-	else
-		sim="98"
-	fi
-	csstar_file=$(find ${SAMPDATADIR}/c-sstar/${sample_name}.ResGANNCBI*.${gapping}_${sim}_sstar_summary.txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+	csstar_file=$(find ${SAMPDATADIR}/c-sstar/${sample_name}.ResGANNCBI*.${gapping}_${csim}_sstar_summary.txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 	if [[ -z "${csstar_file}" ]]; then
 		printf "%-20s: %-8s : %s\\n" "c-SSTAR" "FAILED" "/c-sstar/ does not have an sstar_summary file"
 		status="FAILED"
@@ -1462,20 +1485,10 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 
 	#Check c-SSTAR of plasmid assembly
 	if [[ -d "${SAMPDATADIR}/c-sstar_plasFlow/" ]]; then
-		if [[ ! -z "${4}" ]]; then
-			gapping="${4}"
-		else
-			gapping="gapped"
-		fi
-		if [[ ! -z "${5}" ]]; then
-			sim="${5}"
-		else
-			sim="40"
-		fi
-		csstar_plasFlow_file=$(find ${SAMPDATADIR}/c-sstar_plasFlow/${sample_name}.ResGANNCBI*.${gapping}_${sim}_sstar_summary.txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+		csstar_plasFlow_file=$(find ${SAMPDATADIR}/c-sstar_plasFlow/${sample_name}.ResGANNCBI*.${gapping}_${psim}_sstar_summary.txt -maxdepth 1 -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 		if [[ -z "${csstar_plasFlow_file}" ]]; then
 			printf "%-20s: %-8s : %s\\n" "c-SSTAR_plasFlow" "FAILED" "/c-sstar_plasFlow/ does not have an sstar_summary file"
-			echo "Looking for ${SAMPDATADIR}/c-sstar_plasFlow/${sample_name}.ResGANNCBI.${gapping}_${sim}_sstar_summary.txt"
+			echo "Looking for ${SAMPDATADIR}/c-sstar_plasFlow/${sample_name}.ResGANNCBI.${gapping}_${psim}_sstar_summary.txt"
 			status="FAILED"
 		else
 			header=$(head -n1 "${csstar_plasFlow_file}")
