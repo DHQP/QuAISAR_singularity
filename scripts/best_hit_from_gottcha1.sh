@@ -28,7 +28,7 @@ elif [ "$1" = "-h" ]; then
 	echo "Usage is ./best_hit_from_gottcha1.sh   path_to_sample_folder"
 	echo "Output is saved to path_to_sample_folder/gottcha/sample_name_gottcha_species_summary.txt"
 	exit 0
-elif [ ! -d "$1" ]; then
+elif [ ! -d "${1}" ]; then
 	echo "Path (${1}) does not exist, exiting"
 	exit 2
 fi
