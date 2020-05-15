@@ -245,8 +245,8 @@ fi
 # Set database names to use
 . "${src}/get_latest_DBs.sh" "${local_DBs}"
 ResGANNCBI_srst2=$(get_srst2)
-ResGANNCBI_srst2_filename==$(get_srst2_filename)
-REFSEQ==$(get_ANI_REFSEQ)
+ResGANNCBI_srst2_filename=$(get_srst2_filename)
+REFSEQ=$(get_ANI_REFSEQ)
 REFSEQ_date=$(get_ANI_REFSEQ_Date)
 
 if [[ -z "${ResGANNCBI_srst2_filename}" ]]; then
