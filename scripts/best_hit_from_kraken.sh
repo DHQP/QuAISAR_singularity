@@ -28,8 +28,8 @@ elif [[ "$1" = "-h" ]]; then
 	echo "Usage is ./best_hit_from_kraken.sh  path_to_sample_folder  pre|post paired|assembled kraken|kraken2"
 	echo "Output is saved to path_to_sample_folder/kraken/(pre/post)assembly/sample_name_kraken_summary_(paired/assembled)"
 	exit 0
-elif [ ! -d "${sample_name}" ]; then
-	echo "Path (${sample_name}) does not exist, exiting"
+elif [ ! -d "${1}" ]; then
+	echo "Path (${1}) does not exist, exiting"
 	exit 2
 elif [ -z "$2" ]; then
 	echo "Empty assembly relativity supplied to $0, exiting"
