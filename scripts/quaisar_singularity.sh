@@ -1786,7 +1786,7 @@ for isolate in "${isolate_list[@]}"; do
 	# Task: Create stats file
 	write_Progress
 	task_number=28
-	"${src}/validate_piperun.sh" "${SAMPDATADIR}" "${local_DBs}" "${src}" "${csstar_gapping}" "${csim}" "${cpsim}"> "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt"
+	"${src}/validate_piperun.sh" "${SAMPDATADIR}" "${local_DBs}" "${src}" "${csstar_gapping}" "${csim}" "${cpsim}" > "${SAMPDATADIR}/${isolate_name}_pipeline_stats.txt"
 
 	# Task: Clean sample folder
 	write_Progress
