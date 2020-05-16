@@ -42,7 +42,8 @@ elif [ -z "$4" ]; then
 	exit 5
 fi
 
-SAMPDATADIR="${1}/${4}/${2}Assembly"
+SAMPDATADIR="${1}"
+krakenDIR="${SAMPDATADIR}/${4}/${2}Assembly"
 # Based upon standard naming protocols pulling last portion of path off should result in proper name
 sample_name=$(echo "${SAMPDATADIR}" | rev | cut -d'/' -f1 | rev)
 
@@ -92,8 +93,8 @@ genus="N/A"
 species="N/A"
 
 #Checks to see if the list file used for calculations exists and exits if it does not
-if [[ ! -s "${SAMPDATADIR}/${sample_name}_${3}.list" ]]; then
-	echo "${SAMPDATADIR}/${sample_name}_${3}.list does not exist"
+if [[ ! -s "${krakenDIR}/${sample_name}_${3}.list" ]]; then
+	echo "${krakenDIR}/${sample_name}_${3}.list does not exist"
 	exit 1
 fi
 
@@ -164,7 +165,7 @@ while IFS= read -r line  || [ -n "$line" ]; do
 		species_reads=${reads}
 		echo "New: ${species}-${species_reads}"
 	fi
-done < "${SAMPDATADIR}/${sample_name}_${3}.list"
+done < "${krakenDIR}/${sample_name}_${3}.list"
 
 # Calculate % of unclassified reads using sum of highest taxon level reads against total reads found in QC counts
 # Grabs total possible reads from preQC counts if kraken was used on reads (pre assembly)
@@ -221,7 +222,7 @@ else
 fi
 
 #Print out the best taxa for each level and its corresponding % of reads reported by kraken, % reads of total, taxon description
-(echo -e "U: ${unclass_percent} (${u_percent}) unclassified\\nD: ${domain_percent} (${domain_percent_total}) ${domain}\\nP: ${phylum_percent} (${phylum_percent_total}) ${phylum}\\nC: ${class_percent} (${class_percent_total}) ${class}\\nO: ${order_percent} (${order_percent_total}) ${order}\\nF: ${family_percent} (${family_percent_total}) ${family}\\nG: ${genus_percent} (${genus_percent_total}) ${genus}\\ns: ${species_percent} (${species_percent_total}) ${species}") > "${SAMPDATADIR}/${sample_name}_kraken_summary_${3}.txt"
+(echo -e "U: ${unclass_percent} (${u_percent}) unclassified\\nD: ${domain_percent} (${domain_percent_total}) ${domain}\\nP: ${phylum_percent} (${phylum_percent_total}) ${phylum}\\nC: ${class_percent} (${class_percent_total}) ${class}\\nO: ${order_percent} (${order_percent_total}) ${order}\\nF: ${family_percent} (${family_percent_total}) ${family}\\nG: ${genus_percent} (${genus_percent_total}) ${genus}\\ns: ${species_percent} (${species_percent_total}) ${species}") > "${krakenDIR}/${sample_name}_kraken_summary_${3}.txt"
 
 #Script exited gracefully (unless something else inside failed)
 exit 0

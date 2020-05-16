@@ -55,7 +55,7 @@ if [[ ! -z ${4} ]]; then
 	if [[ "${4}" == "gapped" ]] || [[ "${4}" == "ungapped" ]]; then
 		gapping="${4}"
 	else
-		echo "gapping parameter must be either gapped or ungapped, exiting validate_piprun.sh"
+		echo "gapping parameter ${4}) must be either gapped or ungapped, exiting validate_piprun.sh"
 		exit
 	fi
 else
@@ -66,7 +66,7 @@ if [[ ! -z ${5} ]]; then
 	if [[ "${5}" -ge 40 ]] && [[ "${5}" -le 100 ]]; then
 		csim="${5}"
 	else
-		echo "c_similarity parameter must be either 80,95,98,99, or 100, exiting validate_piprun.sh"
+		echo "c_similarity parameter (${5}) must be either 80,95,98,99, or 100, exiting validate_piprun.sh"
 		exit
 	fi
 else
@@ -77,7 +77,7 @@ if [[ ! -z ${6} ]]; then
 	if [[ "${6}" -eq 80 ]] || [[ "${6}" -eq 95 ]] || [[ "${6}" -eq 98 ]] || [[ "${6}" -eq 99 ]] || [[ "${6}" -eq 100 ]]; then
 		psim="${5}"
 	else
-		echo "p_similarity parameter must be between 40 and 100, exiting validate_piprun.sh"
+		echo "p_similarity parameter (${6}) must be between 40 and 100, exiting validate_piprun.sh"
 		exit
 	fi
 else
