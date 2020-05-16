@@ -63,10 +63,10 @@ else
 fi
 
 if [[ ! -z ${5} ]]; then
-	if [[ "${5}" -ge 40 ]] && [[ "${5}" -le 100 ]]; then
-		csim="${5}"
+	if [[ "${5}" -eq 80 ]] || [[ "${5}" -eq 95 ]] || [[ "${5}" -eq 98 ]] || [[ "${5}" -eq 99 ]] || [[ "${5}" -eq 100 ]]; then
+		psim="${5}"
 	else
-		echo "c_similarity parameter (${5}) must be either 80,95,98,99, or 100, exiting validate_piprun.sh"
+		echo "c_similarity parameter (${6}) must be between 40 and 100, exiting validate_piprun.sh"
 		exit
 	fi
 else
@@ -74,16 +74,15 @@ else
 fi
 
 if [[ ! -z ${6} ]]; then
-	if [[ "${6}" -eq 80 ]] || [[ "${6}" -eq 95 ]] || [[ "${6}" -eq 98 ]] || [[ "${6}" -eq 99 ]] || [[ "${6}" -eq 100 ]]; then
-		psim="${5}"
+	if [[ "${6}" -ge 40 ]] && [[ "${6}" -le 100 ]]; then
+		psim="${6}"
 	else
-		echo "p_similarity parameter (${6}) must be between 40 and 100, exiting validate_piprun.sh"
+		echo "c_similarity parameter (${5}) must be either 80,95,98,99, or 100, exiting validate_piprun.sh"
 		exit
 	fi
 else
 	psim=40
 fi
-
 
 SAMPDATADIR="${1}"
 # Based upon standard naming protocols pulling last portion of path off should result in proper sample name
