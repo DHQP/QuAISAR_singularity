@@ -64,7 +64,7 @@ fi
 
 if [[ ! -z ${5} ]]; then
 	if [[ "${5}" -eq 80 ]] || [[ "${5}" -eq 95 ]] || [[ "${5}" -eq 98 ]] || [[ "${5}" -eq 99 ]] || [[ "${5}" -eq 100 ]]; then
-		psim="${5}"
+		csim="${5}"
 	else
 		echo "c_similarity parameter (${6}) must be between 40 and 100, exiting validate_piprun.sh"
 		exit
