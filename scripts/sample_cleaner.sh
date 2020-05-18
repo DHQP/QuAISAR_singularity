@@ -276,7 +276,7 @@ fi
 # Zip single fq files if present
 if [ -f "${sample_folder}/trimmed/${sample_name}.single.fq" ]; then
 	if [ ! -f "${sample_folder}/trimmed/${sample_name}.single.fq.gz" ]; then
-		gzip "${sample_folder}/trimmed/${sample_name}.single.fq.gz"
+		gzip "${sample_folder}/trimmed/${sample_name}.single.fq"
 	fi
 fi
 
