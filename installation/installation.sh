@@ -38,18 +38,23 @@ while getopts ":h?n:p:" option; do
       ;;
 		t)
 			echo "Option -t triggered, argument = ${OPTARG}"
-			OS_type=${OPTARG};;
+			OS_type=${OPTARG}
+      ;;
     i)
   		echo "Option -i triggered, argument = ${OPTARG}"
-  		installation_location=${OPTARG};;
+  		installation_location=${OPTARG}
+      ;;
 		d)
 			echo "Option -d triggered, argument = ${OPTARG}"
-			databases=${OPTARG};;
+			databases=${OPTARG}
+      ;;
     w)
       echo "Option -w triggered, argument = ${OPTARG}"
-      working_directory=${OPTARG};;
+      working_directory=${OPTARG}
+      ;;
 		:)
-			echo "Option -${OPTARG} requires as argument";;
+			echo "Option -${OPTARG} requires as argument"
+      ;;
 		h)
 			show_help
 			exit 0
