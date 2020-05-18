@@ -11,7 +11,7 @@
 #
 # Modules required: None
 #
-# v1.0.1 (04/01/2020)
+# v1.0.2 (05/18/2020)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -21,40 +21,61 @@ install_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && 
 
 echo "Current directory is ${install_script_dir}"
 
-# Checking for proper number of arguments from command line
-if [[ $# -lt 1  || $# -gt 4 ]]; then
-  echo "Usage: ./installation.sh OS-Type script_installation_location database_installation_location Working_directory_of_output_from_runs"
-	echo "You have used $# args"
-  echo "Options for OS-type are 0-Other/No Singularity Install needed 1-Ubuntu/Debian Family, 2-CentOS/Red Hat Family"
-  exit 3
+#  Function to print out help blurb
+show_help () {
+	echo "Usage: ./installation.sh -t OS-Type -i script_installation_location -d database_installation_location -w Working_directory_of_output_from_runs"
+}
+
+# Parse command line options
+options_found=0
+while getopts ":h?n:p:" option; do
+	options_found=$(( options_found + 1 ))
+	case "${option}" in
+		\?)
+			echo "Invalid option found: ${OPTARG}"
+      show_help
+      exit 0
+      ;;
+		t)
+			echo "Option -t triggered, argument = ${OPTARG}"
+			OS_type=${OPTARG};;
+    i)
+  		echo "Option -i triggered, argument = ${OPTARG}"
+  		installation_location=${OPTARG};;
+		d)
+			echo "Option -d triggered, argument = ${OPTARG}"
+			databases=${OPTARG};;
+    w)
+      echo "Option -w triggered, argument = ${OPTARG}"
+      working_directory=${OPTARG};;
+		:)
+			echo "Option -${OPTARG} requires as argument";;
+		h)
+			show_help
+			exit 0
+			;;
+	esac
+done
+
+# Show help info for when no options are given
+if [[ "${options_found}" -eq 0 ]]; then
+	echo "No options found"
+	show_help
+	exit 1
+elif [ -z "${OS_type}" ]; then
+  echo "Empty OS_type supplied to supplied to installation.sh, exiting"
+  exit 2
+elif [ -z "${installation_location}" ]; then
+	echo "Empty script location supplied to supplied to installation.sh, exiting"
+	exit 3
+elif [ -z "${databases}" ]; then
+	echo "Empty database installation location supplied to installation.sh, exiting"
+	exit 4
+elif [ -z "${working_directory}" ]; then
+  echo "Empty working directory for output supplied to installation.sh, exiting"
+  exit 5
 fi
 
-# Checks for proper argumentation
-if [[ $# -eq 0 ]]; then
-	echo "No argument supplied to $0, exiting"
-	exit 1
-elif [[ "$1" = "-h" ]]; then
-	echo "Usage: ./installation.sh script_installation_location database_installation_location Working_directory_of_output_from_runs"
-  exit 0
-elif [ -z "$1" ]; then
-  echo "Empty OS_type supplied to supplied to $0, exiting"
-  exit 1
-elif [ -z "$2" ]; then
-	echo "Empty script location supplied to supplied to $0, exiting"
-	exit 1
-elif [ -z "$3" ]; then
-	echo "Empty database installation location supplied to $0, exiting"
-	exit 1
-elif [ -z "$4" ]; then
-  echo "Empty working directory for output supplied to $0, exiting"
-  exit 1
-fi
-
-# need to add to bottom of yaml with proper home location
-OS_type="${1}"
-installation_location="${2}"
-databases="${3}"
-working_directory="${4}"
 
 echo -e "${OS_type}\n${installation_location}\n${databases}\n${working_directory}"
 
