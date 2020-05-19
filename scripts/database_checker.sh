@@ -111,7 +111,8 @@ if [[ ${link_index} -eq 1 ]]; then
 elif [[ ${link_index} -eq 2 ]]; then
 	wget_options="--no-check-certificate"
 elif [[ ${link_index} -eq 3 ]]; then
-	echo "None needed for google drive"
+	wget_options="-k"
+	#echo "None needed for google drive"
 fi
 
 # star (6 Mbs)
