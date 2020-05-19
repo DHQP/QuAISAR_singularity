@@ -165,7 +165,7 @@ if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
   test_singularity
 fi
 
-test_singularity
+#test_singularity
 
 # Create primary config file
 head -n25 ${install_script_dir}/installation/config_template.sh > ${installation_location}/new_config.sh
