@@ -108,11 +108,10 @@ taxes_links=("taxes.csv" "https://mega.nz/file/1v5UFIgY#K5pFtVNLrKP5kB6BH5S_f_nq
 wget_options=""
 if [[ ${link_index} -eq 1 ]]; then
 	echo "Unknown how to process"
-elif [[ ${link_index} -eq 2 ]]; then
+elif [[ ${link_index} -ge 2 ]]; then
 	wget_options="--no-check-certificate"
 elif [[ ${link_index} -eq 3 ]]; then
-	wget_options="-k"
-	#echo "None needed for google drive"
+	echo "None needed for google drive"
 fi
 
 # star (6 Mbs)
@@ -197,11 +196,11 @@ if [[ ! -d "${path_to_DBs}/ANI" ]]; then
 		mkdir ${path_to_DBs}/ANI
 		cd ${path_to_DBs}/ANI
 		if [[ ${link_index} -eq 3 ]]; then
-			query=`curl -c ./cookie.txt -s -L "${ANI_links[3]}" \
+			query=`curl -k -c ./cookie.txt -s -L "${ANI_links[3]}" \
 			| perl -nE'say/uc-download-link.*? href="(.*?)\">/' \
 			| sed -e 's/amp;//g' | sed -n 2p`
 			url="https://drive.google.com$query"
-			curl -b ./cookie.txt -L -o ${ANI_links[0]} $url
+			curl -k -b ./cookie.txt -L -o ${ANI_links[0]} $url
 			rm ./cookie.txt
 		else
 			wget "${wget_options}" -O "${ANI_links[0]}" "${ANI_links[${link_index}]}"
@@ -254,11 +253,11 @@ for simage_info in "${singularities[@]}"; do
 				#wget --save-cookies cookies.txt "${url_link}" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
 		 		#wget --load-cookies cookies.txt -O ${simage} '${url_link}'&'confirm='$(<confirm.txt)
 
-				query=`curl -c ./cookie.txt -s -L "${url_link}" \
+				query=`curl -k -c ./cookie.txt -s -L "${url_link}" \
 				| perl -nE'say/uc-download-link.*? href="(.*?)\">/' \
 				| sed -e 's/amp;//g' | sed -n 2p`
 				url="https://drive.google.com$query"
-				curl -b ./cookie.txt -L -o ${simage} $url
+				curl -k -b ./cookie.txt -L -o ${simage} $url
 				rm ./cookie.txt
 			else
 				echo "Normal command -just testing"
@@ -281,7 +280,7 @@ if [[ ! -d "${path_to_DBs}/kraken" ]]; then
 		echo "Downloading latest (mini)kraken database (wget https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz)"
 		wget "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
 		if [[ ! -f "minikraken_20171019_4GB.tgz" ]]; then
-			curl -O "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+			curl -k -O "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
 		fi
 		tar xzf minikraken_20171019_4GB.tgz
 		rm minikraken_20171019_4GB.tgz
