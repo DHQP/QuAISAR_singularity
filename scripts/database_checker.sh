@@ -124,8 +124,6 @@ if [[ ! -d "${path_to_DBs}/star" ]]; then
 		cd ${path_to_DBs}
 		wget "${wget_options}" -O "${sstar_links[0]}" "${sstar_links[${link_index}]}"
 		tar -zxvf sstar.tar.gz
-		mv ${path_to_DBs}/raid5/QuAISAR_databases/star ${path_to_DBs}
-		rm -r ${path_to_DBs}/raid5
 		rm sstar.tar.gz
 	else
 		echo "Missing latest NAR-AR database"
