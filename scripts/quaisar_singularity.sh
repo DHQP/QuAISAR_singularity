@@ -192,6 +192,14 @@ else
 fi
 
 
+echo "${INDATADIR}"
+echo "${output_dir}"
+echo "${PROJECT}"
+echo "${local_DBs}"
+echo "${src}"
+
+exit
+
 #echo "${singularity_version}-${singularity_release}:${python_version}-${python_release}:${python_command}"
 
 
