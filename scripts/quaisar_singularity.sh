@@ -68,7 +68,7 @@ for ((i=1 ; i <= nopts ; i++)); do
 		#Help/Usage section
 		-h | --help)
 			echo -e "\\n\\n\\n"
-			echo -e "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location project_name [-s] [-r] [-d]"
+			echo -e "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location -p project_name [-s] [-r] [-d]"
 			echo -e "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
 			echo -e "Additional functions/flags: \n\t -s If you would like to reference and run pipeline scripts installed in an alternate location \n\t -r if you would like to retry the list of samples if they failed during assembly \n\t -d if you would like to reference a different location for databases, but must contain all necessary for pipeline"
 			echo -e "\\n\\n\\n"
@@ -192,13 +192,12 @@ else
 fi
 
 
-echo "${INDATADIR}"
-echo "${output_dir}"
-echo "${PROJECT}"
-echo "${local_DBs}"
-echo "${src}"
+echo "input - ${INDATADIR}"
+echo "output - ${output_dir}"
+echo "project - ${PROJECT}"
+echo "dbs - ${local_DBs}"
+echo "src - ${src}"
 
-exit
 
 #echo "${singularity_version}-${singularity_release}:${python_version}-${python_release}:${python_command}"
 
