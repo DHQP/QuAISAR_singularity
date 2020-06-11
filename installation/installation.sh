@@ -187,8 +187,6 @@ echo "${installation_location}"
 chmod +x ${installation_location}/*.sh ${installation_location}/*.py
 
 
-echo "Exiting prematurely to prevent constant installations"
-
 # Install databases
 #Create database folder
 if [[ ! -d ${databases} ]]; then

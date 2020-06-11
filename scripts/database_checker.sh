@@ -78,9 +78,13 @@ for odb_info in "${busco_taxa[@]}"; do
 		echo "BUSCO has latest ${taxa}_odb10 as of 3/15/2020"
 	fi
 done
-find ${path_to_DBs}/BUSCO/ -name '*.gz' -exec tar xzf {} \;
-mv ${path_to_DBs}/BUSCO/actinobacteria_class_odb10 ${path_to_DBs}/BUSCO/actinobacteria_odb10
-find ${path_to_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
+
+# Unpack and cleanup
+if [[ "${do_download}" = "true" ]]; then
+	find ${path_to_DBs}/BUSCO/ -name '*.gz' -exec tar xzf {} \;
+	mv ${path_to_DBs}/BUSCO/actinobacteria_class_odb10 ${path_to_DBs}/BUSCO/actinobacteria_odb10
+	find ${path_to_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
+fi
 
 # All other databases will need to be hosted somehwere before being able to be checked/updated. Currently they are included in the Docker image
 
