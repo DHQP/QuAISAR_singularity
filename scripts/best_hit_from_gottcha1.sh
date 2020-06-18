@@ -145,15 +145,15 @@ while IFS='	' read -r -a line  || [ -n "$line" ]; do
 	fi
 done < "${SAMPDATADIR}/gottcha/gottcha_S/${sample_name}.gottcha.tsv"
 
-# Calculate % of unclassified reads using sum of highest taxon level reads against total reads found in QC counts
+# Calculate % of unclassified reads/contigs using sum of highest taxon level reads against total reads found in QC counts
 # Checks for the existence of the trimmed_counts file for the sample. If found true % classification is performed
 if [[ -s "${SAMPDATADIR}/preQCcounts/${sample_name}_trimmed_counts.txt" ]]; then
 	# The total reads is determined by pulling from the trimmed_counts
 	qc_reads=$(tail -n 1 "${SAMPDATADIR}/preQCcounts/${sample_name}_trimmed_counts.txt" | cut -d'	' -f13)
 	qc_reads=$((qc_reads/2))
-	# Unclassified reads are calculated by subtracting the sum of all phylum reads from the total possible reads
+	# Unclassified reads/contigs are calculated by subtracting the sum of all phylum reads from the total possible reads
 	unclass_reads=$(( qc_reads - sum_reads ))
-	# The unclassified percent is found using unclassified reads divided by the total possible reads
+	# The unclassified percent is found using unclassified reads/contigs divided by the total possible reads
 	u_percent=$( echo "${unclass_reads} ${qc_reads}" | awk '{ printf "%2.2f", ($1*100)/$2 }' )
 	# Each taxas % applied reads is calculated using the applied reads divided by the total possible reads
 	domain_percent_total=$( echo "${u_percent}" | awk '{ printf "%2.2f", 100-$1}' )

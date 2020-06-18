@@ -107,7 +107,7 @@ cpsim=40
 
 
 ##### kraken unclassified threshold ######
-# Will throw a warning flag during run summary if percent of unclassified reads are above this value
+# Will throw a warning flag during run summary if percent of unclassified reads/contigs are above this value
 unclass_flag=30
 # Will throw a warning flag during run summary if percent of 2nd organism is above this value
 contamination_threshold=25

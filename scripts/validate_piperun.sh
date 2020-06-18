@@ -616,8 +616,8 @@ if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assem
 				status="WARNING"
 			fi
 		else
-			#printf "%-20s: %-8s : %s\\n" "post Classify" "SUCCESS" "${speciespercent}%${true_speciespercent%} ${genuspost} ${speciespost} with ${unclass}%${true_unclass%} unclassified reads"
-			printf "%-20s: %-8s : %s\\n" "post Classify" "SUCCESS" "${speciespercent}% ${genuspost} ${speciespost} with ${unclass}% unclassified reads"
+			#printf "%-20s: %-8s : %s\\n" "post Classify" "SUCCESS" "${speciespercent}%${true_speciespercent%} ${genuspost} ${speciespost} with ${unclass}%${true_unclass%} unclassified contigs"
+			printf "%-20s: %-8s : %s\\n" "post Classify" "SUCCESS" "${speciespercent}% ${genuspost} ${speciespost} with ${unclass}% unclassified contigs"
 		fi
 	fi
 # If no summary file was found
@@ -704,8 +704,8 @@ if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assem
 			printf "%-20s: %-8s : %s\\n" "weighted Classify" "FAILED" "${genusweighted} ${speciesweighted} is under 50% (${speciespercent}), likely contaminated"
 			status="FAILED"
 		else
-			#printf "%-20s: %-8s : %s\\n" "weighted Classify" "SUCCESS" "${speciespercent}%${true_speciespercent%} ${genusweighted} ${speciesweighted} with ${unclass}%${true_unclass%} unclassified reads"
-			printf "%-20s: %-8s : %s\\n" "weighted Classify" "SUCCESS" "${speciespercent}% ${genusweighted} ${speciesweighted} with ${unclass}% unclassified reads"
+			#printf "%-20s: %-8s : %s\\n" "weighted Classify" "SUCCESS" "${speciespercent}%${true_speciespercent%} ${genusweighted} ${speciesweighted} with ${unclass}%${true_unclass%} unclassified weighted contigs"
+			printf "%-20s: %-8s : %s\\n" "weighted Classify" "SUCCESS" "${speciespercent}% ${genusweighted} ${speciesweighted} with ${unclass}% unclassified weighted contigs"
 		fi
 	fi
 # If no summary file was found
