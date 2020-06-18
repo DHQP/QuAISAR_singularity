@@ -5,9 +5,13 @@
 #
 # Description: Script to prepare environment to be able to run quaisar pipeline
 #
-# Usage: ./quaisar_installation.sh OS_Type location_for_scriopts location_to_download_databases_to location_of_where_to_store_output
+# Usage: ./installation.sh OS_Type full_path_for_scripts full_path_to_download_databases_to full_path_of_where_to_store_output_of_runs
+# 	OS -type pertains to the need to install singularity and conda on the system
+#			0 - No need, singularity v3.X+ and conda are already installed"
+#			1 - This is an Ubuntu/Debian based kernel and Singularity and conda need to be installed"
+#			2 - This is a Redhat/CentOS based kernel and Singularity and conda need to be installed"
 #
-# Output location: No output created
+# Output location: Script, Database, and Output folders created and populated based on parameters
 #
 # Modules required: None
 #
@@ -16,14 +20,19 @@
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
 
-#finds where script is it, so it properly reference directories during install
+#finds where script is, so it properly reference directories during install
 install_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd | rev | cut -d'/' -f2- | rev)"
 
 echo "Current directory is ${install_script_dir}"
 
 #  Function to print out help blurb
 show_help () {
-	echo "Usage: ./installation.sh -t OS-Type -i script_installation_location -d database_installation_location -w Working_directory_of_output_from_runs"
+	echo "Usage: ./installation.sh OS_Type full_path_for_scripts full_path_to_download_databases_to full_path_of_where_to_store_output_of_runs"
+	echo " All paths need to be full, not relative"
+	echo "OS-Type pertains to the need for if singularity and conda are to be installed"
+	echo "	0 - No need, singularity v3.X+ and conda are already installed"
+	echo "	1 - This is an Ubuntu/Debian based kernel and Singularity and conda need to be installed"
+	echo "	2 - This is a Redhat/CentOS based kernel and Singularity and conda need to be installed"
 }
 
 # Parse command line options
@@ -32,33 +41,33 @@ while getopts ":h?t:i:d:w:" option; do
 	options_found=$(( options_found + 1 ))
 	case "${option}" in
 		\?)
-			echo "Invalid option found: ${OPTARG}"
+      echo "Invalid option found: ${OPTARG}"
       show_help
       exit 0
       ;;
 		t)
-			echo "Option -t triggered, argument = ${OPTARG}"
-			OS_type=${OPTARG}
+      echo "Option -t triggered, argument = ${OPTARG}"
+      OS_type=${OPTARG}
       ;;
-    i)
-  		echo "Option -i triggered, argument = ${OPTARG}"
-  		installation_location=${OPTARG}
+		i)
+      echo "Option -i triggered, argument = ${OPTARG}"
+      installation_location=${OPTARG}
       ;;
 		d)
-			echo "Option -d triggered, argument = ${OPTARG}"
-			databases=${OPTARG}
+      echo "Option -d triggered, argument = ${OPTARG}"
+      databases=${OPTARG}
       ;;
-    w)
+		w)
       echo "Option -w triggered, argument = ${OPTARG}"
       working_directory=${OPTARG}
       ;;
 		:)
-			echo "Option -${OPTARG} requires as argument"
+      echo "Option -${OPTARG} requires as argument"
       ;;
 		h)
-			show_help
-			exit 0
-			;;
+      show_help
+      exit 0
+      ;;
 	esac
 done
 
@@ -179,7 +188,7 @@ CPUs=$(nproc --all)
 echo "procs=${CPUs}" >> ${installation_location}/new_config.sh
 tail -n91 ${install_script_dir}/installation/config_template.sh >> ${installation_location}/new_config.sh
 
-# Copy all scripts from this fodler to install location
+# Copy all scripts from this folder to install location
 cp ${install_script_dir}/scripts/* ${installation_location}
 rm ${installation_location}/config.sh
 mv ${installation_location}/new_config.sh ${installation_location}/config.sh

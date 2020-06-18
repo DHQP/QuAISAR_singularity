@@ -713,6 +713,7 @@ for isolate in "${isolate_list[@]}"; do
 				mkdir "${SAMPDATADIR}/srst2"
 		fi
 
+		#prep file for srst transfer
 		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz
 		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz
 
