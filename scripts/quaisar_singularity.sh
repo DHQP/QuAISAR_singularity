@@ -7,14 +7,14 @@
 #$ -q short.q
 
 #
-# Description: The full QuAISAR-H pipeline start to end serially
+# Description: The full QuAISAR-H pipeline start to end serially with singularity containers
 #
-# Usage: ./quaisar_singularity.sh -i Absolute_path_to_reads/assemblies 1|2|3|4 -o path_to_output_folder -p name_of_project [-s] [-r] [-d] [-c]"
+# Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o name_of_output_folder -p project_name [-s full_path_to_script_folder] [-r] [-d full_path_to_database_folder] [-c config.sh full_path_to_config_file]"
 #		filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz 5: Asssemblies (.fasta)"
+#		Reads can be gzipped or raw, but if your files are not named in any one of these formats, they will need to be renamed before running them through the pipeline
+#		If you are submitting assemblies, use 1 as the value
 #
-# Output location: default_config.sh_output_location
-#
-# Modules required: Python3/3.5.2
+# Output location: A folder with the name given for the -p flag will be created under the folder given with the -o flag (/-o/-p)
 #
 # v1.0.1 (5/07/2020)
 #
@@ -45,9 +45,11 @@ function write_Progress() {
 # Checking for proper number of arguments from command line
 if [[ $# -lt 1  || $# -gt 12 ]]; then
 	echo "If reads are in default location set in config file then"
-  echo "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o name_of_output_folder -p project_name [-s location_to_script_folder] [-r] [-d database location] [-c config.sh location]"
+  echo "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o name_of_output_folder -p project_name [-s full_path_to_script_folder] [-r] [-d full_path_to_database_folder] [-c config.sh full_path_to_config_file]"
 	echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz 5: .fasta (Assemblies only)"
-  echo "You have used $# args"
+	echo "Reads can be gzipped or raw, but if your files are not named in any one of these formats, they will need to be renamed before running them through the pipeline"
+	echo "If you are submitting assemblies, use 1 as the value"
+	echo "You have used $# args"
   exit 3
 fi
 
@@ -68,8 +70,10 @@ for ((i=1 ; i <= nopts ; i++)); do
 		#Help/Usage section
 		-h | --help)
 			echo -e "\\n\\n\\n"
-			echo -e "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o path_to_parent_output_folder_location -p project_name [-s] [-r] [-d]"
+			echo -e "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o name_of_output_folder -p project_name [-s full_path_to_script_folder] [-r] [-d full_path_to_database_folder] [-c config.sh full_path_to_config_file]"
 			echo -e "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
+			echo -e "If your reads are not named in any one of these formats, they will need to be renamed before running them through the pipeline"
+			echo -e "Reads can be gzipped or raw, but if you are submitting assemblies, use 1 as the value"
 			echo -e "Additional functions/flags: \n\t -s If you would like to reference and run pipeline scripts installed in an alternate location \n\t -r if you would like to retry the list of samples if they failed during assembly \n\t -d if you would like to reference a different location for databases, but must contain all necessary for pipeline"
 			echo -e "\\n\\n\\n"
 			exit 0
@@ -294,7 +298,7 @@ if [[ "${assemblies}" == "true" ]]; then
 	echo "${INDATADIR}"
 	for file in ${INDATADIR}/*
 	do
-		# Check if file is a recognized assembly format externsion
+		# Check if file is a recognized assembly format extension
 		if [[ "${file}" = *.fasta ]] || [[ "${file}" = *.fna ]]; then
 			isolate_name=$(basename -- "$file")
 			extension="${isolate_name##*.}"
@@ -1654,7 +1658,7 @@ for isolate in "${isolate_list[@]}"; do
 			mv "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/assembly.fasta" "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_original.fasta"
 			mv "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/assembly.gfa" "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_assembly.gfa"
 			python3 ${src}/fasta_headers_plasFlow.py -i "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_original.fasta" -o "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta"
-			python3 "${src}/removeShortContigs.py" -i "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta" -t 500 -s "plasFlow"
+			python3 ${src}/removeShortContigs.py -i "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta" -t 500 -s "plasFlow"
 			mv "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta.TRIMMED.fasta" "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta"
 			rm "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta"
 		else
@@ -2044,7 +2048,7 @@ done < ${list_path}
 write_Progress
 run_task_id=10
 runsumdate=$(date "+%m_%d_%Y_at_%Hh_%Mm")
-${src}/run_sum.sh ${PROJDATADIR}
+${src}/run_sum.sh ${PROJDATADIR} ${src} ${local_DBs}
 
 # Task: Copy config file to run folder to show configuration used in the run
 write_Progress
