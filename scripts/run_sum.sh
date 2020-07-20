@@ -56,12 +56,13 @@ databases=${2}
 scripts="${3}"
 
 echo "Checking for ${OUTDATADIR}/${project_name}/${project_name}_list(_ordered).txt"
-if [[ -f "${OUTDATADIR}/${project_name}/${project_name}_list_ordered.txt" ]]; then
-	list="${OUTDATADIR}/${project_name}/${project_name}_list_ordered.txt"
-elif [[ -f "${OUTDATADIR}/${project_name}/${project_name}_list.txt" ]]; then
-	list="${OUTDATADIR}/${project_name}/${project_name}_list.txt"
-else
-	echo "No list found (${OUTDATADIR}/${project_name}/${project_name}_list(_ordered).txt)"
+list=$(find ${OUTDATADIR} -name "*_list_ordered")
+if [[ ! -f "${list}" ]]; then
+	list=$(find ${OUTDATADIR} -name "*_list")
+fi
+if [[ ! -f "${list}" ]]; then
+	echo "No list found (${OUTDATADIR}/*_list(_ordered).txt), exiting"
+	exit
 fi
 
 # Gets todays date to show when summary was run
