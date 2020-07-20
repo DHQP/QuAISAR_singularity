@@ -56,9 +56,9 @@ databases=${2}
 scripts="${3}"
 
 echo "Checking for ${OUTDATADIR}/${project_name}/${project_name}_list(_ordered).txt"
-list=$(find ${OUTDATADIR} -name "*_list_ordered")
+list=$(find ${OUTDATADIR} -name "*_list_ordered.txt")
 if [[ ! -f "${list}" ]]; then
-	list=$(find ${OUTDATADIR} -name "*_list")
+	list=$(find ${OUTDATADIR} -name "*_list.txt")
 fi
 if [[ ! -f "${list}" ]]; then
 	echo "No list found (${OUTDATADIR}/*_list(_ordered).txt), exiting"
