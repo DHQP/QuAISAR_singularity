@@ -73,5 +73,6 @@ while IFS= read -r samples || [ -n "$samples" ]; do
 	sample_name=$(echo "${samples}" | awk -F/ '{ print $2}' | tr -d '[:space:]')
 	project_name_internal=$(echo "${samples}" | awk -F/ '{ print $1}' | tr -d '[:space:]')
 	if [[ "${project_name}" == "${project_name_internal}" ]]; then
-	"${3}/validate_piperun.sh" "${OUTDATADIR}/${sample_name}" "${databases}" "${scripts}" > "${OUTDATADIR}/${sample_name}/${sample_name}_pipeline_stats.txt"
+		"${3}/validate_piperun.sh" "${OUTDATADIR}/${sample_name}" "${databases}" "${scripts}" > "${OUTDATADIR}/${sample_name}/${sample_name}_pipeline_stats.txt"
+	fi
 done < ${list}
