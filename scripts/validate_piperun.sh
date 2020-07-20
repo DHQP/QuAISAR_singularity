@@ -100,6 +100,7 @@ contamination_threshold=25
 . ${scripts}/get_latest_DBs.sh "${databases}"
 ResGANNCBI_srst2_filename=$(get_srst2_filename)
 REFSEQ_date=$(get_ANI_REFSEQ_Date)
+echo "${REFSEQ_date}"
 
 # Creates and prints header info for the sample being processed
 today=$(date)
