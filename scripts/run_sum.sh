@@ -52,8 +52,8 @@ fi
 OUTDATADIR="${1}"
 # Based upon standard naming protocols pulling 2nd to last portion of path off should result in proper project name
 project_name=$(echo "${OUTDATADIR}" | rev | cut -d'/' -f1 | rev)
-databases=${2}
-scripts="${3}"
+databases=${3}
+scripts="${2}"
 
 echo "Checking for ${OUTDATADIR}/${project_name}/${project_name}_list(_ordered).txt"
 list=$(find ${OUTDATADIR} -name "*_list_ordered.txt")
