@@ -26,7 +26,7 @@ if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 1
 elif [[ "${1}" = "-h" ]]; then
-	echo "Usage is ./run_sum.sh miseq_run_ID -vo(optional)"
+	echo "Usage is ./run_sum.sh path_to_run_folder path_to_scripts_folder path_to_database_folder"
 	echo "Output is saved to path_to_run_folder/run_name_run_summary_at_time.sum"
 	exit 0
 elif [[ ! -d "${1}" ]]; then
