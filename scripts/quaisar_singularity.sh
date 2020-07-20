@@ -1876,9 +1876,9 @@ while IFS= read -r var || [ -n "$var" ]; do
 	species_post="not_assigned"
 	# Pulls species and genus_post information from kraken out of assembly
 	if [[ -s "${SAMPDATADIR}/kraken/postAssembly/${isolate_name}_kraken_summary_assembled_BP.txt" ]]; then
-		while IFS= read -r line  || [ -n "$line" ]; do
+		while IFS= read -r line; do
 			first=${line::1}
-			if [ "${first}" = "S" ]
+			if [ "${first}" = "s" ]
 			then
 				species_post=$(echo "${line}" | awk -F ' ' '{print $4}')
 			elif [ "${first}" = "G" ]
@@ -1898,9 +1898,9 @@ while IFS= read -r var || [ -n "$var" ]; do
 	species_reads="not_assigned"
 	# Pulls species and genus_16s information from kraken out of reads
 	if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${isolate_name}_kraken_summary_paired.txt" ]]; then
-		while IFS= read -r line  || [ -n "$line" ]; do
+		while IFS= read -r line; do
 			first=${line::1}
-			if [ "${first}" = "S" ]
+			if [ "${first}" = "s" ]
 			then
 				species_reads=$(echo "${line}" | awk -F ' ' '{print $4}')
 			elif [ "${first}" = "G" ]
