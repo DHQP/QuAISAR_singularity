@@ -32,20 +32,20 @@ elif [[ "${1}" = "-h" ]]; then
 elif [[ ! -d "${1}" ]]; then
 	echo "Path ($1) does not exit, exiting run_sum.sh"
 	exit 2
-elif [[ -z "${3}" ]]; then
+elif [[ -z "${2}" ]]; then
 	echo "Empty script path supplied, exiting run_sum.sh"
 	exit 3
-elif [[ ! -d "${3}" ]]; then
-	echo "Script path ($3) does not exsit, exiting run_sum.sh"
+elif [[ ! -d "${2}" ]]; then
+	echo "Script path ($2) does not exsit, exiting run_sum.sh"
 	exit 4
-elif [[ ! -f "${3}/validate_piperun.sh" ]]; then
+elif [[ ! -f "${2}/validate_piperun.sh" ]]; then
 	echo "validate_piperun.sh does not exist in $2, exiting run_sum.sh"
 	exit 5
-elif [[ -z "${2}" ]]; then
+elif [[ -z "${3}" ]]; then
 	echo "Empty database pathsupplied, exiting run_sum.sh"
 	exit 6
-elif [[ ! -d "${2}" ]]; then
-	echo "Database path ($2) does not exsit, exiting run_sum.sh"
+elif [[ ! -d "${3}" ]]; then
+	echo "Database path ($3) does not exsit, exiting run_sum.sh"
 	exit 7
 fi
 
