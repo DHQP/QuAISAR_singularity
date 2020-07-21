@@ -4,7 +4,7 @@
 #$ -e quaisar_X.err
 #$ -N quasX
 #$ -cwd
-#$ -q short.q
+#$ -q all.q
 
 #
 # Description: The full QuAISAR-H pipeline start to end serially with singularity containers
