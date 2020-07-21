@@ -22,20 +22,20 @@ hostname=$(hostname -f)
 host=$(echo "${hostname}" | cut -d'.' -f1)
 
 
-############# General Options #############
-#shortcut to processed samples folder
-output_dir=""
-# Locations of all scripts and necessary accessory files
-src=""
-# Local databases that are necessary for pipeline...ANI, BUSCO, star, adapters, phiX
-local_DBs=""
+# ############# General Options #############
+# #shortcut to processed samples folder
+# output_dir=""
+# # Locations of all scripts and necessary accessory files
+# src=""
+# # Local databases that are necessary for pipeline...ANI, BUSCO, star, adapters, phiX
+# local_DBs=""
 # Number of processors requested by numerous applications within the pipeline
 procs=12 # Number of processors
-
-if [[ ! -d "${local_DBs}" ]]; then
-  #echo "Database folder does not exist, please be aware
-  :
-fi
+#
+# if [[ ! -d "${local_DBs}" ]]; then
+#   #echo "Database folder does not exist, please be aware
+#   :
+# fi
 
 ############# Application Specific Options #############
 
@@ -52,8 +52,8 @@ bbduk_hdist=1
 #####Trimmomatic specific config options #####
 #Which scoring scale to use
 trim_phred="phred33"
-#Location of the Adapter FASTA file used for trimming
-trim_adapter_location="${local_DBs}/adapters.fasta"
+# #Location of the Adapter FASTA file used for trimming
+# trim_adapter_location="${local_DBs}/adapters.fasta"
 #Seeding mismatches
 trim_seed_mismatch=2
 #palindrome clip threshold
@@ -89,13 +89,13 @@ max_ani_samples=20
 ani_coverage_threshold=70
 # Shortcuts used to find newest REFSEQ mash sketch
 
-if [[ -d "${local_DBs}" ]]; then
-  REFSEQ=$(find ${local_DBs}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-  REFSEQ_date=$(echo "${REFSEQ}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1)
-else
-  REFSEQ="NO_DB_FOUND"
-  REFSEQ_date="NO_DB_FOUND"
-fi
+# if [[ -d "${local_DBs}" ]]; then
+#   REFSEQ=$(find ${local_DBs}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+#   REFSEQ_date=$(echo "${REFSEQ}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1)
+# else
+#   REFSEQ="NO_DB_FOUND"
+#   REFSEQ_date="NO_DB_FOUND"
+# fi
 
 ##### c-SSTAR standard settings #####
 # gapped versus ungapped
@@ -111,17 +111,17 @@ cpsim=40
 unclass_flag=30
 # Will throw a warning flag during run summary if percent of 2nd organism is above this value
 contamination_threshold=25
-# MiniKraken DB (smaller, but effective option)
-kraken_DB_path="${local_DBs}/kraken/minikraken_20171013_4GB"
-kraken_DB=$(echo "${kraken_DB_path}" | rev | cut -d'/' -f1 | rev)
+# # MiniKraken DB (smaller, but effective option)
+# kraken_DB_path="${local_DBs}/kraken/minikraken_20171013_4GB"
+# kraken_DB=$(echo "${kraken_DB_path}" | rev | cut -d'/' -f1 | rev)
 
 
-##### gottcha #####
-# gottcha DB
-gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species"
-
-#gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30__xHUMAN3x.species"
-gottcha_DB=$(echo ${gottcha_DB_path} | rev | cut -d'/' -f1 | rev)
+# ##### gottcha #####
+# # gottcha DB
+# gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species"
+#
+# #gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30__xHUMAN3x.species"
+# gottcha_DB=$(echo ${gottcha_DB_path} | rev | cut -d'/' -f1 | rev)
 
 
 ##### plasmidFinder ######
@@ -131,11 +131,11 @@ plasmidFinder_identity=.95
 plasmidFinder_length=60
 
 
-# Shortcuts used to reference NEWEST AR database
-if [[ -d "${local_DBs}" ]]; then
-  ResGANNCBI_srst2=$(find ${local_DBs}/star -maxdepth 1 -name "ResGANNCBI_*_srst2.fasta" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-  ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
-else
-  ResGANNCBI_srst2="NO_DB_FOUND"
-  ResGANNCBI_srst2_filename="NO_DB_FOUND"
-fi
+# # Shortcuts used to reference NEWEST AR database
+# if [[ -d "${local_DBs}" ]]; then
+#   ResGANNCBI_srst2=$(find ${local_DBs}/star -maxdepth 1 -name "ResGANNCBI_*_srst2.fasta" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+#   ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
+# else
+#   ResGANNCBI_srst2="NO_DB_FOUND"
+#   ResGANNCBI_srst2_filename="NO_DB_FOUND"
+# fi
