@@ -146,7 +146,8 @@ do_ANI() {
 	source="ANI"
 	#echo "${source}"
 
-	source ./get_latest_DBs.sh ${databases}
+	SCRIPT_DIR=$(dirname "$(readlink -f "$0")") # get dir of current script
+  source ${SCRIPT_DIR}/get_latest_DBs.sh ${databases}
 	refseq_ANI_date=$(get_ANI_REFSEQ_Date)
 	#echo "${refseq_ANI_date}"
 	if [[ -f "${output_dir}/${project}/${sample}/ANI/best_ANI_hits_ordered(${sample}_vs_REFSEQ_${refseq_ANI_date}).txt" ]]; then
