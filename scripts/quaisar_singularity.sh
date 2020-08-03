@@ -29,7 +29,7 @@ isolate_number=0
 isolate_count=0
 
 version_type="Quaisar-Singularity"
-version_num="qs1.0.2"
+version_num="qs1.0.3"
 
 # Will be called throughout the script to write current progress for inquisitive minds and to restart run from where it was murdered
 # parameters need to be as follows
@@ -637,8 +637,8 @@ for isolate in "${isolate_list[@]}"; do
 		timeTrim=$((end - start))
 		echo "Trimming - ${timeTrim} seconds" >> "${time_summary}"
 		totaltime=$((totaltime + timeTrim))
-		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq"
-		gzip -k "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq"
+		gzip -c "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq" > "${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq.gz"
+		gzip -c "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq" > "${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq.gz"
 
 		# Task: Check differences after QC and trimming (also for gottcha proper read count for assessing unclassified reads)
 		write_Progress
@@ -717,7 +717,7 @@ for isolate in "${isolate_list[@]}"; do
 				mkdir "${SAMPDATADIR}/srst2"
 		fi
 
-		#prep file for srst transfer
+		# prep file for srst transfer
 		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz
 		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz
 
@@ -1657,8 +1657,8 @@ for isolate in "${isolate_list[@]}"; do
 			echo -e "unicycler:0.4.4 -- unicycler -1 ${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}_R1_bacterial.fastq -2 ${SAMPDATADIR}/plasFlow/filtered_reads_70/${isolate_name}_R2_bacterial.fastq -o ${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly\n" >> "${command_log_file}"
 			mv "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/assembly.fasta" "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_original.fasta"
 			mv "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/assembly.gfa" "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_assembly.gfa"
-			python3 ${src}/fasta_headers_plasFlow.py -i "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_original.fasta" -o "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta"
-			python3 ${src}/removeShortContigs.py -i "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta" -t 500 -s "plasFlow"
+			python3 "${src}/fasta_headers_plasFlow.py" -i "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_original.fasta" -o "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta"
+			python3 "${src}/removeShortContigs.py" -i "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta" -t 500 -s "plasFlow"
 			mv "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta.TRIMMED.fasta" "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta"
 			rm "${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly.fasta"
 		else
