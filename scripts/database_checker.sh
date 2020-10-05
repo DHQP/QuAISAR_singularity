@@ -9,7 +9,7 @@
 #
 # Description: Script checks for all databases used by QuAISAR pipeline and sets up any missing ones
 #
-# Usage ./database_checker.sh -path_to_database_folder [-i]
+# Usage ./database_checker.sh path_to_database_folder [-i]
 #	optional -i is for chencking AND installing, otherwise script just checks for existence..no downloading
 #
 # Modules required: None
@@ -25,7 +25,7 @@ if [[ $# -eq 0 ]]; then
 	echo "No argument supplied to $0, exiting"
 	exit 113
 elif [[ "${1}" = "-h" ]]; then
-	echo "Usage ./database_checker.sh -path_to_config_file [-i]"
+	echo "Usage ./database_checker.sh path_to_config_file [-i]"
 	echo "-i is too install databases, otherwise script just checks for existence"
 	exit 0
 elif [[ ! -d "${1}" ]]; then
