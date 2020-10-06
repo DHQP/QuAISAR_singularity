@@ -32,7 +32,7 @@ version_type="Quaisar-Singularity"
 version_num="qs1.0.3"
 
 ml singularity
-singularity -v
+singularity --version
 
 # Will be called throughout the script to write current progress for inquisitive minds and to restart run from where it was murdered
 # parameters need to be as follows
