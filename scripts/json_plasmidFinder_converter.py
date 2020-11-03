@@ -48,8 +48,8 @@ def convert_json_to_text(infile, outfile):
     # Parse all Enterobacteriaceae hits
     if results['plasmidfinder']['results']['Enterobacteriaceae']['enterobacteriaceae'] != 'No hit found':
         for key,value in results['plasmidfinder']['results']['Enterobacteriaceae']['enterobacteriaceae'].items():
-            print("E-"+str(key))
-            print("E-"+str(value))
+            print("EK-"+str(key))
+            print("EV-"+str(value))
             if value != "No hit found":
                 plasmid = value['plasmid']
                 percent_identity = str(value['identity'])
