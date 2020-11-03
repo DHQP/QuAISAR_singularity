@@ -33,7 +33,9 @@ def convert_json_to_text(infile, outfile):
     if results['plasmidfinder']['results']['Gram Positive'] != 'No hit found':
         for key,value in results['plasmidfinder']['results']['Gram Positive'].items():
             print("GPK-"+str(key))
-            print()
+            print(value[0])
+            print(value[1])
+            print(value[2])
             print("GPV-",len(value),str(value))
             if value != "No hit found":
                 plasmid = value['plasmid']
