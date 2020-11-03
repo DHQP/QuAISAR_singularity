@@ -30,7 +30,7 @@ def convert_json_to_text(infile, outfile):
         results = json.load(f)
 
     # Parse all Gram positive hits
-    if result['plasmidfinder']['results']['Gram Positive'] != 'No hit found':
+    if results['plasmidfinder']['results']['Gram Positive'] != 'No hit found':
         for key,value in results['plasmidfinder']['results']['Gram Positive'].items():
             print("GPK-"+str(key))
             print("GPV-"+str(value))
