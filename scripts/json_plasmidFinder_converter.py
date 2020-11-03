@@ -39,7 +39,7 @@ def convert_json_to_text(infile, outfile):
                     #print("K", hits)
                     #print("V", value[hits])
                     plasmid = value[hits]['plasmid']
-                    print("P", plasmid)
+                    #print("P", plasmid)
                     percent_identity = str(value[hits]['identity'])
                     HSP_length = str(value[hits]['HSP_length'])
                     template_length = str(value[hits]['template_length'])
