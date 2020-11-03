@@ -32,11 +32,9 @@ def convert_json_to_text(infile, outfile):
     # Parse all Gram positive hits
     if results['plasmidfinder']['results']['Gram Positive'] != 'No hit found':
         for key,value in results['plasmidfinder']['results']['Gram Positive'].items():
-            print("GPK-"+str(key))
-            print(value[0])
-            print(value[1])
-            print(value[2])
-            print("GPV-",len(value),str(value))
+            for key1, value1 in value:
+            print("GPK1-"+str(key))
+            print("GPV1-",len(value),str(value))
             if value != "No hit found":
                 plasmid = value['plasmid']
                 percent_identity = str(value['identity'])
