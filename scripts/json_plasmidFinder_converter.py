@@ -36,18 +36,18 @@ def convert_json_to_text(infile, outfile):
                 # print("GPV1-",len(value),str(value))
              if value != "No hit found":
                 for hits in value:
-                    print("K", hits)
-                    print("V", value[hits])
+                    #print("K", hits)
+                    #print("V", value[hits])
                     plasmid = value[hits]['plasmid']
                     print("P", plasmid)
-                #     percent_identity = str(value['identity'])
-                #     HSP_length = str(value['HSP_length'])
-                #     template_length = str(value['template_length'])
-                #     contig = value['contig_name']
-                #     contig_position = value['positions_in_contig']
-                #     accession_number = value['note']
-                #     coverage = str(value['coverage'])
-                #     gramps.append(plasmid+"\t"+percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number+"\n")
+                    percent_identity = str(value[hits]['identity'])
+                    HSP_length = str(value[hits]['HSP_length'])
+                    template_length = str(value[hits]['template_length'])
+                    contig = value[hits]['contig_name']
+                    contig_position = value[hits]['positions_in_contig']
+                    accession_number = value[hits]['note']
+                    coverage = str(value[hits]['coverage'])
+                    gramps.append(plasmid+"\t"+percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number+"\n")
 
 
     # Parse all Enterobacteriaceae hits
