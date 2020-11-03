@@ -30,19 +30,20 @@ def convert_json_to_text(infile, outfile):
         results = json.load(f)
 
     # Parse all Gram positive hits
-    for key,value in results['plasmidfinder']['results']['Gram Positive'].items():
-        print("GPK-"+str(key))
-        print("GPV-"+str(value))
-        if value != "No hit found":
-            plasmid = value['plasmid']
-            percent_identity = str(value['identity'])
-            HSP_length = str(value['HSP_length'])
-            template_length = str(value['template_length'])
-            contig = value['contig_name']
-            contig_position = value['positions_in_contig']
-            accession_number = value['note']
-            coverage = str(value['coverage'])
-            gramps.append(plasmid+"\t"+percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number+"\n")
+    if result['plasmidfinder']['results']['Gram Positive'] != 'No hit found':
+        for key,value in results['plasmidfinder']['results']['Gram Positive'].items():
+            print("GPK-"+str(key))
+            print("GPV-"+str(value))
+            if value != "No hit found":
+                plasmid = value['plasmid']
+                percent_identity = str(value['identity'])
+                HSP_length = str(value['HSP_length'])
+                template_length = str(value['template_length'])
+                contig = value['contig_name']
+                contig_position = value['positions_in_contig']
+                accession_number = value['note']
+                coverage = str(value['coverage'])
+                gramps.append(plasmid+"\t"+percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number+"\n")
 
 
     # Parse all Enterobacteriaceae hits
