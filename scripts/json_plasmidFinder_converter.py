@@ -35,10 +35,11 @@ def convert_json_to_text(infile, outfile):
                 # print("GPK1-"+str(key))
                 # print("GPV1-",len(value),str(value))
              if value != "No hit found":
-                for espo in value:
-                    print("K", espo)
-                    print("V", value[espo])
-                #     plasmid = value['plasmid']
+                for hits in value:
+                    print("K", hits)
+                    print("V", value[hits])
+                    plasmid = value[hits]['plasmid']
+                    print("P", plasmid)
                 #     percent_identity = str(value['identity'])
                 #     HSP_length = str(value['HSP_length'])
                 #     template_length = str(value['template_length'])
