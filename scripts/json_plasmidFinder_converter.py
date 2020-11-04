@@ -45,7 +45,7 @@ def convert_json_to_text(infile, outfile):
                     template_length = str(value[hits]['template_length'])
                     contig = value[hits]['contig_name']
                     contig_position = value[hits]['positions_in_contig']
-                    accession_number = value[hits]['note']
+                    accession_number = value[hits]['accession']
                     coverage = str(value[hits]['coverage'])
                     gramps.append(plasmid+"\t"+percent_identity+"\t"+HSP_length+'/'+template_length+"\t"+contig+"\t"+contig_position+"\t"+accession_number+"\n")
 
