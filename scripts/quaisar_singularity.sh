@@ -724,14 +724,20 @@ for isolate in "${isolate_list[@]}"; do
 		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R1_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz
 		cp ${SAMPDATADIR}/trimmed/${isolate_name}_R2_001.paired.fq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz
 
-		singularity exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DBs ${local_DBs}/singularities/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/${isolate_name}_ResGANNCBI --gene_db /DBs/star/ResGANNCBI_20191227_srst2.fasta
-		echo -e "srst2:0.2.0 -- srst2 --input_pe ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output ${SAMPDATADIR}/srst2/${isolate_name}_ResGANNCBI --gene_db ${local_DBs}/star/ResGANNCBI_20191227_srst2.fasta\n" >> "${command_log_file}"
+        # create temp location for srst2 db
+        mkdir -p "${SAMPDATADIR}/srst2/tmp_db"
+        cp "${local_DBs}/star/${ResGANNCBI_srst2_filename}_srst2.fasta" "${SAMPDATADIR}/srst2/tmp_db/"
+
+		singularity exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DBs ${local_DBs}/singularities/srst2.simg srst2 --input_pe /SAMPDIR/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz /SAMPDIR/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output /SAMPDIR/srst2/${isolate_name}_ResGANNCBI --gene_db /SAMPDIR/srst2/tmp_db/${ResGANNCBI_srst2_filename}_srst2.fasta
+		echo -e "srst2:0.2.0 -- srst2 --input_pe ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz ${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz --output ${SAMPDATADIR}/srst2/${isolate_name}_ResGANNCBI --gene_db ${SAMPDATADIR}/srst2/tmp_db/${ResGANNCBI_srst2_filename}_srst2.fasta\n" >> "${command_log_file}"
 
 		# Cleans up leftover files
 		rm "${SAMPDATADIR}/srst2/"*".bam"
 		rm "${SAMPDATADIR}/srst2/"*".pileup"
 		rm "${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R1_001.fastq.gz"
 		rm "${SAMPDATADIR}/srst2/${isolate_name}_S1_L001_R2_001.fastq.gz"
+        rm "${SAMPDATADIR}/srst2/tmp_db/*"
+        rmdir "${SAMPDATADIR}/srst2/tmp_db"
 
 		# Removes the extra ResGANNCBI__ from all files created
 		find ${SAMPDATADIR}/srst2 -type f -name "*ResGANNCBI__*" | while read FILE ; do
@@ -1277,22 +1283,19 @@ for isolate in "${isolate_list[@]}"; do
 		echo "buscoDB:${buscoDB}"
 		# Run busco
 		# Odd and annoying personal fix for BUSCO strange behaviour
-		current_dir=$(pwd)
-		cd ${src}
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}/BUSCO:/DATABASES docker://quay.io/biocontainers/busco:3.0.2--py35_4 run_BUSCO.py -i /SAMPDIR/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l /DATABASES/${buscoDB} -m prot
+		singularity -s exec -B ${src}/busco_config.ini:/usr/local/config/config.ini -B ${SAMPDATADIR}:/output -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}/BUSCO:/DATABASES docker://quay.io/biocontainers/busco:3.0.2--py35_4 run_BUSCO.py -i /SAMPDIR/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l /DATABASES/${buscoDB} -m prot
 		echo -e "BUSCO:3.0.2 -- run_BUSCO.py -i ${SAMPDATADIR}/prokka/${isolate_name}_PROKKA.faa -o ${isolate_name}_BUSCO -l ${local_DBs}/BUSCO/${buscoDB} -m prot\n" >> "${command_log_file}"
 		if [ ! -d "${SAMPDATADIR}/BUSCO" ]; then  #create outdir if absent
 			echo "Creating ${SAMPDATADIR}/BUSCO"
 			mkdir -p "${SAMPDATADIR}/BUSCO"
 		fi
-		mv ${src}/run_${isolate_name}_BUSCO/* ${SAMPDATADIR}/BUSCO/
+		mv ${SAMPDATADIR}/run_${isolate_name}_BUSCO/* ${SAMPDATADIR}/BUSCO/
 		### Different naming than normal pipeline
 		mv ${SAMPDATADIR}/BUSCO/short_summary_${isolate_name}_BUSCO.txt ${SAMPDATADIR}/BUSCO/short_summary_${isolate_name}.txt
 		mv ${SAMPDATADIR}/BUSCO/full_table_${isolate_name}_BUSCO.tsv ${SAMPDATADIR}/BUSCO/full_table_${isolate_name}.tsv
 		mv ${SAMPDATADIR}/BUSCO/missing_busco_list_${isolate_name}_BUSCO.tsv ${SAMPDATADIR}/BUSCO/missing_busco_list_${isolate_name}.tsv
-		rm -r ${src}/run_${isolate_name}_BUSCO
+		rm -r ${SAMPDATADIR}/run_${isolate_name}_BUSCO
 
-		cd "{$current_dir}"
 		# Get end time of busco and calculate run time and append to time summary (and sum to total time used
 		end=$SECONDS
 		timeBUSCO=$((end - start))
@@ -1316,8 +1319,8 @@ for isolate in "${isolate_list[@]}"; do
 		echo "Creating ${SAMPDATADIR}/c-sstar${ResGANNCBI_srst2_filename}_${csstar_gapping}"
 		mkdir -p "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
 	fi
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${local_DBs}/singularities/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -s "${csim}" -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar"
-	echo -e "c-SSTAR:1.1.01 -- python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta -s ${csim} -d ${local_DBs}/star/${ResGANNCBI_srst2_filename}_srst2.fasta > ${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar\n" >> "${command_log_file}"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${local_DBs}/singularities/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta -s "${csim}" -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta --outdir /SAMPDIR/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping} > "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar"
+	echo -e "c-SSTAR:1.1.01 -- python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta -s ${csim} -d ${local_DBs}/star/${ResGANNCBI_srst2_filename}_srst2.fasta --outdir ${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping} > ${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${csim}.sstar\n" >> "${command_log_file}"
 	###################################### FIND WAY TO CATCH FAILURE? !!!!!!!!!! ###############################
 
 	# Goes through ResGANNCBI outfile and adds labels as well as resistance conferred to the beginning of the line
@@ -1387,8 +1390,8 @@ for isolate in "${isolate_list[@]}"; do
 	fi
 
 	# Clean up
-  mv "${src}/${isolate_name}_scaffolds_trimmed"* "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/"
-	mv "${src}/c-SSTAR_${isolate_name}_scaffolds_trimmed.log" "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/"
+    # mv "${src}/${isolate_name}_scaffolds_trimmed"* "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/"
+	# mv "${src}/c-SSTAR_${isolate_name}_scaffolds_trimmed.log" "${SAMPDATADIR}/c-sstar/${ResGANNCBI_srst2_filename}_${csstar_gapping}/"
 
 	end=$SECONDS
 	timestar=$((end - start))
@@ -1692,7 +1695,7 @@ for isolate in "${isolate_list[@]}"; do
 			echo "Creating ${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
 			mkdir -p "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}"
 		fi
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${local_DBs}/singularities/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -s "${cpsim}" -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta > "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}.sstar"
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${local_DBs}/singularities/cSSTAR.simg python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -s "${cpsim}" -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta -o /SAMPDIR/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping} > "${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}.sstar"
 		echo -e "c-SSTAR:1.1.01 -- python3 /cSSTAR/c-SSTAR_${csstar_gapping}.py -g ${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -s ${cpsim} -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta > ${SAMPDATADIR}/c-sstar_plasFlow/${ResGANNCBI_srst2_filename}_${csstar_gapping}/${isolate_name}.${ResGANNCBI_srst2_filename}.${csstar_gapping}_${cpsim}.sstar\n" >> "${command_log_file}"
 
 
