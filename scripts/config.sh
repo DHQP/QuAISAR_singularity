@@ -112,7 +112,7 @@ unclass_flag=30
 # Will throw a warning flag during run summary if percent of 2nd organism is above this value
 contamination_threshold=25
 # # MiniKraken DB (smaller, but effective option)
-# kraken_DB_path="${local_DBs}/kraken/minikraken_20171013_4GB"
+# kraken_DB_path="${local_DBs}/kraken/minikraken_20171019_4GB"
 # kraken_DB=$(echo "${kraken_DB_path}" | rev | cut -d'/' -f1 | rev)
 
 
