@@ -29,7 +29,7 @@ src="$(pwd)"
 # Local databases that are necessary for pipeline...ANI, BUSCO, star, adapters, phiX
 local_DBs=""
 # Number of processors requested by numerous applications within the pipeline
-procs= # Number of processors
+procs=4 # Number of processors
 
 
 
@@ -77,7 +77,8 @@ trim_min_length=50
 spades_phred_offset=33
 #Coverage threshold (positive float, off or auto)
 spades_cov_cutoff="auto"
-
+#Max memory in Gbs
+spades_max_memory=32
 
 ##### ANI specific options #####
 #Max number of samples to be kept (not including source sample) when creating the mash tree

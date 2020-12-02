@@ -117,7 +117,7 @@ krona-kraken-preasmb|||-.krona or .html missing
 Pre classfify||-unclassified reads >30%|-no classified reads or kraken_summary_paired.txt missing
 pre Class Contam.|-More than one species found above 25% threshold|-No species found above 25%
 GOTTCHA_S||-.tsv OR .html missing|-Both .tsv and .html missing
-GottchaV1 Classifier||-unclassified reads >30%|-no classified reads or gottcha_species_summary.txt missing
+Gottcha Classifier||-unclassified reads >30%|-no classified reads or gottcha_species_summary.txt missing
 Assembly|||-scaffolds.fasta is missing
 Contig Trim||->200 contigs remain|-scaffolds_trimmed.fasta missing
 kraken postassembly|||-.kraken(.gz) missing

@@ -5,7 +5,7 @@
 #
 # Description: Script to prepare environment to be able to run quaisar pipeline
 #
-# Usage: ./installation.sh OS_Type full_path_for_scripts full_path_to_download_databases_to full_path_of_where_to_store_output_of_runs
+# Usage: ./installation.sh -t OS_Type -i full_path_for_scripts -d full_path_to_download_databases_to -w full_path_of_where_to_store_output_of_runs
 # 	OS -type pertains to the need to install singularity and conda on the system
 #			0 - No need, singularity v3.X+ and conda are already installed"
 #			1 - This is an Ubuntu/Debian based kernel and Singularity and conda need to be installed"
@@ -27,7 +27,7 @@ echo "Current directory is ${install_script_dir}"
 
 #  Function to print out help blurb
 show_help () {
-	echo "Usage: ./installation.sh OS_Type full_path_for_scripts full_path_to_download_databases_to full_path_of_where_to_store_output_of_runs"
+	echo "Usage: ./installation.sh -t OS_Type -i full_path_for_scripts -d full_path_to_download_databases_to -w full_path_of_where_to_store_output_of_runs"
 	echo " All paths need to be full, not relative"
 	echo "OS-Type pertains to the need for if singularity and conda are to be installed"
 	echo "	0 - No need, singularity v3.X+ and conda are already installed"

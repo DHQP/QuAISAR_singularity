@@ -235,7 +235,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 				warning_flags="${warning_flags}-Missing_HTML_file"
 				warnings=$(( warnings + 1 ))
 			fi
-		elif [[ "${tool}" == "GottchaV1Classifier" ]]; then
+		elif [[ "${tool}" == "GottchaClassifier" ]]; then
 			# Determine way to check for multiple species above 30%
 			warning_flags="${warning_flags}-High_#_unclassified_reads_gottcha"
 			warnings=$(( warnings + 1 ))
@@ -333,7 +333,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 		elif [[ "${tool}" == "Gottcha_S" ]]; then
 			failure_flags="${failure_flags}-Missing_intermediate_gottcha_files (TSV AND HTML)"
 			failures=$(( failures + 1 ))
-		elif [[ "${tool}" == "GottchaV1Classifier" ]]; then
+		elif [[ "${tool}" == "GottchaClassifier" ]]; then
 			if [[ -s "${OUTDATADIR}/${project_name}/${sample_name}/gottcha/${1}_gottcha_species_summary.txt" ]]; then
 				failure_flags="${failure_flags}-NO_classified_reads"
 				failures=$(( failures + 1 ))

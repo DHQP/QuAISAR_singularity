@@ -473,22 +473,22 @@ if [[ -s "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" ]];
 	true_speciespercent=$(sed -n '8p' "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" | cut -d' ' -f3 | sed -r 's/[)]+/%)/g')
 	# Gottcha only classifies up to phylum and therefore if no phylum reads, there are no reads
 	if (( $(echo "${phylumpercent} <= 0" | bc -l) )); then
-		printf "%-20s: %-8s : %s\\n" "GottchaV1 Classifier" "FAILED" "There are no classified reads"
+		printf "%-20s: %-8s : %s\\n" "Gottcha Classifier" "FAILED" "There are no classified reads"
 		status="FAILED"
 	# If there are phylum level reads then check to see the percentage. If it falls below the threshold (set in config.sh) report it as a warning, otherwise report all necessary stats
 	else
 		if (( $(echo "${unclass} > ${unclass_flag}" | bc -l) )); then
-			printf "%-20s: %-8s : %s\\n" "GottchaV1 Classifier" "WARNING" "unclassified reads comprise ${unclass}% of total"
+			printf "%-20s: %-8s : %s\\n" "Gottcha Classifier" "WARNING" "unclassified reads comprise ${unclass}% of total"
 			if [ "${status}" = "SUCCESS" ] || [ "${status}" = "ALERT" ]; then
 				status="WARNING"
 			fi
 		else
-			printf "%-20s: %-8s : %s\\n" "GottchaV1 Classifier" "SUCCESS" "${speciespercent}%${true_speciespercent} ${genuspre} ${speciespre} with ${unclass}% unclassified reads"
+			printf "%-20s: %-8s : %s\\n" "Gottcha Classifier" "SUCCESS" "${speciespercent}%${true_speciespercent} ${genuspre} ${speciespre} with ${unclass}% unclassified reads"
 		fi
 	fi
 # If the summary file does not exist, report as such
 else
-	printf "%-20s: %-8s : %s\\n" "GottchaV1 Classifier" "FAILED" "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt not found"
+	printf "%-20s: %-8s : %s\\n" "Gottcha Classifier" "FAILED" "${SAMPDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt not found"
 	status="FAILED"
 fi
 
@@ -799,7 +799,7 @@ while IFS= read -r bug_lines || [ -n "$bug_lines" ]; do
 	mmb_bugs["${bug_name}"]="${bug_size}"
 done < ${databases}/MMB_Bugs.txt
 genus_initial="${dec_genus:0:1}"
-assembly_ID="${genus_initial}.${dec_species}"
+assembly_ID="${genus_initial}. ${dec_species}"
 #echo "${mmb_bugs[@]}"
 #echo "${assembly_ID}"
 if [[ ! -z "${mmb_bugs[${assembly_ID}]}" ]]; then
@@ -1113,7 +1113,7 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 				printf "%-20s: %-8s : %s\\n" "MLST" "FAILED" "no scheme found, check upstream as no genus has been assigned"
 			fi
 		elif [ "${mlstype}" = "-" ] || [ "${mlstype}" = "SUB" ]; then
-			printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no type found, possibly new type?"
+			printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "No type found, possibly new type?"
 			report_info=$(echo "${info}" | cut -d' ' -f2-)
 			if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 				status="WARNING"
@@ -1139,7 +1139,7 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 			#echo "'${mlstdb}:${mlstype}'"
 			if [ "${mlstdb}" = "abaumannii" ]; then
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-					printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no type found, possibly new type?"
+					printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "No type found, possibly new type?"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
@@ -1163,7 +1163,7 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 			#echo "'${mlstdb}:${mlstype}'"
 			if [ "${mlstdb}" = "ecoli" ]; then
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-					printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "no type found, possibly new type?"
+					printf "%-20s: %-8s : %s\\n" "MLST" "WARNING" "No type found, possibly new type?"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
@@ -1196,7 +1196,7 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 		mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 		mlstdb=$(echo "${srst_mlst}" | rev | cut -d'-' -f1 | cut -d'.' -f2 | rev )
 		if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-			printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type?"
+			printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "No type found, possibly new type?"
 			report_info=$(echo "${info}" | cut -d' ' -f2-)
 			if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 				status="WARNING"
@@ -1214,7 +1214,7 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 				mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 				mlstdb="abaumannii(Oxford)"
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type?"
+					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "No type found, possibly new type?"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
@@ -1231,7 +1231,7 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 				mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 				mlstdb="abaumannii_2(Pasteur)"
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type?"
+					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "No type found, possibly new type?"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
@@ -1249,7 +1249,7 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 				mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 				mlstdb="ecoli(Achtman)"
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type?"
+					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "No type found, possibly new type?"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
@@ -1266,7 +1266,7 @@ if [[ -d "${SAMPDATADIR}/MLST/" ]]; then
 				mlstype=$(tail -n1 ${srst_mlst} | cut -d'	' -f2)
 				mlstdb="ecoli_2(Pasteur)"
 				if [ "${mlstype}" = "SUB" ] || [ "${mlstype}" = "-" ]; then
-					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "no type found, possibly new type?"
+					printf "%-20s: %-8s : %s\\n" "MLST-srst2" "WARNING" "No type found, possibly new type?"
 					report_info=$(echo "${info}" | cut -d' ' -f2-)
 					if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
 						status="WARNING"
@@ -1401,7 +1401,11 @@ if [[ -d "${SAMPDATADIR}/plasmidFinder/" ]]; then
 				number_of_plasmids=$(( number_of_plasmids + 1 ))
 			fi
 		done < "${SAMPDATADIR}/plasmidFinder/${sample_name}_results_table_summary.txt"
-		printf "%-20s: %-8s : %s\\n" "plasmidFinder" "SUCCESS" "${number_of_plasmids} replicons were found in the full scaffold"
+		if [[ ${number_of_plasmids} -eq 1 ]]; then
+			printf "%-20s: %-8s : %s\\n" "plasmidFinder" "SUCCESS" "${number_of_plasmids} replicon was found in the full scaffold"
+		elif [[ ${number_of_plasmids} -gt 1 ]]; then
+			printf "%-20s: %-8s : %s\\n" "plasmidFinder" "SUCCESS" "${number_of_plasmids} replicons were found in the full scaffold"
+		fi
 	else
 		printf "%-20s: %-8s : %s\\n" "plasmidFinder" "FAILED" "results_table_summary.txt does not exist"
 		status="FAILED"
@@ -1566,7 +1570,11 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 					number_of_plasmids=$(( number_of_plasmids + 1 ))
 				fi
 			done < "${SAMPDATADIR}/plasmidFinder/${sample_name}_results_table_summary.txt"
-			printf "%-20s: %-8s : %s\\n" "plasmidFndr-plasFlow" "SUCCESS" "${number_of_plasmids} replicons were found in the plasmid scaffold"
+			if [[ ${number_of_plasmids} -eq 1 ]]; then
+				printf "%-20s: %-8s : %s\\n" "plasmidFinder" "SUCCESS" "${number_of_plasmids} replicon was found in the plasmid scaffold"
+			elif [[ ${number_of_plasmids} -gt 1 ]]; then
+				printf "%-20s: %-8s : %s\\n" "plasmidFinder" "SUCCESS" "${number_of_plasmids} replicons were found in the plasmid scaffold"
+			fi
 		else
 			printf "%-20s: %-8s : %s\\n" "plasmidFndr-plasFlow" "FAILED" "results_table_summary.txt does not exist"
 			status="FAILED"
