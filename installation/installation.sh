@@ -105,9 +105,9 @@ function test_go() {
   echo -e "package main\n" > ${installation_location}/hello.go
   echo -e "import \"fmt\"\n" >> ${installation_location}/hello.go
   echo -e "func main() {\n\tfmt.Printf(\"hello, world\")\n}" >> ${installation_location}/hello.go
-  go build ${installation_location}/hello.go
-  cd ${installation_location}
-  go_test_output=$(${installation_location}/hello)
+	cd ${installation_location}
+	go build hello.go
+  go_test_output=$(hello)
   if [[ "${go_test_output}" = "hello, world" ]]; then
     echo "Go is installed correctly, proceed!"
   else
