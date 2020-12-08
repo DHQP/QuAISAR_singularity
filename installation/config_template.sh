@@ -9,7 +9,7 @@
 #
 # Output location: No output created
 #
-# Modules required: None
+# Modules required:
 #
 # v1.0.4 (3/30/2020)
 #
