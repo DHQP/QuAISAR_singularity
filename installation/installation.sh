@@ -178,7 +178,7 @@ if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
     wget https://github.com/hpcng/singularity/releases/download/v${VERSION}/singularity-${VERSION}.tar.gz && \
     tar -C "${installation_location}" -xzf singularity-${VERSION}.tar.gz && \
     cd ${installation_location}/singularity
-  ./mconfig && \
+  ./mconfig --prefix ${installation_location} && \
     make -c builddir && \
     sudo make -C builddir install.
   test_singularity
