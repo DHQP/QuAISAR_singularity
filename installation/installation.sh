@@ -103,11 +103,11 @@ function test_go() {
   current_dir=$(pwd)
   echo "Testing Go!"
   echo -e "package main\n" > ${installation_location}/hello.go
-  echo -e "import fmt\n" >> ${installation_location}/hello.go
-  echo -e "func main() {\nfmt.Printf(\"hello, world\")\n}" >> ${installation_location}/hello.go
+  echo -e "import \"fmt\"\n" >> ${installation_location}/hello.go
+  echo -e "func main() {\n\tfmt.Printf(\"hello, world\")\n}" >> ${installation_location}/hello.go
   go build ${installation_location}/hello.go
   cd ${installation_location}
-  go_test_output=$(go hello)
+  go_test_output=$(hello)
   if [[ "${go_test_output}" = "hello, world" ]]; then
     echo "Go is installed correctly, proceed!"
   else
