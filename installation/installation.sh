@@ -168,8 +168,9 @@ if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
   echo "Installing Go"
   curl -O https://storage.googleapis.com/golang/go1.14.2.linux-amd64.tar.gz --output ${installation_location}
   sudo tar -C /usr/local -xvf go1.14.2.linux-amd64.tar.gz
-  echo "export PATH=$PATH:/usr/local/go/bin" >> /etc/profile
+  #echo "export PATH=$PATH:/usr/local/go/bin" >> /etc/profile
 	echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.profile
+	source $HOME/.profile
   test_go
   echo "Installing Singularity"
   export VERSION=3.5.2 && # adjust this as necessary \
