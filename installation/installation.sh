@@ -167,7 +167,7 @@ if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
   fi
   echo "Installing Go"
   curl -O https://storage.googleapis.com/golang/go1.14.2.linux-amd64.tar.gz --output ${installation_location}
-  tar -C /usr/local -xvf go1.14.2.linux-amd64.tar.gz
+  sudo tar -C /usr/local -xvf go1.14.2.linux-amd64.tar.gz
   echo "export PATH=$PATH:/usr/local/go/bin" >> /etc/profile
 	echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.profile
   test_go
