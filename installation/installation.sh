@@ -107,7 +107,7 @@ function test_go() {
   echo -e "func main() {\n\tfmt.Printf(\"hello, world\")\n}" >> ${installation_location}/hello.go
   go build ${installation_location}/hello.go
   cd ${installation_location}
-  go_test_output=$(hello)
+  go_test_output=$(./hello)
   if [[ "${go_test_output}" = "hello, world" ]]; then
     echo "Go is installed correctly, proceed!"
   else
