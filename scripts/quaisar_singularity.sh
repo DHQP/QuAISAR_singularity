@@ -31,7 +31,7 @@ isolate_count=0
 version_type="Quaisar-Singularity"
 version_num="qs1.0.3"
 
-ml singularity
+#ml singularity
 singularity --version
 
 # Will be called throughout the script to write current progress for inquisitive minds and to restart run from where it was murdered
