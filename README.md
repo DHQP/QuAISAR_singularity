@@ -3,7 +3,9 @@ Quality, Assembly, Identification, Sequence type, Annotation, Resistance mechani
 This version uses containers to ease the necessity of having many preinstalled tools.
 
 ## Installation
-    Dependencies - None. The script will install miniconda, if there is no version of conda already installed. It will then install an environment that contains Python3.6 and Singularity. When the pipeline is run it will activate the environment and will deactivate it when complete.
+    Dependencies - Singularity 3.7.2. (https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps)
+
+The script will install miniconda, if there is no version of conda already installed. It will then install an environment that contains Python3.6. When the pipeline is run it will activate the environment and will deactivate it when complete.
 
     To install
         A. Clone repository
@@ -18,21 +20,17 @@ This version uses containers to ease the necessity of having many preinstalled t
     The first section is system specific that gives the locations of where to find the scripts, databases, and output folders. These were set up during installation, but can be altered if desired. The installation program also attempted to learn the available number of processors to make sure the pipeline can run as quickly as possible. There are a large number of run-time options used by many tools that are defined within this file. The values of these options are the defaults used by the authors, however they may be adjusted to suit the problem.
 
 ## Running the pipeline
-    This script was adjusted to run each isolate through the pipeline in a serial fashion. The QuAISAR-H pipeline takes a folder of paired end reads (or assemblies - BETA) and outputs multiple reports to the designated folder.
+    This script will run each isolate through the pipeline in a serial fashion. The QuAISAR-H pipeline takes a folder of paired end reads and outputs multiple reports to the designated folder.
+
+    Reads filenames need to have a postfix like one of these: _S*_L001_R*_00*.fastq[.gz], _S*_R*_0*X.fastq[.gz], _RX_00*.fastq[.gz], _[R]*.fastq[.gz]
     
     To run the pipeline use the following command with these parameters:
         A. ./quaisar_singularity.sh
             1. -i 
             2. full path to the folder of paired-end reads
-            3. numeric value matching pattern of naming of reads: 
-                1: _SX_L001_RX_00X.fastq.gz 
-                2: _(R)X.fastq.gz 
-                3: _RX_00X.fastq.gz
-                4: _SX_RX_00X.fastq.gz 
-                5: .fasta (Assemblies only - BETA)
             4. -o
             5. name to describe the set of reads (e.g. project_name, run_id)
-	Example: ./quaisar_singularity.sh -i /path/to/reads/folder 1 -o project_name           
+	Example: ./quaisar_singularity.sh -i /path/to/reads/folder -o project_name           
 
 ## Output
 ### Each run of the pipeline will produce the following files in the main (set/project name) folder
