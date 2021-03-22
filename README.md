@@ -3,7 +3,7 @@ Quality, Assembly, Identification, Sequence type, Annotation, Resistance mechani
 This version uses containers to ease the necessity of having many preinstalled tools.
 
 ## Installation
-    Dependencies - Singularity 3.7.2. (https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps)
+    Dependencies - Singularity 3.7.2. (https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps or https://github.com/jiangweiyao/Installing_Singularity#installing_singularity)
 
 The script will install miniconda, if there is no version of conda already installed. It will then install an environment that contains Python3.6. When the pipeline is run it will activate the environment and will deactivate it when complete.
 
