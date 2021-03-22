@@ -29,7 +29,7 @@ isolate_number=0
 isolate_count=0
 
 version_type="Quaisar-Singularity"
-version_num="qs1.0.3"
+version_num="qs1.0.4"
 
 #ml singularity
 singularity --version
@@ -47,13 +47,14 @@ function write_Progress() {
 
 # Checking for proper number of arguments from command line
 if [[ $# -lt 1  || $# -gt 13 ]]; then
-	echo "If reads are in default location set in config file then"
-  echo "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o name_of_output_folder -p project_name [-s full_path_to_script_folder] [-r] [-d full_path_to_database_folder] [-c config.sh full_path_to_config_file]"
-	echo "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz 5: .fasta (Assemblies only)"
-	echo "Reads can be gzipped or raw, but if your files are not named in any one of these formats, they will need to be renamed before running them through the pipeline"
-	echo "If you are submitting assemblies, use 1 as the value"
-	echo "You have used $# args"
-  exit 3
+	echo -e "\\n\\n\\n"
+	echo -e "Usage: ./quaisar_singularity.sh -i location_of_reads -o name_of_output_folder -p project_name [-s full_path_to_script_folder] [-r] [-a] [-d full_path_to_database_folder] [-c config.sh full_path_to_config_file]"
+	echo -e "Reads filenames need to have a postfix in one of the following _S*_L001_R*_00*.fastq[.gz], _S*_R*_0*X.fastq[.gz], _RX_00*.fastq[.gz], _[R]*.fastq[.gz]."
+	echo -e "Assembly filenames need to have a postfix of .fasta or .fna"
+	echo -e "If your reads are not named in any one of these formats, they will need to be renamed before running them through the pipeline"
+	echo -e "Reads can be gzipped or raw, but if you are submitting assemblies, use 1 as the value"
+	echo -e "Additional functions/flags: \n\t -s If you would like to reference and run pipeline scripts installed in an alternate location \n\t -r if you would like to retry the list of samples if they failed during assembly \n\t -d if you would like to reference a different location for databases, but must contain all necessary for pipeline \n\t -a Run pipeline from assemblies"
+	echo -e "\\n\\n\\n"
 fi
 
 # Checks the arguments and sets some default variables
@@ -73,11 +74,12 @@ for ((i=1 ; i <= nopts ; i++)); do
 		#Help/Usage section
 		-h | --help)
 			echo -e "\\n\\n\\n"
-			echo -e "Usage: ./quaisar_singularity.sh -i location_of_reads 1|2|3|4 -o name_of_output_folder -p project_name [-s full_path_to_script_folder] [-r] [-d full_path_to_database_folder] [-c config.sh full_path_to_config_file]"
-			echo -e "filename postfix numbers are as follows 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz"
+			echo -e "Usage: ./quaisar_singularity.sh -i location_of_reads -o name_of_output_folder -p project_name [-s full_path_to_script_folder] [-r] [-a] [-d full_path_to_database_folder] [-c config.sh full_path_to_config_file]"
+			echo -e "Reads filenames need to have a postfix in one of the following _S*_L001_R*_00*.fastq[.gz], _S*_R*_0*X.fastq[.gz], _RX_00*.fastq[.gz], _[R]*.fastq[.gz]."
+			echo -e "Assembly filenames need to have a postfix of .fasta or .fna"
 			echo -e "If your reads are not named in any one of these formats, they will need to be renamed before running them through the pipeline"
 			echo -e "Reads can be gzipped or raw, but if you are submitting assemblies, use 1 as the value"
-			echo -e "Additional functions/flags: \n\t -s If you would like to reference and run pipeline scripts installed in an alternate location \n\t -r if you would like to retry the list of samples if they failed during assembly \n\t -d if you would like to reference a different location for databases, but must contain all necessary for pipeline"
+			echo -e "Additional functions/flags: \n\t -s If you would like to reference and run pipeline scripts installed in an alternate location \n\t -r if you would like to retry the list of samples if they failed during assembly \n\t -d if you would like to reference a different location for databases, but must contain all necessary for pipeline \n\t -a Run pipeline from assemblies"
 			echo -e "\\n\\n\\n"
 			exit 0
 			;;
@@ -108,13 +110,9 @@ for ((i=1 ; i <= nopts ; i++)); do
 					exit 1
 			fi
 			indir_set="true"
-			postfix_index="$3"
-			if [[ "${postfix}" -eq 5 ]]; then
-				assemblies="true"
-			fi
 			#is_full_run="false"
 			#echo "$INDATADIR $2"
-			shift 3
+			shift 2
 			;;
 		#Gets output directory name of folder that all output files will be stored
 		-o | --out-dir)
@@ -141,6 +139,8 @@ for ((i=1 ; i <= nopts ; i++)); do
 		-r | --retry_from_assembly)
 			assemblies="retry"
 			shift
+		-a | --assemblies)
+			assemblies="true"
 			;;
 		#Captures any other characters in the args
 		\?)
@@ -324,39 +324,69 @@ else
 	for file in ${INDATADIR}/*
 	do
 		# Check if file is a zipped reads file
-		if [[ "${file}" = *.gz ]] || [[ "${file}" = *.fastq ]]; then
-			echo "isolate_name: ${file}"
-			# Gets full file name from path
-			full_sample_name=${file##*/}
+		if [[ "${file}" = *.fastq.gz ]] || [[ "${file}" = *.fastq ]] && [[ "${file}" != *_L001_I1_001.fastq.gz ]]; then
+		full_sample_name=${file##*/}
+		echo ${full_sample_name}
+		# Extracts filename keeping only isolate ID, if it matches standard miseq naming
+		if [[ ${full_sample_name} =~ _S[0-9]+_L[0-9]+_R[1|2]_00[0-9]+\.fast.+$ ]]; then #*"_S"*"_L001_RX_00X.fastq.gz" ]]; then
+			short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f5- | rev)
 			if [[ "${full_sample_name}" = *"_R1_"* ]]; then
 				full_sample_name_pair=${full_sample_name/_R1_/_R2_}
+				current_read=1
 			elif [[ "${full_sample_name}" = *"_R2_"* ]]; then
 				full_sample_name_pair="${full_sample_name/_R2_/_R1_}"
-			elif [[ "${full_sample_name}" = *"_1.fast"* ]]; then
+				current_read=2
+			fi
+			# postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2,3 | rev)
+
+		elif [[ ${full_sample_name} =~ _S[0-9]+_R[1|2]_00[0-9]+\.fast.+$ ]]; then
+			short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f4- | rev)
+			if [[ "${full_sample_name}" = *"_R1_"* ]]; then
+				full_sample_name_pair=${full_sample_name/_R1_/_R2_}
+				current_read=1
+			elif [[ "${full_sample_name}" = *"_R2_"* ]]; then
+				full_sample_name_pair="${full_sample_name/_R2_/_R1_}"
+				current_read=2
+			fi
+			#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2,3 | rev)
+
+		elif [[ ${full_sample_name} =~ _R[1|2]_00[0-9]+\.fast.+$ ]]; then
+			short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f3- | rev)
+			if [[ "${full_sample_name}" = *"_R1_"* ]]; then
+				full_sample_name_pair=${full_sample_name/_R1_/_R2_}
+				current_read=1
+			elif [[ "${full_sample_name}" = *"_R2_"* ]]; then
+				full_sample_name_pair="${full_sample_name/_R2_/_R1_}"
+				current_read=2
+			fi
+			#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2 | rev)
+
+		elif [[ ${full_sample_name} =~ _R[1|2]\.fast.+$ ]]; then
+			short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f2- | rev)
+			if [[ "${full_sample_name}" = *"_R1.fast"* ]]; then
+				full_sample_name_pair=${full_sample_name/_R1.fast/_R2.fast}
+				current_read=1
+			elif [[ "${full_sample_name}" = *"_R2.fast"* ]]; then
+				full_sample_name_pair="${full_sample_name/_R2.fast/_R1.fast}"
+				current_read=2
+			fi
+			#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1 | rev)
+
+		elif [[ ${full_sample_name} =~ _[1|2]\.fast.+$ ]]; then
+			short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f2- | rev)
+			if [[ "${full_sample_name}" = *"_1.fast"* ]]; then
 				full_sample_name_pair=${full_sample_name/_1.fast/_2.fast}
+				current_read=1
 			elif [[ "${full_sample_name}" = *"_2.fast"* ]]; then
 				full_sample_name_pair="${full_sample_name/_2.fast/_1.fast}"
+				current_read=2
 			fi
-			# gets path from file
-			source_path=$(dirname "${file}")
-			# Extracts isolate_name keeping only isolate ID, if it matches standard miseq naming
-			echo "${postfix_index}:${full_sample_name}"
-			if [[ "${postfix_index}" -eq 1 ]]; then
-				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f5- | rev)
-				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2,3 | rev)
-			elif [[ "${postfix_index}" -eq 4 ]]; then
-				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f4- | rev)
-				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2,3 | rev)
-			elif [[ "${postfix_index}" -eq 3 ]]; then
-				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f3- | rev)
-				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2 | rev)
-			elif [[ "${postfix_index}" -eq 2 ]]; then
-				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f2- | rev)
-				postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1 | rev)
-			else
-				echo "Magic - should have never gotten here as this number does not match any of the input numbers... 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz , exiting"
-				exit
-			fi
+			#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1 | rev)
+
+		else
+			echo "Magic - should have never gotten here as this number does not match any of the input numbers... 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz , exiting"
+			exit
+		fi
 
 			#long_name=$(echo "${full_sample_name}" | cut -d'_' -f1,2,3)
 			echo "Short: ${short_name}"
@@ -378,7 +408,7 @@ else
 				# Announces name of file being unzipped and then unzips it to the FASTQs folder for the matching sample name. Files are shortened to just name_R1_001.fastq or name_R2_001.fastq
 				echo "Retrieving ${source_path}/${full_sample_name} and ${full_sample_name_pair}"
 				#if [[ "${match}" -eq 1 ]] || [[ "${match}" -eq 4 ]]; then
-					if [[ "${postfix}" = *"R1_001.fast"* ]] || [[ "${postfix}" = *"R1.fast"* ]] || [[ "${postfix}" = *"1.fast"* ]]; then
+					if [[ "${current_read}" -eq 1 ]]; then
 						if [[ "${full_sample_name}" = *".fastq.gz" ]]; then
 							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
 								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]]; then
@@ -407,7 +437,7 @@ else
 							fi
 						fi
 					fi
-					if [[ "${postfix}" = *"R2_001.fast"* ]] || [[ "${postfix}" = *"R2.fast"* ]] || [[ "${postfix}" = *"2.fast"* ]]; then
+				elif [[ "${current_read}" -eq 2 ]]; then
 						if [[ "${full_sample_name}" = *".fastq.gz" ]]; then
 							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
 								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]]; then
@@ -435,6 +465,8 @@ else
 								gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R2_001.fastq.gz"
 							fi
 						fi
+					else
+						"Current read = ${current_read} (hint: its not 1 or 2), so it should never get here anyway"
 					fi
 					if grep -Fxq "${PROJECT}/${short_name}" "${PROJDATADIR}/${PROJECT}_list.txt"
 					then
