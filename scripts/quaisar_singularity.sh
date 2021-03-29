@@ -139,6 +139,7 @@ for ((i=1 ; i <= nopts ; i++)); do
 		-r | --retry_from_assembly)
 			assemblies="retry"
 			shift
+			;;
 		-a | --assemblies)
 			assemblies="true"
 			;;
