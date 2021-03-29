@@ -62,16 +62,16 @@ busco_taxa=(acidobacteria_odb10.${busco_updated_on1} actinobacteria_phylum_odb10
 for odb_info in "${busco_taxa[@]}"; do
 	# Check for top level bacteria database
 	#echo ${odb_info}
-	taxa=$(echo "$odb_info" | cut -d'_' -f1)
+	taxa=$(echo "$odb_info" | cut -d'.' -f1)
 	db_date=$(echo "$odb_info" | cut -d'.' -f2)
-	if [[ ! -d "${path_to_DBs}/BUSCO/${taxa}_odb10" ]]; then
+	if [[ ! -d "${path_to_DBs}/BUSCO/${taxa}" ]]; then
 		if [[ "${do_download}" = "true" ]]; then
 			if [[ ! -d "${path_to_DBs}/BUSCO" ]]; then
 				mkdir "${path_to_DBs}/BUSCO"
 			fi
 			cd "${path_to_DBs}/BUSCO"
 			echo "Downloading latest BUSCO database for ${taxa} (wget http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz)"
-			wget "http://busco-data.ezlab.org/v4/data/lineages/${taxa}_odb10.${db_date}.tar.gz"
+			wget "http://busco-data.ezlab.org/v4/data/lineages/${taxa}.${db_date}.tar.gz"
 			# Dont know how to handle this one outlier (only one to specify a level in the filename) - ALl OUR bugs are in class Actinobacteria too
 		else
 			echo "Missing latest BUSCO database for ${taxa}"
