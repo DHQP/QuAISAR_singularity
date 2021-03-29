@@ -5,17 +5,13 @@
 #
 # Description: Script to prepare environment to be able to run quaisar pipeline
 #
-# Usage: ./installation.sh -t OS_Type -i full_path_for_scripts -d full_path_to_download_databases_to -w full_path_of_where_to_store_output_of_runs
-# 	OS -type pertains to the need to install singularity and conda on the system
-#			0 - No need, singularity v3.X+ and conda are already installed"
-#			1 - This is an Ubuntu/Debian based kernel and Singularity and conda need to be installed"
-#			2 - This is a Redhat/CentOS based kernel and Singularity and conda need to be installed"
+# Usage: ./installation.sh -i full_path_for_scripts -d full_path_to_download_databases_to -w full_path_of_where_to_store_output_of_runs
 #
 # Output location: Script, Database, and Output folders created and populated based on parameters
 #
 # Modules required: None
 #
-# v1.0.2 (05/18/2020)
+# v1.0.3 (03/29/2021)
 #
 # Created by Nick Vlachos (nvx4@cdc.gov)
 #
@@ -27,27 +23,19 @@ echo "Current directory is ${install_script_dir}"
 
 #  Function to print out help blurb
 show_help () {
-	echo "Usage: ./installation.sh -t OS_Type -i full_path_for_scripts -d full_path_to_download_databases_to -w full_path_of_where_to_store_output_of_runs"
+	echo "Usage: ./installation.sh -i full_path_for_scripts -d full_path_to_download_databases_to -w full_path_of_where_to_store_output_of_runs"
 	echo " All paths need to be full, not relative"
-	echo "OS-Type pertains to the need for if singularity and conda are to be installed"
-	echo "	0 - No need, singularity v3.X+ and conda are already installed"
-	echo "	1 - This is an Ubuntu/Debian based kernel and Singularity and conda need to be installed"
-	echo "	2 - This is a Redhat/CentOS based kernel and Singularity and conda need to be installed"
 }
 
 # Parse command line options
 options_found=0
-while getopts ":h?t:i:d:w:" option; do
+while getopts ":h?i:d:w:" option; do
 	options_found=$(( options_found + 1 ))
 	case "${option}" in
 		\?)
       echo "Invalid option found: ${OPTARG}"
       show_help
       exit 0
-      ;;
-		t)
-      echo "Option -t triggered, argument = ${OPTARG}"
-      OS_type=${OPTARG}
       ;;
 		i)
       echo "Option -i triggered, argument = ${OPTARG}"
@@ -76,9 +64,6 @@ if [[ "${options_found}" -eq 0 ]]; then
 	echo "No options found"
 	show_help
 	exit 1
-elif [ -z "${OS_type}" ]; then
-  echo "Empty OS_type supplied to supplied to installation.sh, exiting"
-  exit 2
 elif [ -z "${installation_location}" ]; then
 	echo "Empty script location supplied to supplied to installation.sh, exiting"
 	exit 3
@@ -91,7 +76,7 @@ elif [ -z "${working_directory}" ]; then
 fi
 
 
-echo -e "${OS_type}\n${installation_location}\n${databases}\n${working_directory}"
+echo -e "${installation_location}\n${databases}\n${working_directory}"
 
 echo "Installing quaisar scripts to ${installation_location}"
 if [[ ! -d ${installation_location} ]]; then
@@ -135,56 +120,17 @@ function test_singularity() {
   fi
 }
 
+# Do checks of singularity and Go to ensure they are installed already
+test_go
+test_singularity
+
+echo "Go and Singularity are installed...proceed with installation"
+
 echo "Checking for working directory of runs ${working_directory}"
 if [[ ! -d ${working_directory} ]]; then
   echo "Creating ${working_directory}"
   mkdir -p ${working_directory}
 fi
-
-if [[ ${OS_type} -eq 1 ]] || [[ ${OS_type} -eq 2 ]]; then
-  echo "Installing pre-dependencies"
-  if [[ "${OS_type}" -eq 1 ]]; then
-    sudo apt-get update && sudo apt-get install -y \
-    build-essential \
-    libssl-dev \
-    uuid-dev \
-    libgpgme11-dev \
-    squashfs-tools \
-    libseccomp-dev \
-    wget \
-    pkg-config \
-    git \
-    cryptsetup
-
-  elif [[ ${OS_type} -eq 2 ]]; then
-		sudo yum update -y && \
-    sudo yum groupinstall -y 'Development Tools' && \
-    sudo yum install -y \
-    openssl-devel \
-    libuuid-devel \
-    libseccomp-devel \
-    wget \
-    squashfs-tools
-  fi
-  echo "Installing Go"
-  curl -O https://storage.googleapis.com/golang/go1.14.2.linux-amd64.tar.gz --output ${installation_location}
-  sudo tar -C /usr/local -xvf go1.14.2.linux-amd64.tar.gz
-  #echo "export PATH=$PATH:/usr/local/go/bin" >> /etc/profile
-	echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.profile
-	source $HOME/.profile
-  test_go
-  echo "Installing Singularity"
-  export VERSION=3.5.2 && # adjust this as necessary \
-    wget https://github.com/hpcng/singularity/releases/download/v${VERSION}/singularity-${VERSION}.tar.gz && \
-    tar -C "${installation_location}" -xzf singularity-${VERSION}.tar.gz && \
-    cd ${installation_location}/singularity
-  ./mconfig --prefix=${installation_location} && \
-    make -C builddir && \
-    sudo make -C builddir install.
-  test_singularity
-fi
-
-#test_singularity
 
 # Create primary config file
 head -n25 ${install_script_dir}/installation/config_template.sh > ${installation_location}/new_config.sh
