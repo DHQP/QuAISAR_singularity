@@ -11,9 +11,9 @@ The script will install miniconda, if there is no version of conda already insta
         A. Clone repository
         B. Navigate into the installation folder of the repository
         C. Run the instllation.sh script with the following parameters
-            1. location of where to put the scripts to run the pipeline (installation directory)
-            2. location of where to put the databases needed to run the pipeline (3.6 Gbs)
-            3. location of where you expect to keep the output of the pipeline. This will be a folder that houses all runs (each within its own folder)
+            1.(-i) location of where to put the scripts to run the pipeline (installation directory)
+            2.(-d) location of where to put the databases needed to run the pipeline (3.6 Gbs)
+            3.(-w) location of where you expect to keep the output of the pipeline. This will be a folder that houses all runs (each within its own folder)
             
 ## Configuration
     There is a config.sh file within the script folder that has many configurable options
