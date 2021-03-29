@@ -1300,6 +1300,14 @@ for isolate in "${isolate_list[@]}"; do
 		busco_found=0
 		for tax in $species $genus $family $order $class $phylum $kingdom $domain
 		do
+			# Check for problematic taxonomy naming
+			if [[ "${tax}" == "actinobacteria" ]]:
+				if [[ "${class}" == "actinobacteria" ]]; then
+					tax="actinobacteria_class"
+				elif [[ "${phylum}" == "actinobacteria" ]]; then
+					tax="actinobacteria_phylum"
+				fi
+			fi
 			if [ -d "${local_DBs}/BUSCO/${tax,}_odb10" ]; then
 				buscoDB="${tax,}_odb10"
 				busco_found=1
