@@ -170,8 +170,8 @@ echo "Checking for dependencies and databases"
 conda_call_lines=$(conda list | wc -l)
 singularity_version=$(singularity --version | cut -d' ' -f3 | cut -d'.' -f1)
 singularity_release=$(singularity --version | cut -d' ' -f3)
-python_version=$(python --version | cut -d' ' -f2 | cut -d'.' -f1)
-python_release=$(python --version | cut -d' ' -f2)
+python_release=$(python -c 'import sys; print(".".join(map(str, sys.version_info[:3])))')
+python_version=$(echo "${python_release}" | cut -d'.' -f1)
 
 if [[ "${conda_call_lines}" -gt 1 ]]; then
 	:

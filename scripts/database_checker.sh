@@ -85,7 +85,7 @@ done
 # Unpack and cleanup
 if [[ "${do_download}" = "true" ]]; then
 	find ${path_to_DBs}/BUSCO/ -name '*.gz' -exec tar xzf {} \;
-	mv ${path_to_DBs}/BUSCO/actinobacteria_class_odb10 ${path_to_DBs}/BUSCO/actinobacteria_odb10
+	#mv ${path_to_DBs}/BUSCO/actinobacteria_class_odb10 ${path_to_DBs}/BUSCO/actinobacteria_odb10
 	find ${path_to_DBs}/BUSCO/ -name '*.gz' -exec rm {} \;
 fi
 
