@@ -194,7 +194,8 @@ elif [[ "${python_version}" = "2" ]]; then
 		missing_names=("${missing_names[@]}" python3)
 	fi
 else
-	#echo -e "\nPython3.x not installed, can not proceed\n"
+	echo -e "\nPython3.x not installed, can not proceed\n"
+	echo -e "Python version =${python_release}"
 	prereqs="false"
 	missing_names=("${missing_names[@]}" python3)
 fi
