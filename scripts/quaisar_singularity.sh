@@ -327,68 +327,68 @@ else
 	do
 		# Check if file is a zipped reads file
 		if [[ "${file}" = *.fastq.gz ]] || [[ "${file}" = *.fastq ]] && [[ "${file}" != *_L001_I1_001.fastq.gz ]]; then
-		full_sample_name=${file##*/}
-		echo ${full_sample_name}
-		# Extracts filename keeping only isolate ID, if it matches standard miseq naming
-		if [[ ${full_sample_name} =~ _S[0-9]+_L[0-9]+_R[1|2]_00[0-9]+\.fast.+$ ]]; then #*"_S"*"_L001_RX_00X.fastq.gz" ]]; then
-			short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f5- | rev)
-			if [[ "${full_sample_name}" = *"_R1_"* ]]; then
-				full_sample_name_pair=${full_sample_name/_R1_/_R2_}
-				current_read=1
-			elif [[ "${full_sample_name}" = *"_R2_"* ]]; then
-				full_sample_name_pair="${full_sample_name/_R2_/_R1_}"
-				current_read=2
-			fi
-			# postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2,3 | rev)
+			full_sample_name=${file##*/}
+			echo ${full_sample_name}
+			# Extracts filename keeping only isolate ID, if it matches standard miseq naming
+			if [[ ${full_sample_name} =~ _S[0-9]+_L[0-9]+_R[1|2]_00[0-9]+\.fast.+$ ]]; then #*"_S"*"_L001_RX_00X.fastq.gz" ]]; then
+				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f5- | rev)
+				if [[ "${full_sample_name}" = *"_R1_"* ]]; then
+					full_sample_name_pair=${full_sample_name/_R1_/_R2_}
+					current_read=1
+				elif [[ "${full_sample_name}" = *"_R2_"* ]]; then
+					full_sample_name_pair="${full_sample_name/_R2_/_R1_}"
+					current_read=2
+				fi
+				# postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2,3 | rev)
 
-		elif [[ ${full_sample_name} =~ _S[0-9]+_R[1|2]_00[0-9]+\.fast.+$ ]]; then
-			short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f4- | rev)
-			if [[ "${full_sample_name}" = *"_R1_"* ]]; then
-				full_sample_name_pair=${full_sample_name/_R1_/_R2_}
-				current_read=1
-			elif [[ "${full_sample_name}" = *"_R2_"* ]]; then
-				full_sample_name_pair="${full_sample_name/_R2_/_R1_}"
-				current_read=2
-			fi
-			#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2,3 | rev)
+			elif [[ ${full_sample_name} =~ _S[0-9]+_R[1|2]_00[0-9]+\.fast.+$ ]]; then
+				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f4- | rev)
+				if [[ "${full_sample_name}" = *"_R1_"* ]]; then
+					full_sample_name_pair=${full_sample_name/_R1_/_R2_}
+					current_read=1
+				elif [[ "${full_sample_name}" = *"_R2_"* ]]; then
+					full_sample_name_pair="${full_sample_name/_R2_/_R1_}"
+					current_read=2
+				fi
+				#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2,3 | rev)
 
-		elif [[ ${full_sample_name} =~ _R[1|2]_00[0-9]+\.fast.+$ ]]; then
-			short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f3- | rev)
-			if [[ "${full_sample_name}" = *"_R1_"* ]]; then
-				full_sample_name_pair=${full_sample_name/_R1_/_R2_}
-				current_read=1
-			elif [[ "${full_sample_name}" = *"_R2_"* ]]; then
-				full_sample_name_pair="${full_sample_name/_R2_/_R1_}"
-				current_read=2
-			fi
-			#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2 | rev)
+			elif [[ ${full_sample_name} =~ _R[1|2]_00[0-9]+\.fast.+$ ]]; then
+				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f3- | rev)
+				if [[ "${full_sample_name}" = *"_R1_"* ]]; then
+					full_sample_name_pair=${full_sample_name/_R1_/_R2_}
+					current_read=1
+				elif [[ "${full_sample_name}" = *"_R2_"* ]]; then
+					full_sample_name_pair="${full_sample_name/_R2_/_R1_}"
+					current_read=2
+				fi
+				#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1,2 | rev)
 
-		elif [[ ${full_sample_name} =~ _R[1|2]\.fast.+$ ]]; then
-			short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f2- | rev)
-			if [[ "${full_sample_name}" = *"_R1.fast"* ]]; then
-				full_sample_name_pair=${full_sample_name/_R1.fast/_R2.fast}
-				current_read=1
-			elif [[ "${full_sample_name}" = *"_R2.fast"* ]]; then
-				full_sample_name_pair="${full_sample_name/_R2.fast/_R1.fast}"
-				current_read=2
-			fi
-			#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1 | rev)
+			elif [[ ${full_sample_name} =~ _R[1|2]\.fast.+$ ]]; then
+				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f2- | rev)
+				if [[ "${full_sample_name}" = *"_R1.fast"* ]]; then
+					full_sample_name_pair=${full_sample_name/_R1.fast/_R2.fast}
+					current_read=1
+				elif [[ "${full_sample_name}" = *"_R2.fast"* ]]; then
+					full_sample_name_pair="${full_sample_name/_R2.fast/_R1.fast}"
+					current_read=2
+				fi
+				#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1 | rev)
 
-		elif [[ ${full_sample_name} =~ _[1|2]\.fast.+$ ]]; then
-			short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f2- | rev)
-			if [[ "${full_sample_name}" = *"_1.fast"* ]]; then
-				full_sample_name_pair=${full_sample_name/_1.fast/_2.fast}
-				current_read=1
-			elif [[ "${full_sample_name}" = *"_2.fast"* ]]; then
-				full_sample_name_pair="${full_sample_name/_2.fast/_1.fast}"
-				current_read=2
-			fi
-			#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1 | rev)
+			elif [[ ${full_sample_name} =~ _[1|2]\.fast.+$ ]]; then
+				short_name=$(echo "${full_sample_name}" | rev | cut -d'_' -f2- | rev)
+				if [[ "${full_sample_name}" = *"_1.fast"* ]]; then
+					full_sample_name_pair=${full_sample_name/_1.fast/_2.fast}
+					current_read=1
+				elif [[ "${full_sample_name}" = *"_2.fast"* ]]; then
+					full_sample_name_pair="${full_sample_name/_2.fast/_1.fast}"
+					current_read=2
+				fi
+				#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1 | rev)
 
-		else
-			echo "Magic - should have never gotten here as this number does not match any of the input numbers... 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz , exiting"
-			exit
-		fi
+			else
+				echo "Magic - should have never gotten here as this number does not match any of the input numbers... 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz , exiting"
+				exit
+			fi
 
 			#long_name=$(echo "${full_sample_name}" | cut -d'_' -f1,2,3)
 			echo "Short: ${short_name}"
@@ -410,62 +410,60 @@ else
 				# Announces name of file being unzipped and then unzips it to the FASTQs folder for the matching sample name. Files are shortened to just name_R1_001.fastq or name_R2_001.fastq
 				echo "Retrieving ${source_path}/${full_sample_name} and ${full_sample_name_pair}"
 				#if [[ "${match}" -eq 1 ]] || [[ "${match}" -eq 4 ]]; then
-					if [[ "${current_read}" -eq 1 ]]; then
-						if [[ "${full_sample_name}" = *".fastq.gz" ]]; then
-							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
-								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]]; then
-									echo "${short_name} already has both zipped FASTQs (Probably done when R2 was found, this is the R1 tester)"
-								else
-									echo "Moving ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-									cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
-									cp "${source_path}/${full_sample_name_pair}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-								fi
+				if [[ "${current_read}" -eq 1 ]]; then
+					if [[ "${full_sample_name}" = *".fastq.gz" ]]; then
+						if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
+							if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]]; then
+								echo "${short_name} already has both zipped FASTQs (Probably done when R2 was found, this is the R1 tester)"
 							else
-								echo "No R2 found for ${source_path}/${full_sample_name}"
+								echo "Moving ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
 								cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
+								cp "${source_path}/${full_sample_name_pair}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
 							fi
-						elif [[ "${full_sample_name}" = *".fastq" ]]; then
-							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
-								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]]; then
-									echo "${short_name} already has both unzipped FASTQs (Probably done when R2 was found, this is the R1 tester)"
-								else
-									echo "Zipping and not clumping ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-									gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
-									gzip -c "${source_path}/${full_sample_name_pair}" > "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-								fi
+						else
+							echo "No R2 found for ${source_path}/${full_sample_name}"
+							cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
+						fi
+					elif [[ "${full_sample_name}" = *".fastq" ]]; then
+						if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
+							if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]]; then
+								echo "${short_name} already has both unzipped FASTQs (Probably done when R2 was found, this is the R1 tester)"
 							else
-								echo "No R2 found for ${source_path}/${full_sample_name}"
+								echo "Zipping and not clumping ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
 								gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
+								gzip -c "${source_path}/${full_sample_name_pair}" > "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
 							fi
+						else
+							echo "No R2 found for ${source_path}/${full_sample_name}"
+							gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
 						fi
 					fi
 				elif [[ "${current_read}" -eq 2 ]]; then
-						if [[ "${full_sample_name}" = *".fastq.gz" ]]; then
-							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
-								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]]; then
-									echo "${short_name} already has both zipped FASTQs (Probably done when R1 was found, this is the R2 tester)"
-								else
-									echo "Not Clumping ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-									cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-									cp "${source_path}/${full_sample_name_pair}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
-								fi
+					if [[ "${full_sample_name}" = *".fastq.gz" ]]; then
+						if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
+							if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]]; then
+								echo "${short_name} already has both zipped FASTQs (Probably done when R1 was found, this is the R2 tester)"
 							else
-								echo "No R1 found for ${source_path}/${full_sample_name}"
+								echo "Not Clumping ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
 								cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
+								cp "${source_path}/${full_sample_name_pair}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz"
 							fi
-						elif [[ "${full_sample_name}" = *".fastq" ]]; then
-							if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
-								if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]]; then
-									echo "${short_name} already has both zipped FASTQs (Probably done when R1 was found, this is the R2 tester)"
-								else
-									echo "Zipping and not clumping ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
-									gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R1_001.fastq.gz"
-									gzip -c "${source_path}/${full_sample_name_pair}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R2_001.fastq.gz"
-								fi
+						else
+							echo "No R1 found for ${source_path}/${full_sample_name}"
+							cp "${source_path}/${full_sample_name}" "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
+						fi
+					elif [[ "${full_sample_name}" = *".fastq" ]]; then
+						if [[ -f "${source_path}/${full_sample_name_pair}" ]]; then
+							if [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz" ]] && [[ -f "${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz" ]]; then
+								echo "${short_name} already has both zipped FASTQs (Probably done when R1 was found, this is the R2 tester)"
 							else
-								echo "No R1 found for ${source_path}/${full_sample_name}"
-								gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R2_001.fastq.gz"
+								echo "Zipping and not clumping ${source_path}/${full_sample_name} and ${source_path}/${full_sample_name_pair} to ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R1_001.fastq.gz and ${PROJDATADIR}/${short_name}/FASTQs/${short_name}_R2_001.fastq.gz"
+								gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R1_001.fastq.gz"
+								gzip -c "${source_path}/${full_sample_name_pair}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R2_001.fastq.gz"
 							fi
+						else
+							echo "No R1 found for ${source_path}/${full_sample_name}"
+							gzip -c "${source_path}/${full_sample_name}" > "${PROJDATADIR}/${short_name}/FASTQs/temp/${short_name}_R2_001.fastq.gz"
 						fi
 					else
 						"Current read = ${current_read} (hint: its not 1 or 2), so it should never get here anyway"
@@ -476,6 +474,7 @@ else
 					else
 						echo -e "${PROJECT}/${short_name}" >> "${PROJDATADIR}/${PROJECT}_list.txt"
 					fi
+				fi
 			fi
 		else
 			echo "${file} is not a FASTQ(.gz) read file, not acting on it"
