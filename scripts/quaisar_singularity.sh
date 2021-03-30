@@ -163,7 +163,7 @@ done
 prereqs="true"
 missing_names=()
 
-conda activate py36_biopython_singularity
+conda activate py36_biopython
 
 echo "Checking for dependencies and databases"
 # Check for required software (python3 and singularity)
