@@ -386,7 +386,7 @@ else
 				#postfix=$(echo "${full_sample_name}" | rev | cut -d'_' -f1 | rev)
 
 			else
-				echo "Magic - should have never gotten here as this number does not match any of the input numbers... 1:_SX_L001_RX_00X.fastq.gz 2: _(R)X.fastq.gz 3: _RX_00X.fastq.gz 4: _SX_RX_00X.fastq.gz , exiting"
+				echo "Does not match any of the expected filenameing conventions - ${full_sample_name}"
 				exit
 			fi
 
@@ -1302,10 +1302,10 @@ for isolate in "${isolate_list[@]}"; do
 		for tax in $species $genus $family $order $class $phylum $kingdom $domain
 		do
 			# Check for problematic taxonomy naming
-			if [[ "${tax}" == "actinobacteria" ]]:
-				if [[ "${class}" == "actinobacteria" ]]; then
+			if [ "${tax}" = "actinobacteria" ]; then
+				if [ "${class}" = "actinobacteria" ]; then
 					tax="actinobacteria_class"
-				elif [[ "${phylum}" == "actinobacteria" ]]; then
+				elif [ "${phylum}" = "actinobacteria" ]; then
 					tax="actinobacteria_phylum"
 				fi
 			fi
