@@ -393,6 +393,7 @@ else
 			#long_name=$(echo "${full_sample_name}" | cut -d'_' -f1,2,3)
 			echo "Short: ${short_name}"
 			#echo "Does ${full_sample_name} match *${match}"
+			source_path=$(dirname "${file}")
 
 			# Skip file if it happens to be undetermined
 	    if [[ "${short_name}" == "Undetermined" ]]; then
@@ -404,7 +405,7 @@ else
 				if [ ! -d "${PROJDATADIR}/${short_name}" ]; then
 					echo "Creating $PROJDATADIR/${short_name}"
 					mkdir -p "${PROJDATADIR}/${short_name}"
-					echo "Creating $PROJDATADIR/${short_name}/FASTQs"
+					echo "Creating ${PROJDATADIR}/${short_name}/FASTQs"
 					mkdir -p "${PROJDATADIR}/${short_name}/FASTQs"
 				fi
 				# Announces name of file being unzipped and then unzips it to the FASTQs folder for the matching sample name. Files are shortened to just name_R1_001.fastq or name_R2_001.fastq
@@ -468,9 +469,13 @@ else
 					else
 						"Current read = ${current_read} (hint: its not 1 or 2), so it should never get here anyway"
 					fi
-					if grep -Fxq "${PROJECT}/${short_name}" "${PROJDATADIR}/${PROJECT}_list.txt"
-					then
-						echo -e "${PROJECT}/${short_name} already on list "${PROJDATADIR}/${PROJECT}_list.txt", not adding again"
+					if [[ -f "${PROJDATADIR}/${PROJECT}_list.txt" ]]; then
+						if grep -Fxq "${PROJECT}/${short_name}" "${PROJDATADIR}/${PROJECT}_list.txt"
+						then
+							echo -e "${PROJECT}/${short_name} already on list ${PROJDATADIR}/${PROJECT}_list.txt, not adding again"
+						else
+							echo -e "${PROJECT}/${short_name}" >> "${PROJDATADIR}/${PROJECT}_list.txt"
+						fi
 					else
 						echo -e "${PROJECT}/${short_name}" >> "${PROJDATADIR}/${PROJECT}_list.txt"
 					fi
