@@ -120,20 +120,19 @@ function test_singularity() {
   fi
 }
 
-function test_curl() {
-	curled=$(curl -V)
-	if [[ "${curled}" = "curl 7."* ]]; then
-		echo "curl version 7.X installed, good to go"
-	else
-		echo "curl is NOT installed and is needed to download some databases, please install it using 'sudo apt get install curl' or 'sudo yum install curl'"
-		exit 102
-	fi
-}
+# function test_curl() {
+# 	curled=$(curl -V)
+# 	if [[ "${curled}" = "curl 7."* ]]; then
+# 		echo "curl version 7.X installed, good to go"
+# 	else
+# 		echo "curl is NOT installed and is needed to download some databases, please install it using 'sudo apt get install curl' or 'sudo yum install curl'"
+# 		exit 102
+# 	fi
+# }
 
 # Do checks of singularity and Go to ensure they are installed already
 test_go
 test_singularity
-test_curl
 
 echo "Go and Singularity are installed...proceed with installation"
 
