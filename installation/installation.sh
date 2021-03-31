@@ -112,7 +112,7 @@ function test_singularity() {
       echo "Singularity installed and ready to go"
     else
       echo "Your singularity version is too old, please upgrade to version 3 (or remove old versions and change parameters) before trying again"
-      exit
+      exit 100
     fi
   else
     echo "You do not have singularity installed, either choose a supported operating system, or preinstall before trying to install QuAISAR"
@@ -120,9 +120,20 @@ function test_singularity() {
   fi
 }
 
+function test_curl() {
+	curled=$(curl -V)
+	if [[ "${curled}" = "curl 7."* ]]; then
+		echo "curl version 7.X installed, good to go"
+	else
+		echo "curl is NOT installed and is needed to download some databases, please install it using 'sudo apt get install curl' or 'sudo yum install curl'"
+		exit 102
+	fi
+}
+
 # Do checks of singularity and Go to ensure they are installed already
 test_go
 test_singularity
+test_curl
 
 echo "Go and Singularity are installed...proceed with installation"
 

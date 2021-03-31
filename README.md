@@ -3,7 +3,9 @@ Quality, Assembly, Identification, Sequence type, Annotation, Resistance mechani
 This version uses containers to ease the necessity of having many preinstalled tools.
 
 ## Installation
-    Dependencies - Singularity 3.7.2. (https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps or https://github.com/jiangweiyao/Installing_Singularity#installing_singularity)
+    Dependencies - cURL, Singularity 3.7.2 and Go.
+      Installation instructions for Singularity and go can be found at https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps or https://github.com/jiangweiyao/Installing_Singularity#installing_singularity
+      cURL can be installed by 'sudo apt get install curl' or 'sudo yum install curl'
 
 The script will install miniconda, if there is no version of conda already installed. It will then install an environment that contains Python3.6. When the pipeline is run it will activate the environment and will deactivate it when complete.
 
@@ -14,7 +16,7 @@ The script will install miniconda, if there is no version of conda already insta
             1.(-i) location of where to put the scripts to run the pipeline (installation directory)
             2.(-d) location of where to put the databases needed to run the pipeline (3.6 Gbs)
             3.(-w) location of where you expect to keep the output of the pipeline. This will be a folder that houses all runs (each within its own folder)
-            
+
 ## Configuration
     There is a config.sh file within the script folder that has many configurable options
     The first section is system specific that gives the locations of where to find the scripts, databases, and output folders. These were set up during installation, but can be altered if desired. The installation program also attempted to learn the available number of processors to make sure the pipeline can run as quickly as possible. There are a large number of run-time options used by many tools that are defined within this file. The values of these options are the defaults used by the authors, however they may be adjusted to suit the problem.
@@ -23,10 +25,10 @@ The script will install miniconda, if there is no version of conda already insta
     This script will run each isolate through the pipeline in a serial fashion. The QuAISAR-H pipeline takes a folder of paired end reads and outputs multiple reports to the designated folder.
 
     Reads filenames need to have a postfix like one of these: _S*_L001_R*_00*.fastq[.gz], _S*_R*_0*X.fastq[.gz], _RX_00*.fastq[.gz], _[R]*.fastq[.gz]
-    
+
     To run the pipeline use the following command with these parameters:
         A. ./quaisar_singularity.sh
-            1. -i 
+            1. -i
             2. full path to the folder of paired-end reads
             4. -o
             5. name to describe the set of reads (e.g. project_name, run_id)
@@ -40,7 +42,7 @@ The script will install miniconda, if there is no version of conda already insta
         4. .sum - is a concatenated version of all the individual isolates pipeline_stats files
         5. Seqlog_output.txt - A file that the authors use for run quality record keeping
         6. config_*.sh - copy of the config file used during the run.
-        
+
 ### Each isolate folder will contain the following files and folders
     All Isolates -
     1. 16s folder
@@ -63,7 +65,7 @@ The script will install miniconda, if there is no version of conda already insta
     18. _pipeline_stats.txt - summary and status of all steps performed in the pipeline
     19. .tax - determined taxonomy of isolate
     20. _time_summary.txt - estimate of length to complete each task
-    
+
     Isolates within the Enterobacteriaceae family (currently the only taxa that plasFlow is being run on) -
     1. Assembly_Stats_plasFlow
     2. c-sstar_plasFlow
@@ -148,4 +150,3 @@ plasFlow contig Trim|||-plasmid_scaffolds_trimmed.fasta missing
 c-SSTAR_plasFlow|-NO known AMR genes present,database is not current||-summary.txt or c-sstar folder missing
 GAMA_plasFlow|-NO known AMR genes present,database is not current||.GAMA or GAMA folder missing
 plasmidFndr-plasFlow|||-results_table_summary.txt missing,plasmidFinder_on_plasFlow folder missing
-
