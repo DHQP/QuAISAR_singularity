@@ -285,7 +285,7 @@ if [[ ! -d "${path_to_DBs}/kraken" ]]; then
 		mkdir "${path_to_DBs}/kraken"
 		cd "${path_to_DBs}/kraken"
 		echo "Downloading latest (mini)kraken database (wget https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz)"
-		wget "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+		wget --ciphers=DEFAULT:@SECLEVEL1 "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
 		if [[ ! -f "minikraken_20171019_4GB.tgz" ]]; then
 			curl -k -O "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
 		fi
