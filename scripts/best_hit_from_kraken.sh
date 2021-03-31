@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/bash -l
 
 #$ -o best_hit_kraken.out
 #$ -e best_hit_kraken.err

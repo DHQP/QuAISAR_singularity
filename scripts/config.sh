@@ -1,5 +1,5 @@
 #! /usr/bin/env bash
-#!/bin/sh -l
+#!/bin/bash -l
 
 
 #

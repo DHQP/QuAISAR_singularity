@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/bash -l
 
 #$ -o quapro.out
 #$ -e quapro.err

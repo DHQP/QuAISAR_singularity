@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/bash -l
 
 #$ -o append_tax.out
 #$ -e append_tax.err

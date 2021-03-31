@@ -1,5 +1,5 @@
 #! /usr/bin/env bash
-#!/bin/sh -l
+#!/bin/bash -l
 
 #
 # Description: Script to consolidate all configuration type settings for QuAISAR pipeline and any tools contained within

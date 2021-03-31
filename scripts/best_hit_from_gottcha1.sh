@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/bash -l
 
 #$ -o best_hit_from_gottcha1.out
 #$ -e best_hit_from_gottcha1.err

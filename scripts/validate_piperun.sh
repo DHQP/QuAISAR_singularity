@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/bash -l
 
 #$ -o validate_piperun.out
 #$ -e validate_piperun.err
