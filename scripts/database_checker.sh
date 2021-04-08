@@ -290,6 +290,9 @@ if [[ ! -d "${path_to_DBs}/kraken" ]]; then
 			curl -k -O "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
 		fi
 		tar xzf minikraken_20171019_4GB.tgz
+
+		mv minikraken_20171013_4GB minikraken_20171019_4GB
+
 		rm minikraken_20171019_4GB.tgz
 	else
 		echo "Missing latest kraken database"
