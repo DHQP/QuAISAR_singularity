@@ -284,10 +284,11 @@ if [[ ! -d "${path_to_DBs}/kraken" ]]; then
 	if [[ "${do_download}" = "true" ]]; then
 		mkdir "${path_to_DBs}/kraken"
 		cd "${path_to_DBs}/kraken"
-		echo "Downloading latest (mini)kraken database (wget https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz)"
-		wget --ciphers=DEFAULT:@SECLEVEL1 "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+		echo "Downloading latest (mini)kraken database (wget ftp://ftp.cdc.gov/pub/QUAISAR-FTP/minikraken_20171019_4GB.tgz)"
+
+		wget "ftp://ftp.cdc.gov/pub/QUAISAR-FTP/minikraken_20171019_4GB.tgz"
 		if [[ ! -f "minikraken_20171019_4GB.tgz" ]]; then
-			curl -k -O "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_4GB.tgz"
+			curl -k -O "ftp://ftp.cdc.gov/pub/QUAISAR-FTP/minikraken_20171019_4GB.tgz"
 		fi
 		tar xzf minikraken_20171019_4GB.tgz
 
@@ -310,8 +311,8 @@ if [[ ! -d "${path_to_DBs}/gottcha" ]]; then
 		# Original LANL hosted address that has been down a good while
 	 	#wget -P "${path_to_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
 		# Temporary mirror until original is fixed
-		echo "Downloading latest gottcha database (wget https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz)"
-		wget "https://zenodo.org/record/819341/files/gottcha_bac_arc_v1.tar.gz"
+		echo "Downloading latest gottcha database (wget ftp://ftp.cdc.gov/pub/QUAISAR-FTP/gottcha_bac_arc_v1.tar.gz)"
+		wget "ftp://ftp.cdc.gov/pub/QUAISAR-FTP/gottcha_bac_arc_v1.tar.gz"
 		tar xzf gottcha_bac_arc_v1.tar.gz
 		rm gottcha_bac_arc_v1.tar.gz
 		mv gottcha/gottcha_db ./
