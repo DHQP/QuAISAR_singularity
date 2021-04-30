@@ -5,7 +5,7 @@ This version uses containers to ease the necessity of having many preinstalled t
 ## Installation
     Dependencies - cURL, Singularity 3.7.2 and Go.
       Installation instructions for Singularity and go can be found at https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps or https://github.com/jiangweiyao/Installing_Singularity#installing_singularity
-      cURL can be installed by 'sudo apt get install curl' or 'sudo yum install curl'
+      cURL can be installed by 'sudo apt-get install curl' or 'sudo yum install curl'
 
 The script will install miniconda, if there is no version of conda already installed. It will then install an environment that contains Python3.6. When the pipeline is run it will activate the environment and will deactivate it when complete.
 
