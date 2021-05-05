@@ -315,10 +315,10 @@ if [[ ! -d "${path_to_DBs}/gottcha" ]]; then
 		wget "ftp://ftp.cdc.gov/pub/QUAISAR-FTP/gottcha_bac_arc_v1.tar.gz"
 		tar xzf gottcha_bac_arc_v1.tar.gz
 		rm gottcha_bac_arc_v1.tar.gz
-		mv gottcha/gottcha_db ./
-		rm -r gottcha
-		mv gottcha_db gottcha
-		rm gottcha.dbprofile.out
+		#mv gottcha/gottcha_db ./
+		#rm -r gottcha
+		#mv gottcha_db gottcha
+		#rm gottcha.dbprofile.out
 		# Need to find sa place to host genus_Lookup.tar.gz
 	else
 		echo "Missing gottcha database"
