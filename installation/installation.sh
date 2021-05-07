@@ -153,6 +153,7 @@ head -n31 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${
 CPUs=$(nproc --all)
 echo "procs=${CPUs}" >> ${installation_location}/new_config.sh
 tail -n91 ${install_script_dir}/installation/config_template.sh >> ${installation_location}/new_config.sh
+echo "source ${HOME}/miniconda3/bin" >> ${installation_location}/new_config.sh
 
 # Copy all scripts from this folder to install location
 cp ${install_script_dir}/scripts/* ${installation_location}
