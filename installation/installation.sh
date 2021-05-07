@@ -177,11 +177,11 @@ conda_call_lines=$(conda list | wc -l)
 if [[ "${conda_call_lines}" -gt 1 ]]; then
 	:
 else
-	yes | ${install_script_dir}/installation/install_miniconda.sh
+	yes | ${install_script_dir}/installation/install_miniconda.sh ${installation_location}
 fi
 
 home_dir=$(echo $HOME)
-echo "prefix: ${home_dir}/miniconda3/envs/py36_biopython" >> ${install_script_dir}/installation/py36_biopython.yml
+echo "prefix: ${installation_location}/miniconda3/envs/py36_biopython" >> ${install_script_dir}/installation/py36_biopython.yml
 
 . "${home_dir}/.bashrc"
 
