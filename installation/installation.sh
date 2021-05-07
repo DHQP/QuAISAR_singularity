@@ -153,6 +153,7 @@ head -n31 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${
 CPUs=$(nproc --all)
 echo "procs=${CPUs}" >> ${installation_location}/new_config.sh
 tail -n91 ${install_script_dir}/installation/config_template.sh >> ${installation_location}/new_config.sh
+echo "source ${HOME}/miniconda3/bin" >> ${installation_location}/new_config.sh
 
 # Copy all scripts from this folder to install location
 cp ${install_script_dir}/scripts/* ${installation_location}
@@ -177,11 +178,11 @@ conda_call_lines=$(conda list | wc -l)
 if [[ "${conda_call_lines}" -gt 1 ]]; then
 	:
 else
-	yes | ${install_script_dir}/installation/install_miniconda.sh ${installation_location}
+	yes | "${install_script_dir}/installation/install_miniconda.sh ${installation_location}"
 fi
 
 home_dir=$(echo $HOME)
-echo "prefix: ${installation_location}/miniconda3/envs/py36_biopython" >> ${install_script_dir}/installation/py36_biopython.yml
+echo "prefix: ${HOME}/miniconda3/envs/py36_biopython" >> ${install_script_dir}/installation/py36_biopython.yml
 
 . "${home_dir}/.bashrc"
 
