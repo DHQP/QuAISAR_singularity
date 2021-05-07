@@ -182,7 +182,7 @@ else
 fi
 
 home_dir=$(echo $HOME)
-echo "prefix: ${HOME}/miniconda3/envs/py36_biopython" >> ${install_script_dir}/installation/py36_biopython.yml
+echo "prefix: ${home_dir}/miniconda3/envs/py36_biopython" >> ${install_script_dir}/installation/py36_biopython.yml
 
 . "${home_dir}/.bashrc"
 
