@@ -177,7 +177,7 @@ conda_call_lines=$(conda list | wc -l)
 if [[ "${conda_call_lines}" -gt 1 ]]; then
 	:
 else
-	yes | ${install_script_dir}/installation/install_miniconda.sh ${installation_location}
+	yes | "${install_script_dir}/installation/install_miniconda.sh ${installation_location}"
 fi
 
 home_dir=$(echo $HOME)
