@@ -183,7 +183,7 @@ fi
 
 home_dir=$(echo $HOME)
 echo "prefix: ${home_dir}/miniconda3/envs/py36_biopython" >> ${install_script_dir}/installation/py36_biopython.yml
-echo 'export PATH=${home_dir}/miniconda3/bin' >> ~/.bashrc
+echo 'export PATH=$PATH:${home_dir}/miniconda3/bin' >> ~/.bashrc
 . "${home_dir}/.bashrc"
 
 conda create --name py36_biopython python=3.6 biopython -y
