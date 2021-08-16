@@ -184,8 +184,13 @@ fi
 home_dir=$(echo $HOME)
 echo "prefix: ${home_dir}/miniconda3/envs/py36_biopython" >> ${install_script_dir}/installation/py36_biopython.yml
 echo 'export PATH=$PATH:${home_dir}/miniconda3/bin' >> ~/.bashrc
-. "${home_dir}/.bashrc"
 
-conda create --name py36_biopython python=3.6 biopython -y
+#Need to call in separate shell
+TMPFILE=${install_script_dir}/tempfile
+echo ". ${home_dir}/.bashrc" > tempfile
+echo "conda create --name py36_biopython python=3.6 biopython -y" >> tempfile
+echo "rm -f $TMPFILE" >> tempfile
+
+bash --rcfile $TMPFILE
 
 echo -e "Installation complete. Before running the pipeline, open a new window or run the following:\n. ${home_dir}/.bashrc \n\n If you would like to view or edit parameters and settings for pipeline, please see ${installation_location}/config.sh"
