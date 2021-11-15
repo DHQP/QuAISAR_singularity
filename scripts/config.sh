@@ -42,7 +42,7 @@ procs=4 # Number of processors
 
 #####BBDUK specific config options #####
 #requested memory size block
-bbduk_mem=Xmx20g
+bbduk_mem=Xmx2g
 #Kmer length (1-31). Larger Kmer size results in greater specificity
 bbduk_k=31
 #hamming distance

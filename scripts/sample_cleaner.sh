@@ -36,6 +36,9 @@ else
 	echo "Cleaning ${1}"
 fi
 
+# Get path of this script so any other scripts calls can be referential
+self_path=$( realpath "$0"  ) && dirname "$self_path"
+
 # Set main sample folder to clean
 sample_folder="${1}"
 echo "Source - ${sample_folder}"
@@ -69,7 +72,7 @@ fi
 echo "Cleaning Assembly Folder"
 if [ -d "${sample_folder}/Assembly" ]; then
 	echo "Using Gulviks SPAdes cleaner on Assembly"
-	${src}/gulvic_SPAdes_cleaner.sh "${sample_folder}/Assembly"
+	${self_path}/gulvic_SPAdes_cleaner.sh "${sample_folder}/Assembly"
 	rm "${sample_folder}/Assembly/${sample_name}_scaffolds_trimmed_original.fasta"
 fi
 
