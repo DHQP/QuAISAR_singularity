@@ -50,9 +50,9 @@ if [ -d "${sample_folder}/ANI/localANIDB" ]; then
 	echo "removing localANIDB"
 	rm -r "${sample_folder}/ANI/localANIDB"
 fi
-if [ -d "${sample_folder}/ANI/localANIDB" ]; then
+if [ -d "${sample_folder}/ANI/localANIDB_REFSEQ" ]; then
 	echo "removing localANIDB_REFSEQ"
-	rm -r "${sample_folder}/ANI/localANIDB"
+	rm -r "${sample_folder}/ANI/localANIDB_REFSEQ"
 fi
 if [ -d "${sample_folder}/ANI/localANIDB_full" ]; then
 	echo "removing localANIDB_full"
@@ -62,6 +62,10 @@ if [ -d "${sample_folder}/ANI/temp" ]; then
 	echo "removing temp"
 	rm -r "${sample_folder}/ANI/temp"
 fi
+#if [ -d "${sample_folder}/ANI/aniM_REFSEQ" ]; then
+#	echo "removing nucmers"
+#	rm -r "${sample_folder}/ANI/aniM_REFSEQ/nucmer_output.tar.gz"
+#fi
 # Remove the hmmer output from the BUSCO folder
 echo "Cleaning BUSCO"
 if [ -d "${sample_folder}/BUSCO/hmmer_output" ]; then
@@ -101,8 +105,14 @@ fi
 # Clean kraken folder (only for reads as it is MUCH larger)
 if [ -d "${sample_folder}/kraken/preAssembly" ]; then
 	gzip ${sample_folder}/kraken/preAssembly/${sample_name}_paired.classified
+	#rm ${sample_folder}/kraken/preAssembly/${sample_name}_paired.classified
 	gzip ${sample_folder}/kraken/preAssembly/${sample_name}_paired.kraken
+fi
+
+# Clean kraken folder (only for reads as it is MUCH larger)
+if [ -d "${sample_folder}/kraken/postAssembly" ]; then
 	gzip ${sample_folder}/kraken/postAssembly/${sample_name}_assembled.classified
+	#rm ${sample_folder}/kraken/postAssembly/${sample_name}_assembled.classified
 	gzip ${sample_folder}/kraken/postAssembly/${sample_name}_assembled.kraken
 fi
 
@@ -288,4 +298,4 @@ fi
 #	clumpify in1="${sample_folder}/trimmed/${sample_name}_R1_001.paired.fq.gz" in2="${sample_folder}/trimmed/${sample_name}_R2_001.paired.fq.gz" out1="${sample_folder}/trimmed/${sample_name}_R1_001.paired.fq.clumped.gz" out2="${sample_folder}/trimmed/${sample_name}_R2_001.paired.fq.clumped.gz" reorder
 #fi
 
-echo "Sample ${1} should now be clean" >> "${output_dir}/cleaned_sample_list.txt"
+# echo "Sample ${1} should now be clean" >> "${output_dir}/cleaned_sample_list.txt"
