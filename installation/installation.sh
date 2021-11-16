@@ -187,10 +187,10 @@ echo 'export PATH=$PATH:${home_dir}/miniconda3/bin' >> ~/.bashrc
 
 #Need to call in separate shell
 TMPFILE=${install_script_dir}/tempfile
-echo ". ${home_dir}/.bashrc" > tempfile
-echo "conda create --name py36_biopython python=3.6 biopython -y" >> tempfile
-echo "rm -f $TMPFILE" >> tempfile
-
+echo ". ${home_dir}/.bashrc" > $TMPFILE
+echo "conda create --name py36_biopython python=3.6 biopython -y" >> $TMPFILE
 bash --rcfile $TMPFILE
+
+# rm -f $TMPFILE
 
 echo -e "Installation complete. Before running the pipeline, open a new window or run the following:\n. ${home_dir}/.bashrc \n\n If you would like to view or edit parameters and settings for pipeline, please see ${installation_location}/config.sh"
