@@ -61,3 +61,16 @@ function get_srst2_filename {
 	ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
 	echo "${ResGANNCBI_srst2_filename}"
 }
+
+function get_ratio {
+	NCBI_ratio="NOT_FOUND"
+	NCBI_ratio=$(find ${databases}/ratio_DBs -maxdepth 1 -name "NCBI_Assembly_stats_*.txt" -type f -printf '%p\n' | sort -k4,4 -rt '_' -n | head -n 1)
+	echo "${NCBI_ratio}"
+}
+
+function get_ratio_Date {
+	NCBI_ratio="NOT_FOUND"
+	NCBI_ratio=$(find ${databases}/ratio_DBs -maxdepth 1 -name "NCBI_Assembly_stats_*.txt" -type f -printf '%p\n' | sort -k4,4 -rt '_' -n | head -n 1)
+	NCBI_ratio_date=$(echo "${NCBI_ratio}" | rev | cut -d'_' -f1 | cut -d'.' -f2 | rev)
+	echo "${NCBI_ratio_date}
+}
