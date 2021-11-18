@@ -101,6 +101,9 @@ contamination_threshold=25
 ResGANNCBI_srst2_filename=$(get_srst2_filename)
 REFSEQ_date=$(get_ANI_REFSEQ_Date)
 echo "${REFSEQ_date}"
+NCBI_ratio=$(get_ratio)
+NCBI_ratio_date=$(get_ratio_Date)
+echo "${NCBI_ratio_date}"
 
 # Creates and prints header info for the sample being processed
 today=$(date)
@@ -788,37 +791,94 @@ fi
 
 # Check Assembly ratio
 declare -A mmb_bugs
-while IFS= read -r bug_lines || [ -n "$bug_lines" ]; do
-	#bug_genus=$(echo "${bug_lines}" | cut -d'	' -f1)
-	#bug_species=$(echo "${bug_lines}" | cut -d'	' -f2)
-	bug_info=$(echo "${bug_lines}" | cut -d'	' -f4-)
-	bug_size=$(echo "${bug_lines}" | cut -d'	' -f6)
-	#bug_name="${bug_genus:0:1}.${bug_species}"
-	bug_name=$(echo "${bug_lines}" | cut -d'	' -f3)
-	#echo "Should be adding ${bug_size} for ${bug_name}"
-	mmb_bugs["${bug_name}"]="${bug_size}"
-done < ${databases}/MMB_Bugs.txt
+# while IFS= read -r bug_lines || [ -n "$bug_lines" ]; do
+# 	#bug_genus=$(echo "${bug_lines}" | cut -d'	' -f1)
+# 	#bug_species=$(echo "${bug_lines}" | cut -d'	' -f2)
+# 	bug_info=$(echo "${bug_lines}" | cut -d'	' -f4-)
+# 	bug_size=$(echo "${bug_lines}" | cut -d'	' -f6)
+# 	#bug_name="${bug_genus:0:1}.${bug_species}"
+# 	bug_name=$(echo "${bug_lines}" | cut -d'	' -f3)
+# 	#echo "Should be adding ${bug_size} for ${bug_name}"
+# 	mmb_bugs["${bug_name}"]="${bug_size}"
+# done < ${databases}/MMB_Bugs.txt
 genus_initial="${dec_genus:0:1}"
 assembly_ID="${genus_initial}. ${dec_species}"
 #echo "${mmb_bugs[@]}"
 #echo "${assembly_ID}"
-if [[ ! -z "${mmb_bugs[${assembly_ID}]}" ]]; then
-	#echo "Found Bug in DB: ${assembly_ID}-${mmb_bugs[${assembly_ID}]}"
-	assembly_ratio=$(awk -v p="${assembly_length}" -v q="${mmb_bugs[${assembly_ID}]}" 'BEGIN{printf("%.2f",p/q)}')
-	if (( $(echo "$assembly_ratio > 1.2" | bc -l) )); then
-		printf "%-20s: %-8s : %s\\n" "Assembly ratio" "FAILED" "Too large - ${assembly_ratio}x against ${assembly_ID}"
-		status="FAILED"
-	elif (( $(echo "$assembly_ratio < 0.8" | bc -l) )); then
-		printf "%-20s: %-8s : %s\\n" "Assembly ratio" "FAILED" "Too small - ${assembly_ratio}x against ${assembly_ID}"
-		status="FAILED"
-	else
-		printf "%-20s: %-8s : %s\\n" "Assembly ratio" "SUCCESS" "${assembly_ratio}x against ${assembly_ID}"
-	fi
+# if [[ -n "${}" ]]; then
+# 	#echo "Found Bug in DB: ${assembly_ID}-${mmb_bugs[${assembly_ID}]}"
+# 	assembly_ratio=$(awk -v p="${assembly_length}" -v q="${mmb_bugs[${assembly_ID}]}" 'BEGIN{printf("%.2f",p/q)}')
+# 	if (( $(echo "$assembly_ratio > 1.2" | bc -l) )); then
+# 		printf "%-20s: %-8s : %s\\n" "Assembly ratio" "FAILED" "Too large - ${assembly_ratio}x against ${assembly_ID}"
+# 		status="FAILED"
+# 	elif (( $(echo "$assembly_ratio < 0.8" | bc -l) )); then
+# 		printf "%-20s: %-8s : %s\\n" "Assembly ratio" "FAILED" "Too small - ${assembly_ratio}x against ${assembly_ID}"
+# 		status="FAILED"
+# 	else
+# 		printf "%-20s: %-8s : %s\\n" "Assembly ratio" "SUCCESS" "${assembly_ratio}x against ${assembly_ID}"
+# 	fi
+# else
+# 	printf "%-20s: %-8s : %s\\n" "Assembly ratio" "WARNING" "${assembly_ID} does not exist in the DB"
+# 	if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
+# 		status="WARNING"
+# 	fi
+# fi
+
+
+newest_ratio_file=$(find ${SAMPDATADIR}/ -maxdepth 1 -type f -name "${isolate_name}_Assembly_ratio_*.txt" | sort -k4,4 -rt '_' -n | head -n1)
+if [[ -f "${newest_ratio_file}" ]]; then
+ ratio_db_date=$(echo "${newest_ratio_file}" | rev | cut -d'_' -f1 | rev | cut -d'.' -f1)
+ assembly_ratio=$(tail -n1 "${newest_ratio_file}" | cut -d' ' -f2)
+ stdev_line=$(head -n4 "${newest_ratio_file}" | tail -n1)
+ species_stdev_line=$(head -n3 "${newest_ratio_file}" | tail -n1)
+ if [[ "${stdev_line}" = "Isolate_St.Devs:"* ]]; then
+	 st_dev=$(head -n4 "${newest_ratio_file}" | tail -n1 | cut -d' ' -f2)
+ else
+	 "${shareScript}/calculate_assembly_ratio.sh" -e ${OUTDATADIR}
+	 st_dev=$(head -n4 "${newest_ratio_file}" | tail -n1 | cut -d' ' -f2)
+ fi
+ if [[ "${ratio_db_date}" = "${NCBI_ratio_date}" ]]; then
+	 #assembly_ratio=$(tail -n1 ${OUTDATADIR}/Assembly_ratio.txt | cut -d' ' -f2)
+	 if [[ "${species_st_dev_line}" = *"Single_Reference"* ]]; then
+		 printf "%-20s: %-8s : %s\\n" "Assembly ratio(SD)" "ALERT" "One Reference for STDev - ${assembly_ratio}x(${st_dev}-SD) against ${assembly_ID} (DB up to date! Most current DB: ${NCBI_ratio_date})"
+		 if [[ "${status}" = "SUCCESS" ]]; then
+			 status="ALERT"
+		 fi
+	 elif (( $(echo "$st_dev > 2.58" | bc -l) )); then
+		 printf "%-20s: %-8s : %s\\n" "Assembly ratio(SD)" "FAILED" "Too large - ${assembly_ratio}x(${st_dev}-SD) against ${assembly_ID} (DB up to date! Most current DB: ${NCBI_ratio_date})"
+		 status="FAILED"
+		 #QC_FAIL=$QC_FAIL"STDev_above_2.58($st_dev)-"
+	 #elif (( $(echo "$assembly_ratio < 0.8" | bc -l) )); then
+	 #	printf "%-20s: %-8s : %s\\n" "Assembly ratio" "FAILED" "Too small - ${assembly_ratio}x(${st_dev}-SD) against ${assembly_ID} (DB up to date! Most current DB: ${NCBI_ratio_date})"  >> "${processed}/${project}/${sample_name}/${sample_name}_pipeline_stats.txt"
+	 #	status="FAILED"
+	 else
+		 printf "%-20s: %-8s : %s\\n" "Assembly ratio(SD)" "SUCCESS" "${assembly_ratio}x(${st_dev}-SD) against ${assembly_ID} (DB up to date! Most current DB: ${NCBI_ratio_date})"
+	 fi
+ else
+	 if [[ "${st_dev}" = "Single_Reference" ]]; then
+		 printf "%-20s: %-8s : %s\\n" "Assembly ratio(SD)" "WARNING" "One Reference for STDev - ${assembly_ratio}x(${st_dev}-SD) against ${assembly_ID} (DB NOT up to date! Found as ${ratio_db_date}. Most current DB: ${NCBI_ratio_date})"
+		 if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
+			 status="WARNING"
+		 fi
+	 elif (( $(echo "$st_dev > 2.58" | bc -l) )); then
+		 printf "%-20s: %-8s : %s\\n" "Assembly ratio(SD)" "FAILED" "Too large - ${assembly_ratio}x(${st_dev}-SD) against ${assembly_ID} (DB NOT up to date! Found as ${ratio_db_date}. Most current DB: ${NCBI_ratio_date})"
+		 status="FAILED"
+		 #QC_FAIL="true-STDev_above_2.58($st_dev)-old_DB"
+	 #elif (( $(echo "$assembly_ratio < 0.8" | bc -l) )); then
+	 #	printf "%-20s: %-8s : %s\\n" "Assembly ratio" "FAILED" "Too small - ${assembly_ratio}x(${st_dev}-SD) against ${assembly_ID} (DB NOT up to date! Found as ${ratio_db_date}. Most current DB: ${NCBI_ratio_date})"  >> "${processed}/${project}/${sample_name}/${sample_name}_pipeline_stats.txt"
+	 #	status="FAILED"
+	 else
+		 printf "%-20s: %-8s : %s\\n" "Assembly ratio(SD)" "WARNING" "${assembly_ratio}x(${st_dev}-SD) against ${assembly_ID} (DB NOT up to date! Found as ${ratio_db_date}. Most current DB: ${NCBI_ratio_date})"
+		 if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
+			 status="WARNING"
+		 fi
+	 fi
+ fi
 else
-	printf "%-20s: %-8s : %s\\n" "Assembly ratio" "WARNING" "${assembly_ID} does not exist in the DB"
-	if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]]; then
-		status="WARNING"
-	fi
+ printf "%-20s: %-8s : %s\\n" "Assembly ratio(SD)" "FAILED" "No Ratio File exists"
+ if [[ "${status}" = "SUCCESS" ]] || [[ "${status}" = "ALERT" ]] || [[ "${status}" = "WARNING" ]]; then
+	 status="FAILED"
+ fi
 fi
 
 # check coverage
