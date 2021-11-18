@@ -749,10 +749,11 @@ for isolate in "${isolate_list[@]}"; do
 		# Get start time of gottcha
 		start=$SECONDS
 		# run gottcha
-		#singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DATABASES ${local_DBs}/singularities/gottcha.simg gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DATABASES/gottcha/${gottcha_DB}
-		#echo -e "gottcha:1.0c -- gottcha.pl --mode all --outdir ${SAMPDATADIR}/gottcha/gottcha_S --input ${SAMPDATADIR}/trimmed/${isolate_name}.paired.fq --database ${local_DBs}/gottcha/${gottcha_DB}\n" >> "${command_log_file}"
-		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DATABASES docker://quay.io/biocontainers/gottcha:1.0--pl526_2 gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DATABASES/gottcha/${gottcha_DB}
+		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DATABASES ${local_DBs}/singularities/gottcha.simg gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DATABASES/gottcha/${gottcha_DB}
 		echo -e "gottcha:1.0c -- gottcha.pl --mode all --outdir ${SAMPDATADIR}/gottcha/gottcha_S --input ${SAMPDATADIR}/trimmed/${isolate_name}.paired.fq --database ${local_DBs}/gottcha/${gottcha_DB}\n" >> "${command_log_file}"
+		### Public version failed BWA
+		#singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B "${local_DBs}":/DATABASES docker://quay.io/biocontainers/gottcha:1.0--pl526_2 gottcha.pl --mode all --outdir /SAMPDIR/gottcha/gottcha_S --input /SAMPDIR/trimmed/${isolate_name}.paired.fq --database /DATABASES/gottcha/${gottcha_DB}
+		#echo -e "gottcha:1.0c -- gottcha.pl --mode all --outdir ${SAMPDATADIR}/gottcha/gottcha_S --input ${SAMPDATADIR}/trimmed/${isolate_name}.paired.fq --database ${local_DBs}/gottcha/${gottcha_DB}\n" >> "${command_log_file}"
 
 		singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR docker://quay.io/biocontainers/krona:2.8--pl5262hdfd78af_2 ktImportText /SAMPDIR/gottcha/gottcha_S/${isolate_name}_temp/${isolate_name}.lineage.tsv -o /SAMPDIR/gottcha/${isolate_name}_species.krona.html
 		echo -e "krona:2.8 -- ktImportText ${SAMPDATADIR}/gottcha/gottcha_S/${isolate_name}_temp/${isolate_name}.lineage.tsv -o ${SAMPDATADIR}/gottcha/${isolate_name}_species.krona.html\n" >> "${command_log_file}"
@@ -1052,7 +1053,7 @@ for isolate in "${isolate_list[@]}"; do
 	#python2 "/apps/x86_64/quast/quast-4.3/quast.py" -o "${SAMPDATADIR}/Assembly_Stats" "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta"
 	#singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR ${local_DBs}/singularities/QUAST5.simg python3 /quast/quast.py --no-icarus --no-html --no-snps -o /SAMPDIR/Assembly_Stats /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
 	#echo -e "Quast:5.0.0 -- python3 /quast/quast.py -o ${SAMPDATADIR}/Assembly_Stats ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta\n" >> "${command_log_file}"
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/biocontainers/quast:5.0.2--py37pl5262hfecc14a_5 python3 quast.py --no-icarus --no-html --no-snps -o /SAMPDIR/Assembly_Stats /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/quast:5.0.2--py37pl5262hfecc14a_5 quast.py --no-icarus --no-html --no-snps -o /SAMPDIR/Assembly_Stats /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta
 	echo -e "Quast:5.0.2 -- python3 quast.py -o ${SAMPDATADIR}/Assembly_Stats ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta\n" >> "${command_log_file}"
 	mv "${SAMPDATADIR}/Assembly_Stats/report.txt" "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.txt"
 	mv "${SAMPDATADIR}/Assembly_Stats/report.tsv" "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv"
@@ -1170,7 +1171,7 @@ for isolate in "${isolate_list[@]}"; do
 	fi
 
 	#Calls pyani on local db folder
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/0.2.11--pyhdfd78af_0 average_nucleotide_identity.py -i /SAMPDIR/ANI/localANIDB_REFSEQ -o /SAMPDIR/ANI/aniM_REFSEQ
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/pyani:0.2.11--pyhdfd78af_0 average_nucleotide_identity.py -i /SAMPDIR/ANI/localANIDB_REFSEQ -o /SAMPDIR/ANI/aniM_REFSEQ
 	echo -e "pyani:0.2.11 -- average_nucleotide_identity.py -i ${SAMPDATADIR}/ANI/localANIDB_REFSEQ -o ${SAMPDATADIR}/ANI/aniM_REFSEQ\n" >> "${command_log_file}"
 
 
