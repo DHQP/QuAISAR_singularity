@@ -238,16 +238,15 @@ else
 	echo "ANI REFSEQ sketch database installed"
 fi
 
-if [[ ! -d "${path_to_DBs}/pubmlsts" ]]; then
-	#cp -r /container_DBs/pubmlsts ${path_to_DBs}
+if [[ ! -d "${path_to_DBs}/pubmlst" ]]; then
+	#cp -r /container_DBs/pubmlst ${path_to_DBs}
 	if [[ "${do_download}" = "true" ]]; then
 		echo "Copying pubMLST"
 		cd ${path_to_DBs}
 		wget {wget_options} -O "${pubmlst_links[0]}" "${pubmlst_links[${link_index}]}"
-		tar -zxvf pubmlsts.tar.gz
-		#mv pubmlsts_2 pubmlsts
-		rm pubmlsts.tar.gz
-		# for scheme in pubmlsts/*/*.gz; do
+		tar -zxvf pubmlst.tar.gz
+		rm pubmlst.tar.gz
+		# for scheme in pubmlst/*/*.gz; do
 		# 	gunzip $scheme
 		# done
 	else
