@@ -1916,8 +1916,8 @@ if [[ -f "${PROJDATADIR}/${PROJECT}_list_original.txt" ]]; then
 fi
 
 # Task: Run the Seqlog creator on the proper file
-write_Progress
-run_task_id=8
+#write_Progress
+#run_task_id=8
 # declare -A mmb_bugs
 # while IFS= read -r bug_lines  || [ -n "$bug_lines" ]; do
 # 	bug_genus=$(echo "${bug_lines}" | cut -d'	' -f1)
@@ -1930,7 +1930,7 @@ run_task_id=8
 # done < ${local_DBs}/MMB_Bugs.txt
 
 # Set output folder as directory of input list
-#> "${PROJDATADIR}/Seqlog_output.txt"
+> "${PROJDATADIR}/Seqlog_output.txt"
 
 # Task: Create Seqlog info
 write_Progress
@@ -2029,107 +2029,82 @@ while IFS= read -r var || [ -n "$var" ]; do
 
 	# Pulls contig info from toms qc analysis file
 	contig_info="0(0)\\t0\tNot_in_DB"
-		if [[ -s "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv" ]]; then
-		counter=0
-		while IFS= read -r line  || [ -n "$line" ]; do
-			if [ ${counter} -eq 0 ]
-			then
-				num_contigs=$(sed -n '14p' "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv"| sed -r 's/[\t]+/ /g' | cut -d' ' -f3 )
-			elif [ ${counter} -eq 1 ]
-			then
-				assembly_length=$(sed -n '16p' "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
-				#Check Assembly ratio against expected size to see if it is missing a large portion or if there is contamination/double genome
-				dec_genus_initial="${dec_genus:0:1}"
-				if [[ "${dec_genus_initial}" = "[" ]] || [[ "${dec_genus_initial}" = "(" ]]; then
-					dec_genus_initial="${dec_genus:1:1}"
-				fi
-				assembly_ID="${dec_genus_initial}.${dec_species}"
-				# echo "About to check mmb_bugs[${assembly_ID}]"
-				# if [[ ! -z "${mmb_bugs[${assembly_ID}]}" ]]; then
-				# 	assembly_ratio=$(awk -v p="${assembly_length}" -v q="${mmb_bugs[${assembly_ID}]}" -v r="${tax_source}" -v s="${assembly_ID}" 'BEGIN{printf("%.2f(%s-%s)",p/q, r, s)}')
-				# else
-				# 	assembly_ratio="Not_in_DB (${tax_source}-${assembly_ID})"
-				# fi
-				echo -e "Checking if directories exist:\nParent:${SAMPDATADIR}\nANI:${SAMPDATADIR}/ANI\nAssembly:${SAMPDATADIR}/Assembly"
-				# Checks for proper argumentation
-				if [[ ! -d "${SAMPDATADIR}/ANI" ]] || [[ ! -d "${SAMPDATADIR}/Assembly" ]]; then
-					echo "No sample (or ANI or Assembly) folder exist, exiting"
-					# Set to something to note which folder is missing?
-				else
-					echo "Checking if Assembly_stats exists:${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv"
-					if [[ -f "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv" ]]; then
-						assembly_length=$(sed -n '16p' "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
-						counter=0
-						# All tax files seem to have an extra empty line. To avoid messing anything else up, we'll deal with it as is
-						total_tax="${genus} ${species}"
-						#echo "${genus} ${species}"
-
-						while IFS='' read -r line; do
-							IFS=$'\t' read -a arr_line <<< "$line"
-							#echo "${arr_line[0]}"
-							#echo  "${genus} ${species} vs ${arr_line[0]}"
-							if [[ "${genus} ${species}" = "${arr_line[0]}" ]]; then
-								taxid="${arr_line[19]}"
-								if [ "${taxid}" = -2 ]; then
-									taxid="No mode available when determining tax id"
-								elif [ "${taxid}" = -1 ]; then
-									taxid="No tax id given or empty when making lookup"
-								fi
-								expected_length=$(echo "scale=0; 1000000 * ${arr_line[4]} / 1 " | bc | cut -d'.' -f1)
-								echo "${arr_line[5]}"
-								stdev=$(echo "scale=4; 1000000 * ${arr_line[5]} /1 " | bc | cut -d"." -f1)
-								if [[ "${stdev}" = "0" ]]; then
-									stdev="Single_Reference"
-									stdevs=0
-								else
-									if [[ "${assembly_length}" -gt "${expected_length}" ]]; then
-										bigger="${assembly_length}"
-										smaller="${expected_length}"
-									else
-										smaller="${assembly_length}"
-										bigger="${expected_length}"
-									fi
-									stdevs=$(echo "scale=4 ; ( ${bigger} - ${smaller} ) / ${stdev}" | bc)
-								fi
-								break
-							elif [[ "${genus:0:1}" < "${arr_line[0]:0:1}" ]]; then
-								# Cut losses if Genus initial is larger than reference list initial
-								break
-							fi
-						done < "${NCBI_ratio}"
-						#echo "looked in ${NCBI_ratio}"
-
-
-						if [[ ! ${expected_length} ]]; then
-							echo "No expected length was found to compare to"
-							echo -e "Tax: ${total_tax}\nNCBI_TAXID: ${taxid}\nSpecies_StDev: ${stdev}\nIsolate_St.Devs: ${stdevs}\nActual_length: ${assembly_length}\nExpected_length: ${expected_length}\nRatio: -1" >  "${SAMPDATADIR}/${isolate_name}_Assembly_ratio_${NCBI_ratio_date}.txt"
-							exit
-						elif [[ ! ${assembly_length} ]]; then
-							echo "No assembly length was found to compare with"
-							echo -e "Tax: ${total_tax}\nNCBI_TAXID: ${taxid}\nSpecies_StDev: ${stdev}\nIsolate_St.Devs: ${stdevs}\nActual_length: ${assembly_length}\nExpected_length: ${expected_length}\nRatio: -2" >  "${SAMPDATADIR}/${isolate_name}_Assembly_ratio_${NCBI_ratio_date}.txt"
-							exit
-						fi
-
-						ratio=$(echo "scale=6; ${assembly_length} / ${expected_length}" | bc | awk '{printf "%.4f", $0}')
-
-						echo -e "Actual - ${assembly_length}\nExpected - ${expected_length}\nRatio - ${ratio}\nSpecies_St.Devs - ${stdev}\nIsolate_St.Dev:${stdevs}"
-
-
-						echo -e "Tax: ${total_tax}\nNCBI_TAXID: ${taxid}\nSpecies_St.Dev: ${stdev}\nIsolate_St.Devs: ${stdevs}\nActual_length: ${assembly_length}\nExpected_length: ${expected_length}\nRatio: ${ratio}" >  "${SAMPDATADIR}/${isolate_name}_Assembly_ratio_${NCBI_ratio_date}.txt"
-					else
-						echo "No Assembly_Stats exists, so cannot continue calculate assembly ratio"
+	if [[ -s "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv" ]]; then
+		N50=$(sed -n '18p' "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv"  | sed -r 's/[\t]+/ /g'| cut -d' ' -f2)
+		num_contigs=$(sed -n '14p' "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv"| sed -r 's/[\t]+/ /g' | cut -d' ' -f3 )
+		assembly_length=$(sed -n '16p' "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv" | sed -r 's/[\t]+/ /g' | cut -d' ' -f3)
+		#Check Assembly ratio against expected size to see if it is missing a large portion or if there is contamination/double genome
+		dec_genus_initial="${dec_genus:0:1}"
+		if [[ "${dec_genus_initial}" = "[" ]] || [[ "${dec_genus_initial}" = "(" ]]; then
+			dec_genus_initial="${dec_genus:1:1}"
+		fi
+		assembly_ID="${dec_genus_initial}.${dec_species}"
+		# echo "About to check mmb_bugs[${assembly_ID}]"
+		# if [[ ! -z "${mmb_bugs[${assembly_ID}]}" ]]; then
+		# 	assembly_ratio=$(awk -v p="${assembly_length}" -v q="${mmb_bugs[${assembly_ID}]}" -v r="${tax_source}" -v s="${assembly_ID}" 'BEGIN{printf("%.2f(%s-%s)",p/q, r, s)}')
+		# else
+		# 	assembly_ratio="Not_in_DB (${tax_source}-${assembly_ID})"
+		# fi
+		echo -e "Checking if directories exist:\nParent:${SAMPDATADIR}\nANI:${SAMPDATADIR}/ANI\nAssembly:${SAMPDATADIR}/Assembly"
+		# Checks for proper argumentation
+		if [[ ! -d "${SAMPDATADIR}/ANI" ]] || [[ ! -d "${SAMPDATADIR}/Assembly" ]]; then
+			echo "No sample (or ANI or Assembly) folder exist, exiting"
+		# Set to something to note which folder is missing?
+		else
+			echo "Checking if Assembly_stats exists:${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv"
+			while IFS='' read -r line; do
+				IFS=$'\t' read -a arr_line <<< "$line"
+				#echo "${arr_line[0]}"
+				#echo  "${genus} ${species} vs ${arr_line[0]}"
+				if [[ "${dec_genus} ${dec_species}" = "${arr_line[0]}" ]]; then
+					taxid="${arr_line[19]}"
+					if [ "${taxid}" = -2 ]; then
+						taxid="No mode available when determining tax id"
+					elif [ "${taxid}" = -1 ]; then
+						taxid="No tax id given or empty when making lookup"
 					fi
-					# Set to something to note assembly stats is missing
+					expected_length=$(echo "scale=0; 1000000 * ${arr_line[4]} / 1 " | bc | cut -d'.' -f1)
+					#echo "${arr_line[5]}"
+					stdev=$(echo "scale=4; 1000000 * ${arr_line[5]} /1 " | bc | cut -d"." -f1)
+					if [[ "${stdev}" = "0" ]]; then
+						stdev="Single_Reference"
+						stdevs=0
+					else
+						if [[ "${assembly_length}" -gt "${expected_length}" ]]; then
+							bigger="${assembly_length}"
+							smaller="${expected_length}"
+						else
+							smaller="${assembly_length}"
+							bigger="${expected_length}"
+						fi
+						stdevs=$(echo "scale=4 ; ( ${bigger} - ${smaller} ) / ${stdev}" | bc)
+					fi
+					break
+				elif [[ "${dec_genus:0:1}" < "${arr_line[0]:0:1}" ]]; then
+					# Cut losses if Genus initial is larger than reference list initial
+					break
 				fi
-			elif [ ${counter} -eq 3 ]
-			then
-				N50=$(sed -n '18p' "${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv"  | sed -r 's/[\t]+/ /g'| cut -d' ' -f2)
+			done < "${NCBI_ratio}"
+			#echo "looked in ${NCBI_ratio}"
+
+			if [[ ! ${expected_length} ]]; then
+				echo "No expected length was found to compare to"
+				echo -e "Tax: ${dec_genus} ${dec_species}\nNCBI_TAXID: ${taxid}\nSpecies_StDev: ${stdev}\nIsolate_St.Devs: ${stdevs}\nActual_length: ${assembly_length}\nExpected_length: ${expected_length}\nRatio: -1" >  "${SAMPDATADIR}/${isolate_name}_Assembly_ratio_${NCBI_ratio_date}.txt"
+			elif [[ ! ${assembly_length} ]]; then
+				echo "No assembly length was found to compare with"
+				echo -e "Tax: ${dec_genus} ${dec_species}\nNCBI_TAXID: ${taxid}\nSpecies_StDev: ${stdev}\nIsolate_St.Devs: ${stdevs}\nActual_length: ${assembly_length}\nExpected_length: ${expected_length}\nRatio: -2" >  "${SAMPDATADIR}/${isolate_name}_Assembly_ratio_${NCBI_ratio_date}.txt"
 			fi
-			counter=$((counter+1))
-		done < ${SAMPDATADIR}/Assembly_Stats/${isolate_name}_report.tsv
-		contig_info=$(echo -e "${num_contigs}\\t${assembly_length}\\t${assembly_ratio}")
-		#contig_info=$(echo -e "${num_contigs}\\t${assembly_length}")
+
+			ratio=$(echo "scale=6; ${assembly_length} / ${expected_length}" | bc | awk '{printf "%.4f", $0}')
+
+			echo -e "Actual - ${assembly_length}\nExpected - ${expected_length}\nRatio - ${ratio}\nSpecies_St.Devs - ${stdev}\nIsolate_St.Dev:${stdevs}"
+			echo -e "Tax: ${dec_genus} ${dec_species}\nNCBI_TAXID: ${taxid}\nSpecies_St.Dev: ${stdev}\nIsolate_St.Devs: ${stdevs}\nActual_length: ${assembly_length}\nExpected_length: ${expected_length}\nRatio: ${ratio}" >  "${SAMPDATADIR}/${isolate_name}_Assembly_ratio_${NCBI_ratio_date}.txt"
+		fi
+	else
+		echo "No Assembly_Stats exists, so cannot continue calculate assembly ratio"
 	fi
+	# Set to something to note assembly stats is missing
+	contig_info=$(echo -e "${num_contigs}\\t${assembly_length}\\t${assembly_ratio}")
 
 	# Pulls busco info from summary file
 	busco_info="No BUSCO performed"
