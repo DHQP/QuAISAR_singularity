@@ -1473,7 +1473,7 @@ for isolate in "${isolate_list[@]}"; do
 		mkdir -p "${SAMPDATADIR}/GAMA"
 	fi
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/gamma:1.4--hdfd78af_0 GAMMA.py /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta /SAMPDIR/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
-	echo -e "GAMA:1.4 -- GAMMA.py ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta ${local_DBs}/star/${ResGANNCBI_srst2_filename}_srst2.fasta ${SAMPDATADIR}/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA" >> "${command_log_file}"
+	echo -e "GAMA:1.4 -- GAMMA.py ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta ${local_DBs}/star/${ResGANNCBI_srst2_filename}_srst2.fasta ${SAMPDATADIR}/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}" >> "${command_log_file}"
 
 	end=$SECONDS
 	timeGAMA=$((end - start))
@@ -1744,7 +1744,7 @@ for isolate in "${isolate_list[@]}"; do
 				echo "Creating ${SAMPDATADIR}/Assembly_Stats_plasFlow"
 		 		mkdir -p "${SAMPDATADIR}/Assembly_Stats_plasFlow"
 		 	fi
-		 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/biocontainers/quast:5.0.2--py37pl5262hfecc14a_5 python3 quast.py --no-icarus --no-html --no-snps -o /SAMPDIR/Assembly_Stats_plasFlow /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta
+		 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR docker://quay.io/biocontainers/quast:5.0.2--py37pl5262hfecc14a_5 python3 quast.py --no-icarus --no-html --no-snps -o /SAMPDIR/Assembly_Stats_plasFlow /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta
 			echo -e "QUAST:5.0.2-- python3 quast.py -o ${SAMPDATADIR}/Assembly_Stats_plasFlow ${SAMPDATADIR}/Assembly/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta\n" >> "${command_log_file}"
 			mv "${SAMPDATADIR}/Assembly_Stats_plasFlow/report.txt" "${SAMPDATADIR}/Assembly_Stats_plasFlow/${isolate_name}_report.txt"
 		 	mv "${SAMPDATADIR}/Assembly_Stats_plasFlow/report.tsv" "${SAMPDATADIR}/Assembly_Stats_plasFlow/${isolate_name}_report.tsv"
@@ -1858,11 +1858,10 @@ for isolate in "${isolate_list[@]}"; do
 			mkdir -p "${SAMPDATADIR}/GAMA_plasFlow"
 		fi
 		#singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${local_DBs}/singularities/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py -i /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta -o /SAMPDIR/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
-		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES	docker://quay.io/biocontainers/biocontainers/gamma:1.4--hdfd78af_0 GAMMA.py /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta /SAMPDIR/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
-
+		singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES	docker://quay.io/biocontainers/gamma:1.4--hdfd78af_0 GAMMA.py /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta /SAMPDIR/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
 
 		#echo -e "GAMA:4.7.4 -- python3 /GAMA/GAMA_quaisar.py -i ${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta -o ${SAMPDATADIR}/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA\n" >> "${command_log_file}"
-		echo -e "GAMMA:1.4 -- GAMMA.py ${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta ${SAMPDATADIR}/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA\n" >> "${command_log_file}"
+		echo -e "GAMMA:1.4 -- GAMMA.py ${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta ${SAMPDATADIR}/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}\n" >> "${command_log_file}"
 
 		end=$SECONDS
 		timeplasflow=$((end - start))

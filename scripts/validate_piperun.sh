@@ -1079,7 +1079,7 @@ fi
 
 #Check GAMA
 if [[ -d "${SAMPDATADIR}/GAMA/" ]]; then
-	GAMA_file=$(find ${SAMPDATADIR}/GAMA -maxdepth 1 -type f -name "${sample_name}.ResGANNCBI*.GAMA"   -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+	GAMA_file=$(find ${SAMPDATADIR}/GAMA -maxdepth 1 -type f -name "${sample_name}.ResGANNCBI*.gamma"   -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 	if [[ -z "${GAMA_file}" ]]; then
 		printf "%-20s: %-8s : %s\\n" "GAMA" "FAILED" "/GAMA/ does not have a .GAMA file"
 		status="FAILED"
@@ -1589,7 +1589,7 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 
 	if [[ -d  "${SAMPDATADIR}/GAMA_plasFlow" ]]; then
 		#Check c-SSTAR
-		GAMA_plasFlow_file=$(find ${SAMPDATADIR}/GAMA_plasFlow -maxdepth 1 -type f -name "${sample_name}.ResGANNCBI*.GAMA"   -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+		GAMA_plasFlow_file=$(find ${SAMPDATADIR}/GAMA_plasFlow -maxdepth 1 -type f -name "${sample_name}.ResGANNCBI*.gamma"   -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
 		if [[ -z "${GAMA_plasFlow_file}" ]]; then
 			printf "%-20s: %-8s : %s\\n" "GAMA_plasFlow" "FAILED" "/GAMA_plasFlow/ does not have a .GAMA file"
 			status="FAILED"
