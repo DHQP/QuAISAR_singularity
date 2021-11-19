@@ -825,7 +825,7 @@ assembly_ID="${genus_initial}. ${dec_species}"
 # fi
 
 
-newest_ratio_file=$(find ${SAMPDATADIR}/ -maxdepth 1 -type f -name "${isolate_name}_Assembly_ratio_*.txt" | sort -k4,4 -rt '_' -n | head -n1)
+newest_ratio_file=$(find ${SAMPDATADIR}/ -maxdepth 1 -type f -name "${sample_name}_Assembly_ratio_*.txt" | sort -k4,4 -rt '_' -n | head -n1)
 if [[ -f "${newest_ratio_file}" ]]; then
  ratio_db_date=$(echo "${newest_ratio_file}" | rev | cut -d'_' -f1 | rev | cut -d'.' -f1)
  assembly_ratio=$(tail -n1 "${newest_ratio_file}" | cut -d' ' -f2)
@@ -834,7 +834,7 @@ if [[ -f "${newest_ratio_file}" ]]; then
  if [[ "${stdev_line}" = "Isolate_St.Devs:"* ]]; then
 	 st_dev=$(head -n4 "${newest_ratio_file}" | tail -n1 | cut -d' ' -f2)
  else
-	 "${shareScript}/calculate_assembly_ratio.sh" -e ${OUTDATADIR}
+	 "${scripts}/calculate_assembly_ratio.sh" -e ${OUTDATADIR}
 	 st_dev=$(head -n4 "${newest_ratio_file}" | tail -n1 | cut -d' ' -f2)
  fi
  if [[ "${ratio_db_date}" = "${NCBI_ratio_date}" ]]; then
