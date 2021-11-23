@@ -34,7 +34,7 @@ elif [[ ! -d "${1}" ]]; then
 fi
 
 databases="${1}"
-database_underscore_index=$(tr -dc ',' <<<"$databases" | awk '{ print length; }')
+database_underscore_index=$(tr -dc '_' <<<"$databases" | awk '{ print length; }')
 if [ -z ${database_underscore_index} ]; then
 	database_underscore_index=0
 fi
