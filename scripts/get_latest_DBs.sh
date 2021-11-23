@@ -38,7 +38,7 @@ database_underscore_index=$(tr -dc '_' <<<"$databases" | awk '{ print length; }'
 if [ -z ${database_underscore_index} ]; then
 	database_underscore_index=0
 fi
-echo $database_underscore_index
+#echo $database_underscore_index
 database_underscore_index=$(( database_underscore_index + 2 ))
 #echo "Using ${1} as database location"
 
