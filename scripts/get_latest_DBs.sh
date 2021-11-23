@@ -39,30 +39,31 @@ if [ -z ${database_underscore_index} ]; then
 	database_underscore_index=0
 fi
 echo $database_underscore_index
+database_underscore_index=$(( database_underscore_index + 2 ))
 #echo "Using ${1} as database location"
 
 function get_ANI_REFSEQ {
 	REFSEQ="NOT_FOUND"
-	REFSEQ=$(find ${databases}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+	REFSEQ=$(find ${databases}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k$database_underscore_index,$database_underscore_index -rt '_' -n | head -n 1)
 	echo "${REFSEQ}"
 }
 
 function get_ANI_REFSEQ_Date {
 	REFSEQ="NOT_FOUND"
-	REFSEQ=$(find ${databases}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+	REFSEQ=$(find ${databases}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k$database_underscore_index,$database_underscore_index -rt '_' -n | head -n 1)
 	REFSEQ_date=$(echo "${REFSEQ}" | rev | cut -d'_' -f1 | rev | cut -d'.' -f1)
 	echo "${REFSEQ_date}"
 }
 
 function get_srst2 {
 	ResGANNCBI_srst2="NOT_FOUND"
-	ResGANNCBI_srst2=$(find ${databases}/star -maxdepth 1 -name "ResGANNCBI_*_srst2.fasta" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+	ResGANNCBI_srst2=$(find ${databases}/star -maxdepth 1 -name "ResGANNCBI_*_srst2.fasta" -type f -printf '%p\n' | sort -k$database_underscore_index,$database_underscore_index -rt '_' -n | head -n 1)
 	echo "${ResGANNCBI_srst2}"
 }
 
 function get_srst2_filename {
 	ResGANNCBI_srst2="NOT_FOUND"
-	ResGANNCBI_srst2=$(find ${databases}/star -maxdepth 1 -name "ResGANNCBI_*_srst2.fasta" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+	ResGANNCBI_srst2=$(find ${databases}/star -maxdepth 1 -name "ResGANNCBI_*_srst2.fasta" -type f -printf '%p\n' | sort -k$database_underscore_index,$database_underscore_index -rt '_' -n | head -n 1)
 	ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
 	echo "${ResGANNCBI_srst2_filename}"
 }
