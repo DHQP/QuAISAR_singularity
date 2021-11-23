@@ -440,7 +440,10 @@ if [[ -s "${SAMPDATADIR}/kraken/preAssembly/${sample_name}_paired.list" ]]; then
 	elif [[ "${number_of_species}" -eq 1 ]]; then
 		:
 	else
-		printf "%-20s: %-8s : %s\\n" "pre Class Contam." "FAILED" "No species have been found above the ${contamination_threshold}% threshold"
+		printf "%-20s: %-8s : %s\\n" "pre Class Contam." "ALERT" "No species have been found above the ${contamination_threshold}% threshold"
+		if [ "${status}" = "SUCCESS" ]; then
+				status="ALERT"
+		fi
 	fi
 	#echo "Number of species: ${number_of_species}"
 fi
@@ -1629,11 +1632,13 @@ if [[ "${plasmidsFoundviaplasFlow}" -eq 1 ]]; then
 				else
 					number_of_plasmids=$(( number_of_plasmids + 1 ))
 				fi
-			done < "${SAMPDATADIR}/plasmidFinder/${sample_name}_results_table_summary.txt"
+			done < "${SAMPDATADIR}/plasmidFinder_on_plasFlow/${sample_name}_results_table_summary.txt"
 			if [[ ${number_of_plasmids} -eq 1 ]]; then
-				printf "%-20s: %-8s : %s\\n" "plasmidFinder" "SUCCESS" "${number_of_plasmids} replicon was found in the plasmid scaffold"
+				printf "%-20s: %-8s : %s\\n" "plasmidFndr-plasFlow" "SUCCESS" "${number_of_plasmids} replicon was found in the plasmid scaffold"
 			elif [[ ${number_of_plasmids} -gt 1 ]]; then
-				printf "%-20s: %-8s : %s\\n" "plasmidFinder" "SUCCESS" "${number_of_plasmids} replicons were found in the plasmid scaffold"
+				printf "%-20s: %-8s : %s\\n" "plasmidFndr-plasFlow" "SUCCESS" "${number_of_plasmids} replicons were found in the plasmid scaffold"
+			else
+				printf "%-20s: %-8s : %s\\n" "plasmidFndr-plasFlow" "SUCCESS" "No replicons were found in the plasmid scaffold"
 			fi
 		else
 			printf "%-20s: %-8s : %s\\n" "plasmidFndr-plasFlow" "FAILED" "results_table_summary.txt does not exist"
