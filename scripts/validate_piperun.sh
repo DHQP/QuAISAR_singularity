@@ -990,6 +990,7 @@ fi
 #Check ANI
 ani_found=false
 #Check ANI REFSEQ. Not fully implemented yet, so not causing a failure in reporting
+echo "checking for ${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${sample_name}_vs_REFSEQ_${REFSEQ_date}).txt"
 if [[ -f "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${sample_name}_vs_REFSEQ_${REFSEQ_date}).txt" ]]; then
 	#echo "ALL"
 	ani_info=$(head -n 1 "${SAMPDATADIR}/ANI/best_ANI_hits_ordered(${sample_name}_vs_REFSEQ_${REFSEQ_date}).txt")
