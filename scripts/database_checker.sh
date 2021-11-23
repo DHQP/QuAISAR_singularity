@@ -229,7 +229,7 @@ if [[ ! -d "${path_to_DBs}/ANI" ]]; then
 		else
 			wget "${wget_options}" -O "${ANI_links[0]}" "${ANI_links[${link_index}]}"
 		fi
-		gunzip *.gz
+		gunzip -N REFSEQ_ANI.msh.gz
 	else
 		echo "Missing latest REFSEQ sketch database (ANI)"
 		missing_DBS=("${missing_DBS[@]}" "REFSEQ-ANI")
