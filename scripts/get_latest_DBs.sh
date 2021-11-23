@@ -38,13 +38,13 @@ databases="${1}"
 
 function get_ANI_REFSEQ {
 	REFSEQ="NOT_FOUND"
-	REFSEQ=$(find ${databases}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+	REFSEQ=$(find ${databases}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k2,2 -t '_' -n | head -n 1)
 	echo "${REFSEQ}"
 }
 
 function get_ANI_REFSEQ_Date {
 	REFSEQ="NOT_FOUND"
-	REFSEQ=$(find ${databases}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
+	REFSEQ=$(find ${databases}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k2,2 -t '_' -n | head -n 1)
 	REFSEQ_date=$(echo "${REFSEQ}" | rev | cut -d'_' -f1 | rev | cut -d'.' -f1)
 	echo "${REFSEQ_date}"
 }
