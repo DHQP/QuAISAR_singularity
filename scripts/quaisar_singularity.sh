@@ -1114,8 +1114,8 @@ for isolate in "${isolate_list[@]}"; do
 	cp "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${SAMPDATADIR}/ANI/localANIDB_REFSEQ/sample.fasta"
 
 	#mash dist "${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta" "${REFSEQ}" > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
-	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/mash:2.3--he348c14_1 mash dist /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta /DATABASES/ANI/REFSEQ_${REFSEQ_date}.msh > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
-	echo -e "mash:2.3 -- mash dist ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta ${local_DBs}/ANI/REFSEQ_${REFSEQ_date}.msh > ${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists\n" >> "${command_log_file}"
+	singularity -s exec -B "${SAMPDATADIR}":/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/mash:2.3--he348c14_1 mash dist /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta /DATABASES/ANI/REFSEQ_${REFSEQ_date}_Bacteria_complete.msh > "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
+	echo -e "mash:2.3 -- mash dist ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta ${local_DBs}/ANI/REFSEQ_${REFSEQ_date}_Bacteria_complete.msh > ${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists\n" >> "${command_log_file}"
 	sort -k3 -n -o "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash_sorted.dists" "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
 	#rm "${SAMPDATADIR}/ANI/${isolate_name}_${REFSEQ_date}_mash.dists"
 
