@@ -227,18 +227,18 @@ while IFS= read -r var || [ -n "$var" ]; do
 			# Determine way to check for multiple species above 30%
 			warning_flags="${warning_flags}-High_#_unclassified_reads_kraken(pre)"
 			warnings=$(( warnings + 1 ))
-		elif [[ "${tool}" == "Gottcha_S" ]]; then
-			if [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/gottcha/gottcha_S/${sample_name}.gottcha_full.tsv" ]]; then
-				warning_flags="${warning_flags}-Missing_tsv_file"
-				warnings=$(( warnings + 1 ))
-			elif [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/gottcha/gottcha_S/${sample_name}_species.krona.html" ]]; then
-				warning_flags="${warning_flags}-Missing_HTML_file"
-				warnings=$(( warnings + 1 ))
-			fi
-		elif [[ "${tool}" == "GottchaClassifier" ]]; then
-			# Determine way to check for multiple species above 30%
-			warning_flags="${warning_flags}-High_#_unclassified_reads_gottcha"
-			warnings=$(( warnings + 1 ))
+		# elif [[ "${tool}" == "Gottcha_S" ]]; then
+		# 	if [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/gottcha/gottcha_S/${sample_name}.gottcha_full.tsv" ]]; then
+		# 		warning_flags="${warning_flags}-Missing_tsv_file"
+		# 		warnings=$(( warnings + 1 ))
+		# 	elif [[ ! -s "${OUTDATADIR}/${project_name}/${sample_name}/gottcha/gottcha_S/${sample_name}_species.krona.html" ]]; then
+		# 		warning_flags="${warning_flags}-Missing_HTML_file"
+		# 		warnings=$(( warnings + 1 ))
+		# 	fi
+		# elif [[ "${tool}" == "GottchaClassifier" ]]; then
+		# 	# Determine way to check for multiple species above 30%
+		# 	warning_flags="${warning_flags}-High_#_unclassified_reads_gottcha"
+		# 	warnings=$(( warnings + 1 ))
 		elif [[ "${tool}" == "ContigTrim" ]]; then
 			warning_flags="${warning_flags}->200_contigs_remain"
 			warnings=$(( warnings + 1 ))
@@ -473,20 +473,20 @@ while IFS= read -r var || [ -n "$var" ]; do
 				failure_flags="${failure_flags}-NO_plasmidFinder_directory_for_plasmid_assembly"
 				failures=$(( failures + 1 ))
 			fi
-		elif [[ "${tool}" == "plasFlowcontigTrim" ]]; then
-			failure_flags="${failure_flags}-NO_trimmed_plasmid_assembly_file"
-			failures=$(( failures + 1 ))
-		elif [[ "${tool}" == "plasmidFndr-plasFlow" ]]; then
-			if [[ -d "${OUTDATADIR}/${project_name}/${sample_name}/plasmidFinder_on_plasFlow/" ]]; then
-				failure_flags="${failure_flags}-NO_plasmidFinder_summary_file"
-				failures=$(( failures + 1 ))
-			else
-				failure_flags="${failure_flags}-NO_plasmidFinder_directory_for_plasmid_assembly"
-				failures=$(( failures + 1 ))
-			fi
-		elif [[ "${tool}" == "c-sstar_plasFlow" ]]; then
-			failure_flags="${failure_flags}-NO_c-sstar_output_on_plasmid_assembly"
-			failures=$(( failures + 1 ))
+		# elif [[ "${tool}" == "plasFlowcontigTrim" ]]; then
+		# 	failure_flags="${failure_flags}-NO_trimmed_plasmid_assembly_file"
+		# 	failures=$(( failures + 1 ))
+		# elif [[ "${tool}" == "plasmidFndr-plasFlow" ]]; then
+		# 	if [[ -d "${OUTDATADIR}/${project_name}/${sample_name}/plasmidFinder_on_plasFlow/" ]]; then
+		# 		failure_flags="${failure_flags}-NO_plasmidFinder_summary_file"
+		# 		failures=$(( failures + 1 ))
+		# 	else
+		# 		failure_flags="${failure_flags}-NO_plasmidFinder_directory_for_plasmid_assembly"
+		# 		failures=$(( failures + 1 ))
+		# 	fi
+		# elif [[ "${tool}" == "c-sstar_plasFlow" ]]; then
+		# 	failure_flags="${failure_flags}-NO_c-sstar_output_on_plasmid_assembly"
+		# 	failures=$(( failures + 1 ))
 		elif [[ "${tool}" == "Rawcoverage" ]]; then
 			failure_flags="${failure_flags}-Raw_coverage_below_40x"
 			failures=$(( failures + 1 ))
@@ -499,9 +499,9 @@ while IFS= read -r var || [ -n "$var" ]; do
 		elif [[ "${tool}" == "Taxa" ]]; then
 			failure_flags="${warning_flags}-NO_taxonomy_was_determined"
 			failures=$(( warnings + 1 ))
-		elif [[ "${tool}" == "plasFlowAssembly" ]]; then
-			failure_flags="${warning_flags}-No_plasFlow_folder_found "
-			failures=$(( warnings + 1 ))
+		# elif [[ "${tool}" == "plasFlowAssembly" ]]; then
+		# 	failure_flags="${warning_flags}-No_plasFlow_folder_found "
+		# 	failures=$(( warnings + 1 ))
 		fi
 	fi
 done < "${sum_file}"

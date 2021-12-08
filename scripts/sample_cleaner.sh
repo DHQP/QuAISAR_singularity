@@ -91,16 +91,16 @@ if [ -d "${sample_folder}/Assembly_Stats" ]; then
 	rm -r "${sample_folder}/Assembly_Stats/basic_stats"
 fi
 
-# Cleaning Assembly Stats plasFlow folder of extra unused files made by QUAST
-echo "Cleaning Assembly Stats plasFlow Folder"
-if [ -d "${sample_folder}/Assembly_Stats_plasFlow" ]; then
-	rm "${sample_folder}/Assembly_Stats_plasFlow/${sample_name}_report.txt"
-	rm "${sample_folder}/Assembly_Stats_plasFlow/report.tex"
-	rm "${sample_folder}/Assembly_Stats_plasFlow/transposed_report.t"*
-	rm "${sample_folder}/Assembly_Stats_plasFlow/icarus.html"
-	rm -r "${sample_folder}/Assembly_Stats_plasFlow/icarus_viewers"
-	rm -r "${sample_folder}/Assembly_Stats_plasFlow/basic_stats"
-fi
+# # Cleaning Assembly Stats plasFlow folder of extra unused files made by QUAST
+# echo "Cleaning Assembly Stats plasFlow Folder"
+# if [ -d "${sample_folder}/Assembly_Stats_plasFlow" ]; then
+# 	rm "${sample_folder}/Assembly_Stats_plasFlow/${sample_name}_report.txt"
+# 	rm "${sample_folder}/Assembly_Stats_plasFlow/report.tex"
+# 	rm "${sample_folder}/Assembly_Stats_plasFlow/transposed_report.t"*
+# 	rm "${sample_folder}/Assembly_Stats_plasFlow/icarus.html"
+# 	rm -r "${sample_folder}/Assembly_Stats_plasFlow/icarus_viewers"
+# 	rm -r "${sample_folder}/Assembly_Stats_plasFlow/basic_stats"
+# fi
 
 # Clean kraken folder (only for reads as it is MUCH larger)
 if [ -d "${sample_folder}/kraken/preAssembly" ]; then
@@ -116,20 +116,20 @@ if [ -d "${sample_folder}/kraken/postAssembly" ]; then
 	gzip ${sample_folder}/kraken/postAssembly/${sample_name}_assembled.kraken
 fi
 
-# Clean plasFlow folder of filtered reads
-if [[ -d "${sample_folder}/plasFlow/filtered_reads_70" ]]; then
-	rm -r "${sample_folder}/plasFlow/filtered_reads_70"
-fi
+# # Clean plasFlow folder of filtered reads
+# if [[ -d "${sample_folder}/plasFlow/filtered_reads_70" ]]; then
+# 	rm -r "${sample_folder}/plasFlow/filtered_reads_70"
+# fi
 
 # Clean plasmidFinder folder
 if [[ -d "${sample_folder}/plasmidFinder/tmp" ]]; then
 	rm -r "${sample_folder}/plasmidFinder/tmp"
 fi
 
-# Clean plasmidFinder folder
-if [[ -d "${sample_folder}/plasmidFinder_on_plasFlow/tmp" ]]; then
-	rm -r "${sample_folder}/plasmidFinder_on_plasFlow/tmp"
-fi
+# # Clean plasmidFinder folder
+# if [[ -d "${sample_folder}/plasmidFinder_on_plasFlow/tmp" ]]; then
+# 	rm -r "${sample_folder}/plasmidFinder_on_plasFlow/tmp"
+# fi
 
 # Remove hmm_output folder from BUSCO analysis if found
 echo "Cleaning BUSCO Folder"
@@ -137,12 +137,12 @@ if [ -d "${sample_folder}/BUSCO/hmm_output" ]; then
 	echo "Deleting hmm_output"
 	rm -r "${sample_folder}/BUSCO/hmm_output"
 fi
-echo "Cleaning GOTTCHA Folder"
-# Remove splitrim fodler from gottcha output, if found
-if [ -d "${sample_folder}/gottcha/gottcha_S/${sample_name}_temp/splitrim" ]; then
-	echo "Deleting splitrim folder"
-	rm -r "${sample_folder}/gottcha/gottcha_S/${sample_name}_temp/splitrim"
-fi
+# echo "Cleaning GOTTCHA Folder"
+# # Remove splitrim fodler from gottcha output, if found
+# if [ -d "${sample_folder}/gottcha/gottcha_S/${sample_name}_temp/splitrim" ]; then
+# 	echo "Deleting splitrim folder"
+# 	rm -r "${sample_folder}/gottcha/gottcha_S/${sample_name}_temp/splitrim"
+# fi
 # Removed intermediate folder that has reads with no adapters, but have not been trimmed yet
 echo "Cleaning Adapter Folder"
 if [ -d "${sample_folder}/removedAdapters" ]; then

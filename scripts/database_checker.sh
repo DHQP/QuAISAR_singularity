@@ -324,30 +324,30 @@ else
 	echo "kraken database is installed"
 fi
 
-##### Currently down.....and has been a while
-# Check to see if gottcha database is installed
-if [[ ! -d "${path_to_DBs}/gottcha" ]]; then
-	if [[ "${do_download}" = "true" ]]; then
-		cd "${path_to_DBs}"
-		# Original LANL hosted address that has been down a good while
-	 	#wget -P "${path_to_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
-		# Temporary mirror until original is fixed
-		echo "Downloading latest gottcha database (wget ftp://ftp.cdc.gov/pub/QUAISAR-FTP/gottcha_bac_arc_v1.tar.gz)"
-		wget "ftp://ftp.cdc.gov/pub/QUAISAR-FTP/gottcha_bac_arc_v1.tar.gz"
-		tar xzf gottcha_bac_arc_v1.tar.gz
-		rm gottcha_bac_arc_v1.tar.gz
-		#mv gottcha/gottcha_db ./
-		#rm -r gottcha
-		#mv gottcha_db gottcha
-		#rm gottcha.dbprofile.out
-		# Need to find sa place to host genus_Lookup.tar.gz
-	else
-		echo "Missing gottcha database"
-		missing_DBS=("${missing_DBS[@]}" "gottcha")
-	fi
-else
-	echo "gottcha database installed"
-fi
+# ##### Currently down.....and has been a while
+# # Check to see if gottcha database is installed
+# if [[ ! -d "${path_to_DBs}/gottcha" ]]; then
+# 	if [[ "${do_download}" = "true" ]]; then
+# 		cd "${path_to_DBs}"
+# 		# Original LANL hosted address that has been down a good while
+# 	 	#wget -P "${path_to_DBs}/gottcha" "https://edge-dl.lanl.gov/gottcha/GOTTCHA_database_v20150825/GOTTCHA_BACTERIA_c4937_k24_u30_xHUMAN3x.species.tar.gz"
+# 		# Temporary mirror until original is fixed
+# 		echo "Downloading latest gottcha database (wget ftp://ftp.cdc.gov/pub/QUAISAR-FTP/gottcha_bac_arc_v1.tar.gz)"
+# 		wget "ftp://ftp.cdc.gov/pub/QUAISAR-FTP/gottcha_bac_arc_v1.tar.gz"
+# 		tar xzf gottcha_bac_arc_v1.tar.gz
+# 		rm gottcha_bac_arc_v1.tar.gz
+# 		#mv gottcha/gottcha_db ./
+# 		#rm -r gottcha
+# 		#mv gottcha_db gottcha
+# 		#rm gottcha.dbprofile.out
+# 		# Need to find sa place to host genus_Lookup.tar.gz
+# 	else
+# 		echo "Missing gottcha database"
+# 		missing_DBS=("${missing_DBS[@]}" "gottcha")
+# 	fi
+# else
+# 	echo "gottcha database installed"
+# fi
 
 ls ${path_to_DBs}
 #chmod -Rx ${path_to_DBs}/*

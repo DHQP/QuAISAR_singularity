@@ -49,7 +49,7 @@ BAR=$(printf "[%${BAR_length}s]" | tr ' ' $BAR_character)
 # run_task AA
 declare -a run_AA=('Copying Reads/Assemblies to project directory' 'Inverting list' 'Listing all isolates' 'Displaying isolates' 'Creating unique run Identifier' 'Catting list' 'running isolates' 'Creating bug array' 'Creating Seqlog' 'Creating run summary' 'Copying config and closing out run')
 # isolate task AA
-declare -a iso_AA=('Prepping FASTQ folder' 'Raw Read Quality count' 'BBDUK PhiX' 'Trimmomatic' 'Trimmed Read Quality Count' 'Kraken on reads' 'GOTTCHA' 'SRST2 AR' 'SPAdes Assembling' 'Trimming Assemmbly' 'Kraken on Assembly' '16s Identification' 'Assembly QC' 'PROKKA' 'Rename Contig Headers' 'ANI' 'Taxon classification' 'BUSCO' 'c-SSTAR' 'GAMA' 'MLST' 'plasmidFinder' 'plasFlow' 'Check plasFlow assembly' 'c-SSTAR on plasFlow' 'plasmidFinder on PlasFlow' 'GAMA on plasFlow' 'Summarize isolate' 'Cleaning isolate')
+declare -a iso_AA=('Prepping FASTQ folder' 'Raw Read Quality count' 'BBDUK PhiX' 'Trimmomatic' 'Trimmed Read Quality Count' 'Kraken on reads' 'SRST2 AR' 'SPAdes Assembling' 'Trimming Assemmbly' 'Kraken on Assembly' '16s Identification' 'Assembly QC' 'PROKKA' 'Rename Contig Headers' 'ANI' 'Taxon classification' 'BUSCO' 'c-SSTAR' 'GAMA' 'MLST' 'plasmidFinder' 'Summarize isolate' 'Cleaning isolate')
 
 while true; do
 	pro_run_task_id=$(head -n1 ${run_path}/progress.txt | cut -d':' -f2)

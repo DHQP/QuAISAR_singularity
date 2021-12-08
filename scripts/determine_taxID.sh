@@ -114,12 +114,12 @@ Check_source() {
 			fi
 		fi
 	fi
-	if [[ "${start_at}" -le 3 ]];then
-		if [[ -s "${OUTDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" ]]; then
-			do_GOTTCHA
-			return
-		fi
-	fi
+	# if [[ "${start_at}" -le 3 ]];then
+	# 	if [[ -s "${OUTDATADIR}/gottcha/${sample_name}_gottcha_species_summary.txt" ]]; then
+	# 		do_GOTTCHA
+	# 		return
+	# 	fi
+	# fi
 	if [[ "${start_at}" -le 4 ]]; then
 		if [[ -s "${OUTDATADIR}/kraken/postAssembly/${sample_name}_kraken_summary_assembled_BP.txt" ]]; then
 			do_Kraken
