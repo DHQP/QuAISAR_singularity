@@ -14,7 +14,7 @@
 #		Reads can be gzipped or raw, but if your files are not named in any one of these formats, they will need to be renamed before running them through the pipeline
 #		If you are submitting assemblies, use 1 as the value
 #
-# Output location: A folder with the name given for the -p flag will be created under the folder given with the -o flag (/-o/-p)
+# Output location: A folder with the name given for the -p flag will be created under the folder given with the -o flag (/output/project_name)
 #
 # v1.1 (11/17/2021)
 #
@@ -48,7 +48,7 @@ function write_Progress() {
 # Checking for proper number of arguments from command line
 if [[ $# -lt 1  || $# -gt 13 ]]; then
 	echo -e "\\n\\n\\n"
-	echo -e "Usage: ./quaisar_singularity.sh -i location_of_reads -o name_of_output_folder -p project_name [-s full_path_to_script_folder] [-r] [-a] [-d full_path_to_database_folder] [-c config.sh full_path_to_config_file]"
+	echo -e "Usage: ./quaisar_singularity.sh -i location_of_reads -p project_name [-o name_of_output_folder] [-s full_path_to_script_folder] [-r] [-a] [-d full_path_to_database_folder] [-c config.sh full_path_to_config_file]"
 	echo -e "Reads filenames need to have a postfix in one of the following _S*_L001_R*_00*.fastq[.gz], _S*_R*_0*X.fastq[.gz], _RX_00*.fastq[.gz], _[R]*.fastq[.gz]."
 	echo -e "Assembly filenames need to have a postfix of .fasta or .fna"
 	echo -e "If your reads are not named in any one of these formats, they will need to be renamed before running them through the pipeline"

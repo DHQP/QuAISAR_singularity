@@ -1,5 +1,5 @@
 # Quaisar_singularity
-Quality, Assembly, Identification, Sequence type, Annotation, Resistance mechanisms for Hospital acquired infections (QuAISAR-H) is a mash-up of many publicly available tools with a splash of custom scripts with the purpose of producing a multi-layered quality checked report that identifies the taxonomy of and the Anti-microbial Resistence (AMR) elements from a paired end sequenced bacterial isolate.
+Quality, Assembly, Identification, Sequence type, Annotation, Resistance mechanisms for Hospital acquired infections (QuAISAR-H) is a mash-up of many publicly available tools with a splash of custom scripts with the purpose of producing a multi-layered quality checked report that identifies the taxonomy of and the Anti-microbial Resistance (AMR) elements from a paired end sequenced bacterial isolate.
 This version uses containers to ease the necessity of having many preinstalled tools.
 
 ## Installation
@@ -28,14 +28,13 @@ The script will install miniconda, if there is no version of conda already insta
 
     To run the pipeline use the following command with these parameters:
         A. ./quaisar_singularity.sh
-            1. -i
-            2. full path to the folder of paired-end reads
-            4. -o
-            5. name to describe the set of reads (e.g. project_name, run_id)
-	Example: ./quaisar_singularity.sh -i /path/to/reads/folder -o project_name           
+            1. -i full path to the folder of paired-end reads
+            2. -p run/set/project name for the set of reads being analyzed
+            3. (optional) -o output_path_where_to_put_the_run/set/project_folder (if different than what was set during installation with the -w flag)
+    Example: ./quaisar_singularity.sh -i /path/to/reads/folder -p run/set/project_name        
 
 ## Output
-### Each run of the pipeline will produce the following files in the main (set/project name) folder
+### Each run of the pipeline will produce the following files in the main (run/set/project name) folder
         1. A folder for each isolate's output files
         2. .log - standard out and err of all tools are directed to this file as well as being shown on the terminal
         3. _command.log - shows all singularity commands that were called during the run (and what the parameters were)
@@ -66,38 +65,30 @@ The script will install miniconda, if there is no version of conda already insta
     19. .tax - determined taxonomy of isolate
     20. _time_summary.txt - estimate of length to complete each task
 
-    Isolates within the Enterobacteriaceae family (currently the only taxa that plasFlow is being run on) -
-    1. Assembly_Stats_plasFlow
-    2. c-sstar_plasFlow
-    3. GAMA_plasFlow
-    4. plasFlow
-    5. plasmidFinder_on_plasFlow
-
 
 
 ## Table with all external tools and versions used, along with example commands for each
 
 |	Tool	|	Function	|	Version	|	command	|	command 2	|	Notes	|
 |	---	|	---	|	---	|	---	|	---	|	---	|
-|	BBDuk	|	Remove PhiX reads	|	BBMap(37.87)	|	bbduk.sh - Xmx20g threads=12 in=raw_R1.fastq in2=raw_R2.fastq out=noPhiX_R1.fsq out2=noPhiX_R2.fsq ref=phiX_adapter.fasta k=31 hdist=1	|		|		|
-|	Trimmomatic	|	Remove illumina adapters and filter by quality	|	0.36	|	trimmomatic PE -phred33 -threads 12 noPhiX_R1.fsq noPhiX_R2.fsq trimmed_R1_001.paired.fq trimmed_R1_001.unpaired.fq trimmed_R2_001.paired.fq trimmed_R2_001.unpaired.fq ILLUMINACLIP:adapters.fasat:2:30:10:8:TRUE SLIDINGWINDOW:20:30 LEADING:20 TRAILING:20 MINLEN:50	|		|		|
-|	Kraken	|	Taxonomic Identification/Contamination Detection	|	1.0	|	Reads: kraken --paired --db kraken_mini_db_location --preload --fastq-input --threads 12 --output sample_name.kraken --classified-out sample_name.classified  trimmed_R1_001.paired.fq trimmed_R2_001.paired.fq	|	Assembly: kraken --db kraken_mini_db_location --preload --threads 14 --output sample_name.kraken --classified-out sample_name.classified trimmed_assembly.fasta	|		|
-|	Gottcha	|	Taxonomic Identification (Species database)	|	1.0b	|	gottcha.pl --mode all --outdir output_directory --input paired.fq --database location_of_gottcha_database	|		|	· Paired.fq is the concatenated file of trimmed R1 and R2 read files	|
-|	SPAdes	|	Assembly	|	3.13.0	|	spades.py --careful --memory 32 --only-assembler --pe1-1 trimmed_R1_001.paired.fq --pe1-2 trimmed_R2_001.paired.fq --pe1-s trimmed.single.fq" -o output_directory --phred-offset 33 -t 12	|		|		|
-|	QUAST	|	Assembly Quality	|	5.0.0	|	Quast.py -o output_directory trimmed_assembly.fasta	|		|		|
-|	Prokka	|	Annotation	|	1.14.5	|	prokka --outdir output_directory trimmed_assembly.fasta	|		|		|
+|	BBDuk	|	Remove PhiX reads	|	BBMap(38.94)	|	bbduk.sh - Xmx20g threads=4 in=raw_R1.fastq in2=raw_R2.fastq out=noPhiX_R1.fsq out2=noPhiX_R2.fsq ref=phiX_adapter.fasta k=31 hdist=1	|		|		|
+|	FastP	|	Remove illumina adapters and filter by quality	|	0.23.1	|	fastp -w 4 -i trimmed-noPhiX-R1.fsq -I trimmed-noPhiX-R2.fsq -o trimmed_R1_001.paired.fq --unpaired1 trimmed.single1.fq -O trimmed_R2_001.paired.fq --unpaired2 trimmed.single2.fq --adapter_fasta adapters.fasta -r --cut_right_window_size 20 --cut_right_mean_quality 30 -l 50 -g -5 20 -3 20 SLIDINGWINDOW:20:30 LEADING:20 TRAILING:20 MINLEN:50	|		|		|
+|	Kraken	|	Taxonomic Identification/Contamination Detection	|	1.1.1	|	Reads: kraken --paired --db kraken_mini_db_location --preload --fastq-input --threads 4 --output sample_name.kraken --classified-out sample_name.classified  trimmed_R1_001.paired.fq trimmed_R2_001.paired.fq	|	Assembly: kraken --db kraken_mini_db_location --preload --threads 4 --output sample_name.kraken --classified-out sample_name.classified trimmed_assembly.fasta	|		|
+|	SPAdes	|	Assembly	|	3.15.3	|	spades.py --careful --memory 32 --only-assembler --pe1-1 trimmed_R1_001.paired.fq --pe1-2 trimmed_R2_001.paired.fq --pe1-s trimmed.single.fq" -o output_directory --phred-offset 33 -t 12	|		|		|
+|	QUAST	|	Assembly Quality	|	5.0.2	|	Quast.py -o output_directory trimmed_assembly.fasta	|		|		|
+|	Prokka	|	Annotation	|	1.14.6	|	prokka --outdir output_directory trimmed_assembly.fasta	|		|		|
 |	BUSCO	|	Determine quality of assembly and identification	|	3.0.2	|	run_BUSCO.py -i prokka_output_directory/sample_name.faa -o sample_name -l location_of_database -m prot	|		|	· Proper database is determined by matching lowest matching taxonomy to available databases	|
-|	pyANI	|	Taxonomic Identification	|	0.2.7	|	average_nucleotide_identity.py -i directory_of_fastas -o output_directory --write_excel	|		|	· Directory of fastas contain the 20 closest genera matches based on mashtree distances	|
-|	c-SSTAR	|	Anti-microbial Resistance Mechanism identification on Assembly	|	1.1.01	|	Normal: python3 c-SSTAR_gapped.py -g trimmed_assembly.fasta -s 98-d  AR_database_location > sample_name.gapped_98.sstar	|	Plasmid: python3 c-SSTAR_gapped.py -g plasmid_assembly.fasta -s 40-d  AR_database_location > sample_name.gapped_40.sstar	|		|
-|	SRST2	|	Anti-microbial Resistance Mechanism Identification on reads, Sequence Typing	|	0.2.0	|	AR: SRST2--input_pe trimmed_R1.fastq.gz trimmed_R2_001.fastq.gz --output output_directory –threads 12 --gene_db AR_datbase_location	|	MLST: SRST2--input_pe trimmed_R1.fastq.gz trimmed_R2_001.fastq.gz --output output_directory –threads 12 --mlst_db location_of_mlst_database --mlst_definitions location_of_MLST_definitions --mlst_delimiter MLST_definitions_file_delimiter	|	· Newest MLST database and definitions are downloaded as part of the script. The mlst delimiter is determined  using an included script within the SRST2, getmlst,  that must be run prior to SRST2	|
-|	MLST	|	Sequence Typing	|	2.16	|	mlst trimmed_assembly.fasta > sample_name.mlst	|	mlst --scheme  database_name trimmed_assembly.fasta > sample_name_database_name.mlst	|		|
-|	Barrnap	|	Taxonomic Identification	|	0.8	|	barrnap --kingdom bac --threads 12  trimmed_assembly.fasta > rRNA_seqs.fasta	|		|		|
-|	plasmidFinder	|	Anti-microbial Resistance Mechanism Identification on plasmid replicons	|	2.1	|	plasmidfinder -i trimmed_assembly.fasta -o output_directory -k 95.00 -p enterobacteriaceae|gram_positive	|		|		|
-|   plasFlow    |   plasmid contig identifier   |   1.1.0   |   PlasFlow.py --input scaffolds_trimmed_2000.fasta --output plasFlow_results.tsv --threshold 0.7  |       |       |
+|	pyANI	|	Taxonomic Identification	|	0.2.11	|	average_nucleotide_identity.py -i directory_of_fastas -o output_directory --write_excel	|		|	· Directory of fastas contain the 20 closest genera matches based on mashtree distances	|
+|	c-SSTAR	|	Anti-microbial Resistance Mechanism identification on Assembly	|	1.1.01	|	python3 c-SSTAR_gapped.py -g trimmed_assembly.fasta -s 98 -d  AR_database_location > sample_name.gapped_98.sstar	|		|		|
+|	GAMMA	|	Anti-microbial Resistance Mechanism identification on Assembly	|	1.4	|	python3 GAMMA.py trimmed_assembly.fasta AR_database_location output_gama	|		|		|
+|	SRST2	|	Anti-microbial Resistance Mechanism Identification on reads, Sequence Typing	|	0.2.0	|	AR: SRST2--input_pe trimmed_R1.fastq.gz trimmed_R2_001.fastq.gz --output output_directory –threads 4 --gene_db AR_datbase_location	|	MLST: SRST2--input_pe trimmed_R1.fastq.gz trimmed_R2_001.fastq.gz --output output_directory –threads 4 --mlst_db location_of_mlst_database --mlst_definitions location_of_MLST_definitions --mlst_delimiter MLST_definitions_file_delimiter	|	· Newest MLST database and definitions are downloaded as part of the script. The mlst delimiter is determined  using an included script within the SRST2, getmlst,  that must be run prior to SRST2	|
+|	MLST	|	Sequence Typing	|	2.19.0	|	mlst trimmed_assembly.fasta > sample_name.mlst	|	mlst --scheme database_name trimmed_assembly.fasta > sample_name_database_name.mlst	|		|
+|	Barrnap	|	Taxonomic Identification	|	0.9	|	barrnap --kingdom bac --threads 4  trimmed_assembly.fasta > rRNA_seqs.fasta	|		|		|
+|	plasmidFinder	|	Anti-microbial Resistance Mechanism Identification on plasmid replicons	|	2.1.1	|	plasmidfinder -i trimmed_assembly.fasta -o output_directory -k 95.00 -p enterobacteriaceae|gram_positive	|		|		|
 |   bowtie2 |   read aligner    |   2.2.9   |   bowtie2-build -f plasFlow_results.tsv_chromosomes.fasta bowtie2_sample_name_chr |   bowtie2 -x sample_name_chr -1 R1_001.paired.fq -2 R2_001.paired.fq -S sample_name.sam -p 12 --local |       |       |
-|   samtools    |   sam converter   |   1.10    |   samtools view -bS sample_name.sam > sample_name.bam |   sort -n sample_name.bam -o sample_name.bam.sorted
-|   bedtools    |   bam converter   |   2.29.2  |   bamToFastq -i sample_name.bam.sorted -fq sample_name_R1_bacterial.fastq -fq2 sample_name__R2_bacterial.fastq
-|   Unicycler   |   Assembly    |   0.4.4    |   unicycler -1 sample_name_R1_bacterial.fastq -2 sample__name_R2_bacterial.fastq -o sample_name_uni_assembly
+|   samtools    |   sam converter   |   1.14    |   samtools view -bS sample_name.sam > sample_name.bam |   sort -n sample_name.bam -o sample_name.bam.sorted
+|   bedtools    |   bam converter   |   2.30.0  |   bamToFastq -i sample_name.bam.sorted -fq sample_name_R1_bacterial.fastq -fq2 sample_name__R2_bacterial.fastq
+
 
 
 ##Flag table of output summaries
@@ -116,8 +107,6 @@ kraken preassembly|||-.kraken(.gz) missing
 krona-kraken-preasmb|||-.krona or .html missing
 Pre classfify||-unclassified reads >30%|-no classified reads or kraken_summary_paired.txt missing
 pre Class Contam.|-More than one species found above 25% threshold|-No species found above 25%
-GOTTCHA_S||-.tsv OR .html missing|-Both .tsv and .html missing
-Gottcha Classifier||-unclassified reads >30%|-no classified reads or gottcha_species_summary.txt missing
 Assembly|||-scaffolds.fasta is missing
 Contig Trim||->200 contigs remain|-scaffolds_trimmed.fasta missing
 kraken postassembly|||-.kraken(.gz) missing
@@ -144,9 +133,3 @@ MLST-srst2|-No scheme found for taxa, more than 2 srst2 files found, more than 1
 16s_best_hit||-species not found|-Genus not found, 16s_blast_id.txt missing,No reads found,Unclassifiable reads found
 16s_largest_hit||-species not found|-Genus not found, 16s_blast_id.txt missing,No reads found,Unclassifiable reads found
 plasmidFinder|||-results_table_summary.txt missing,plasmidFinder folder missing
-plasFlow Assembly||-No plasmid scaffold found when expected|-plasFlow folder missing
-QUAST_plasFlow|||report.tsv missing
-plasFlow contig Trim|||-plasmid_scaffolds_trimmed.fasta missing
-c-SSTAR_plasFlow|-NO known AMR genes present,database is not current||-summary.txt or c-sstar folder missing
-GAMA_plasFlow|-NO known AMR genes present,database is not current||.GAMA or GAMA folder missing
-plasmidFndr-plasFlow|||-results_table_summary.txt missing,plasmidFinder_on_plasFlow folder missing
