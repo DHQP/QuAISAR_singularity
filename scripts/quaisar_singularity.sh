@@ -1475,7 +1475,7 @@ for isolate in "${isolate_list[@]}"; do
 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/gamma:1.4--hdfd78af_0 GAMMA.py /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta /SAMPDIR/GAMMA/${isolate_name}.${ResGANNCBI_srst2_filename}
 	echo -e "GAMMA:1.4 -- GAMMA.py ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta ${local_DBs}/star/${ResGANNCBI_srst2_filename}_srst2.fasta ${SAMPDATADIR}/GAMMA/${isolate_name}.${ResGANNCBI_srst2_filename}" >> "${command_log_file}"
 
-	python3 ${src}/GAMMA_ResGANNCBI_file_converter.py ${SAMPDIR}/GAMMA/${isolate_name}.${ResGANNCBI_srst2_filename}.gamma
+	python3 ${src}/GAMMA_ResGANNCBI_file_converter.py ${SAMPDATADIR}/GAMMA/${isolate_name}.${ResGANNCBI_srst2_filename}.gamma
 
 	end=$SECONDS
 	timeGAMMA=$((end - start))

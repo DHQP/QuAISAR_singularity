@@ -147,6 +147,9 @@ run_ANI="false"
 > "${output_directory}/${run_name}-srst2_todo.txt"
 > "${output_directory}/${run_name}-GAMMA_todo.txt"
 > "${output_directory}/${run_name}-ANI_todo.txt"
+> "${output_directory}/${run_name}-csstar_rejects.txt"
+> "${output_directory}/${run_name}-srst2_rejects.txt"
+> "${output_directory}/${run_name}-GAMMA_rejects.txt"
 
 # Check that each isolate has been compared to the newest ResGANNCBI DB file
 while IFS= read -r line || [ -n "$line" ]; do
@@ -599,7 +602,7 @@ while IFS= read -r line; do
 done < ${list_file}
 
 # Calls script that sorts and formats all isolates info into a matrix for easy viewing
-python3 "${shareScript}/matrix_maker.py" -s "${output_directory}/${run_name}-sample_summary.txt" -p "${output_directory}/${run_name}-plasmid_summary.txt" -o "${output_directory}/${run_name}_matrix.csv" -d "${database_and_version}" -m "${sim}"
+python3 "${src}/matrix_maker.py" -s "${output_directory}/${run_name}-sample_summary.txt" -p "${output_directory}/${run_name}-plasmid_summary.txt" -o "${output_directory}/${run_name}_matrix.csv" -d "${database_and_version}" -m "${sim}"
 
 if [[ ! -d "${output_directory}/matrix_files" ]]; then
 	mkdir "${output_directory}/matrix_files"
@@ -607,7 +610,11 @@ fi
 declare -a move_list
 move_list=(csstar_todo GAMMA_todo srst2_todo alt_mlst_summary csstar_rejects csstar_summary GAMMA_rejects GAMMA_summary mlst_summary plasmid_summary sample_summary srst2 srst2_rejects ANI_todo)
 for mlist in "${move_list[@]}"; do
- 	mv "${output_directory}/${run_name}-${mlist}.txt" "${output_directory}/matrix_files/${run_name}-${mlist}.txt"
+	if [[ -f "${output_directory}/${run_name}-${mlist}.txt" ]]; then
+ 		mv "${output_directory}/${run_name}-${mlist}.txt" "${output_directory}/matrix_files/${run_name}-${mlist}.txt"
+	else
+		echo "${output_directory}/${run_name}-${mlist}.txt does not exist to move"
+	fi
 done
 
 global_end_time=$(date "+%m-%d-%Y @ %Hh_%Mm_%Ss")
