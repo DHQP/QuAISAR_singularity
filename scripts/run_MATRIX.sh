@@ -70,7 +70,7 @@ if [[ -z "${run_name}" ]]; then
 fi
 
 # Creates the output directory if it does not exist
-output_directory=${output_directory}/${run_name}
+output_directory=${output_dir}/${run_name}
 if [[ ! -d ${output_directory} ]]; then
 	echo "Something went wrong, run folder does not exist"
 	exit
