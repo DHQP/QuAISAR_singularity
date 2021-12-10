@@ -38,7 +38,7 @@ procs=4 # Number of processors
 
 #####BBDUK specific config options #####
 #requested memory size block
-bbduk_mem=Xmx20g
+bbduk_mem=Xmx2g
 #Kmer length (1-31). Larger Kmer size results in greater specificity
 bbduk_k=31
 #hamming distance
@@ -78,7 +78,7 @@ spades_phred_offset=33
 #Coverage threshold (positive float, off or auto)
 spades_cov_cutoff="auto"
 #Max memory in Gbs
-spades_max_memory=32
+spades_max_memory=8
 
 ##### ANI specific options #####
 #Max number of samples to be kept (not including source sample) when creating the mash tree

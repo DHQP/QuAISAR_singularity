@@ -1468,6 +1468,8 @@ if [[ -d "${SAMPDATADIR}/plasmidFinder/" ]]; then
 			printf "%-20s: %-8s : %s\\n" "plasmidFinder" "SUCCESS" "${number_of_plasmids} replicon was found in the full scaffold"
 		elif [[ ${number_of_plasmids} -gt 1 ]]; then
 			printf "%-20s: %-8s : %s\\n" "plasmidFinder" "SUCCESS" "${number_of_plasmids} replicons were found in the full scaffold"
+		elif [[ ${number_of_plasmids} -eq 0 ]]; then
+			printf "%-20s: %-8s : %s\\n" "plasmidFinder" "SUCCESS" "0 replicons were found in the full scaffold"
 		fi
 	else
 		printf "%-20s: %-8s : %s\\n" "plasmidFinder" "FAILED" "results_table_summary.txt does not exist"
