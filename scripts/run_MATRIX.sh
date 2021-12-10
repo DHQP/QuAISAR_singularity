@@ -213,7 +213,7 @@ while IFS= read -r line || [ -n "$line" ]; do
 	project=$(echo "${line}" | awk -F/ '{ print $1}' | tr -d '[:space:]')
 	SAMPLE_DATADIR="${output_directory}/${sample_name}"
 	# run csstar code
-done < "${output_directory}/${run_name}-gamma_todo.txt"
+done < "${output_directory}/${run_name}-GAMMA_todo.txt"
 
 while IFS= read -r line || [ -n "$line" ]; do
 	sample_name=$(echo "${line}" | awk -F/ '{ print $2}' | tr -d '[:space:]')
@@ -227,7 +227,7 @@ while IFS= read -r line || [ -n "$line" ]; do
 	project=$(echo "${line}" | awk -F/ '{ print $1}' | tr -d '[:space:]')
 	SAMPLE_DATADIR="${output_directory}/${sample_name}"
 	# run csstar code
-done < "${output_directory}/${run_name}-ani_todo.txt"
+done < "${output_directory}/${run_name}-ANI_todo.txt"
 
 # Loop through and extracts and formats AR genes found in all isolates, as well as the primary MLST type and plasmid replicons. Each are output to separate files. Any AR genes that do not meet the length or % identity are copied to the rejects file.
 while IFS= read -r line; do
