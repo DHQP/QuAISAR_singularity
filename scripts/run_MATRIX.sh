@@ -175,8 +175,8 @@ while IFS= read -r line || [ -n "$line" ]; do
 			run_srst2="true"
 		fi
 	fi
-	echo "checking for ${SAMPLE_DATADIR}/GAMA/${sample_name}_${database_and_version}.GAMA"
-	if [[ -s "${SAMPLE_DATADIR}/GAMA/${sample_name}.${database_and_version}.GAMA" ]];
+	echo "checking for ${SAMPLE_DATADIR}/GAMMA/${sample_name}.${database_and_version}.gamma"
+	if [[ -s "${SAMPLE_DATADIR}/GAMMA/${sample_name}.${database_and_version}.gamma" ]];
 	then
 		#echo "${project}/${sample_name} has newest ResGANNCBI for normal csstar already"
 		:
@@ -286,10 +286,10 @@ while IFS= read -r line; do
 		csstar_list="NO CURRENT FILE"
 	fi
 
-	#echo "^^^^^^^^^^^^^^^^^^^ ${SAMPLE_DATADIR}/GAMA/${sample_name}.${database_and_version}.GAMA"
-	if [[ -f "${SAMPLE_DATADIR}/GAMA/${sample_name}.${database_and_version}.GAMA" ]]; then
-    GAMA_list=""
-		GARDB_full="${SAMPLE_DATADIR}/GAMA/${sample_name}.${database_and_version}.GAMA"
+	#echo "^^^^^^^^^^^^^^^^^^^ ${SAMPLE_DATADIR}/GAMMA/${sample_name}.${database_and_version}.GAMMA"
+	if [[ -f "${SAMPLE_DATADIR}/GAMMA/${sample_name}.${database_and_version}.gamma" ]]; then
+    GAMMA_list=""
+		GARDB_full="${SAMPLE_DATADIR}/GAMMA/${sample_name}.${database_and_version}.gamma"
 		while IFS= read -r line; do
 			# exit if no genes were found for the sample
 			if [[ -z "${line}" ]]; then
@@ -306,33 +306,33 @@ while IFS= read -r line; do
 			gene="${ar_line[3]}"
 			# Ensure that the gene passes % identity and % length threhsolds for reporting
 			if [[ ${percent_length} -ge ${project_parser_Percent_length} ]] && [[ ${percent_codon_ID} -ge ${project_parser_Percent_identity} ]]; then
-				if [[ -z "${GAMA_list}" ]]; then
-				#	echo "First GAMA: ${gene}"
-					GAMA_list="${gene,,}(${conferred,,})[${percent_BP_ID}NT/${percent_codon_ID}AA/${percent_length}:#${contig_number}]"
+				if [[ -z "${GAMMA_list}" ]]; then
+				#	echo "First GAMMA: ${gene}"
+					GAMMA_list="${gene,,}(${conferred,,})[${percent_BP_ID}NT/${percent_codon_ID}AA/${percent_length}:#${contig_number}]"
 				else
-					if [[ ${GAMA_list} == *"${gene}"* ]]; then
-					#	echo "${gene} already found in ${GAMA_list}"
+					if [[ ${GAMMA_list} == *"${gene}"* ]]; then
+					#	echo "${gene} already found in ${GAMMA_list}"
 						:
 					else
-					#	echo "${gene} not found in ${GAMA_list}...adding it"
-						GAMA_list="${GAMA_list},${gene,,}(${conferred,,})[${percent_BP_ID}NT/${percent_codon_ID}AA/${percent_length}:#${contig_number}]"
+					#	echo "${gene} not found in ${GAMMA_list}...adding it"
+						GAMMA_list="${GAMMA_list},${gene,,}(${conferred,,})[${percent_BP_ID}NT/${percent_codon_ID}AA/${percent_length}:#${contig_number}]"
 					fi
 				fi
 			# If length is less than predetermined minimum (90% right now) then the gene is added to a rejects list to show it was outside acceptable limits
 			else
-				echo -e "${project}\t${sample_name}\tfull_assembly\t${line}" >> ${output_directory}/${run_name}-GAMA_rejects.txt
+				echo -e "${project}\t${sample_name}\tfull_assembly\t${line}" >> ${output_directory}/${run_name}-GAMMA_rejects.txt
 			fi
 		done < ${GARDB_full}
-		if [[ -z "${GAMA_list}" ]]; then
-			echo "${project}	${sample_name}	No AR genes discovered" >> ${output_directory}/${run_name}-GAMA_summary.txt
-			GAMA_list="No AR genes discovered"
+		if [[ -z "${GAMMA_list}" ]]; then
+			echo "${project}	${sample_name}	No AR genes discovered" >> ${output_directory}/${run_name}-GAMMA_summary.txt
+			GAMMA_list="No AR genes discovered"
 		else
-			echo "${project}	${sample_name}	${GAMA_list}" >> ${output_directory}/${run_name}-GAMA_summary.txt
+			echo "${project}	${sample_name}	${GAMMA_list}" >> ${output_directory}/${run_name}-GAMMA_summary.txt
 		fi
 	else
-		echo "${project}	${sample_name}	NO CURRENT FILE" >> ${output_directory}/${run_name}-GAMA_summary.txt
-		echo "NOT FOUND - ${SAMPLE_DATADIR}/GAMA/${sample_name}.${database_and_version}.GAMA"
-		GAMA_list="NO CURRENT FILE"
+		echo "${project}	${sample_name}	NO CURRENT FILE" >> ${output_directory}/${run_name}-GAMMA_summary.txt
+		echo "NOT FOUND - ${SAMPLE_DATADIR}/GAMMA/${sample_name}.${database_and_version}.gamma"
+		GAMMA_list="NO CURRENT FILE"
 	fi
 
 	# Adding in srst2 output in a similar fashion as to how the csstar genes are output to the file.
@@ -572,7 +572,7 @@ while IFS= read -r line; do
 	echo -e "${project}\t${sample_name}\t${alt_mlst}\t${alt_alleles}" >> ${output_directory}/${run_name}-alt_mlst_summary.txt
 
 	# Print all extracted info to primary file
-	echo -e "${project}\t${sample_name}\t${project_path}\t${taxonomy}\t${taxonomy_source_type}\t${confidence_info}\t${mlst}\t${alleles}\t${alt_mlst}\t${alt_alleles}\t${csstar_list}\t${srst2_results}\t${GAMA_list}" >> ${output_directory}/${run_name}-sample_summary.txt
+	echo -e "${project}\t${sample_name}\t${project_path}\t${taxonomy}\t${taxonomy_source_type}\t${confidence_info}\t${mlst}\t${alleles}\t${alt_mlst}\t${alt_alleles}\t${csstar_list}\t${srst2_results}\t${GAMMA_list}" >> ${output_directory}/${run_name}-sample_summary.txt
 
 	# Goes through the plasmid file of the sample and adds all found plasmid replicons to the summary file
 	#echo "Starting plasmid extraction"
@@ -605,7 +605,7 @@ if [[ ! -d "${output_directory}/matrix_files" ]]; then
 	mkdir "${output_directory}/matrix_files"
 fi
 declare -a move_list
-move_list=(csstar_todo GAMA_todo srst2_todo alt_mlst_summary csstar_rejects csstar_summary GAMA_rejects GAMA_summary mlst_summary plasmid_summary sample_summary srst2 srst2_rejects ANI_todo)
+move_list=(csstar_todo GAMMA_todo srst2_todo alt_mlst_summary csstar_rejects csstar_summary GAMMA_rejects GAMMA_summary mlst_summary plasmid_summary sample_summary srst2 srst2_rejects ANI_todo)
 for mlist in "${move_list[@]}"; do
  	mv "${output_directory}/${run_name}-${mlist}.txt" "${output_directory}/matrix_files/${run_name}-${mlist}.txt"
 done
