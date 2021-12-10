@@ -268,15 +268,15 @@ NCBI_ratio=$(get_ratio)
 NCBI_ratio_date=$(get_ratio_Date)
 
 if [[ -z "${ResGANNCBI_srst2_filename}" ]]; then
-	echo "ResGANNCBI_srst2_filename (db version) is empty, cant perform c-SSTAR, srst2, or GAMA AR analysis"
+	echo "ResGANNCBI_srst2_filename (db version) is empty, cant perform c-SSTAR, srst2, or GAMMA AR analysis"
 fi
 
 if [[ -z "${ResGANNCBI_srst2}" ]]; then
-	echo "ResGANNCBI_srst2_filename is empty, cant perform c-SSTAR, srst2, or GAMA AR analysis"
+	echo "ResGANNCBI_srst2_filename is empty, cant perform c-SSTAR, srst2, or GAMMA AR analysis"
 fi
 
 if [[ -z "${REFSEQ_date}" ]]; then
-	echo "REFSEQ_date (db version) is empty, cant perform c-SSTAR, srst2, or GAMA AR analysis"
+	echo "REFSEQ_date (db version) is empty, cant perform c-SSTAR, srst2, or GAMMA AR analysis"
 fi
 
 if [[ -z "${REFSEQ}" ]]; then
@@ -1463,24 +1463,24 @@ for isolate in "${isolate_list[@]}"; do
 	echo "c-SSTAR - ${timestar} seconds" >> "${time_summary}"
 	totaltime=$((totaltime + timestar))
 
-	# Task: Run GAMA on assembly
+	# Task: Run GAMMA on assembly
 	write_Progress
 	task_number=19
-	echo "----- Running GAMA -----"
+	echo "----- Running GAMMA -----"
 	start=$SECONDS
-	if [ ! -d "${SAMPDATADIR}/GAMA" ]; then  #create outdir if absent
-		echo "Creating ${SAMPDATADIR}/GAMA"
-		mkdir -p "${SAMPDATADIR}/GAMA"
+	if [ ! -d "${SAMPDATADIR}/GAMMA" ]; then  #create outdir if absent
+		echo "Creating ${SAMPDATADIR}/GAMMA"
+		mkdir -p "${SAMPDATADIR}/GAMMA"
 	fi
-	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/gamma:1.4--hdfd78af_0 GAMMA.py /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta /SAMPDIR/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}
-	echo -e "GAMA:1.4 -- GAMMA.py ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta ${local_DBs}/star/${ResGANNCBI_srst2_filename}_srst2.fasta ${SAMPDATADIR}/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}" >> "${command_log_file}"
+	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES docker://quay.io/biocontainers/gamma:1.4--hdfd78af_0 GAMMA.py /SAMPDIR/Assembly/${isolate_name}_scaffolds_trimmed.fasta /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta /SAMPDIR/GAMMA/${isolate_name}.${ResGANNCBI_srst2_filename}
+	echo -e "GAMMA:1.4 -- GAMMA.py ${SAMPDATADIR}/Assembly/${isolate_name}_scaffolds_trimmed.fasta ${local_DBs}/star/${ResGANNCBI_srst2_filename}_srst2.fasta ${SAMPDATADIR}/GAMMA/${isolate_name}.${ResGANNCBI_srst2_filename}" >> "${command_log_file}"
 
-	python3 ${src}/GAMMA_ResGANNCBI_file_converter.py ${SAMPDIR}/GAMA/${isolate_name}.${ResGANNCBI_srst2_filename}.gamma
+	python3 ${src}/GAMMA_ResGANNCBI_file_converter.py ${SAMPDIR}/GAMMA/${isolate_name}.${ResGANNCBI_srst2_filename}.gamma
 
 	end=$SECONDS
-	timeGAMA=$((end - start))
-	echo "GAMA - ${timeGAMA} seconds" >> "${time_summary}"
-	totaltime=$((totaltime + timeGAMA))
+	timeGAMMA=$((end - start))
+	echo "GAMMA - ${timeGAMMA} seconds" >> "${time_summary}"
+	totaltime=$((totaltime + timeGAMMA))
 
 	# Task: Get MLST profile
 	write_Progress
@@ -1851,21 +1851,21 @@ for isolate in "${isolate_list[@]}"; do
 	# 	echo -e "plasmidFinder:2.1 -- plasmidfinder.py -i ${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -o ${SAMPDATADIR}/plasmidFinder_on_plasFlow -p /opt/plasmidfinder_db -t ${plasmidFinder_identity}\n" >> "${command_log_file}"
 	# 	python "${src}/json_plasmidFinder_converter.py" -i "${SAMPDATADIR}/plasmidFinder_on_plasFlow/data.json" -o "${SAMPDATADIR}/plasmidFinder_on_plasFlow/${isolate_name}_results_table_summary.txt"
 	#
-	# 	# Task: Use GAMA to find any AR genes in plasFlow assembly_length
+	# 	# Task: Use GAMMA to find any AR genes in plasFlow assembly_length
 	# 	write_Progress
 	# 	task_number=26
-	# 	echo "----- Identifying AR genes with GAMA -----"
-	# 	if [ ! -d "${SAMPDATADIR}/GAMA_plasFlow" ]; then  #create outdir if absent
-	# 		echo "Creating ${SAMPDATADIR}/GAMA_plasFlow"
-	# 		mkdir -p "${SAMPDATADIR}/GAMA_plasFlow"
+	# 	echo "----- Identifying AR genes with GAMMA -----"
+	# 	if [ ! -d "${SAMPDATADIR}/GAMMA_plasFlow" ]; then  #create outdir if absent
+	# 		echo "Creating ${SAMPDATADIR}/GAMMA_plasFlow"
+	# 		mkdir -p "${SAMPDATADIR}/GAMMA_plasFlow"
 	# 	fi
-	# 	#singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${local_DBs}/singularities/GAMA_quaisar.simg python3 /GAMA/GAMA_quaisar.py -i /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta -o /SAMPDIR/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA
-	# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES	docker://quay.io/biocontainers/gamma:1.4--hdfd78af_0 GAMMA.py /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta /SAMPDIR/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}
+	# 	#singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES ${local_DBs}/singularities/GAMMA_quaisar.simg python3 /GAMMA/GAMMA_quaisar.py -i /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta -o /SAMPDIR/GAMMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMMA
+	# 	singularity -s exec -B ${SAMPDATADIR}:/SAMPDIR -B ${local_DBs}:/DATABASES	docker://quay.io/biocontainers/gamma:1.4--hdfd78af_0 GAMMA.py /SAMPDIR/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta /SAMPDIR/GAMMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}
 	#
-	# 	#echo -e "GAMA:4.7.4 -- python3 /GAMA/GAMA_quaisar.py -i ${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta -o ${SAMPDATADIR}/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMA\n" >> "${command_log_file}"
-	# 	echo -e "GAMMA:1.4 -- GAMMA.py ${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta ${SAMPDATADIR}/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}\n" >> "${command_log_file}"
+	# 	#echo -e "GAMMA:4.7.4 -- python3 /GAMMA/GAMMA_quaisar.py -i ${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta -d /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta -o ${SAMPDATADIR}/GAMMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.GAMMA\n" >> "${command_log_file}"
+	# 	echo -e "GAMMA:1.4 -- GAMMA.py ${SAMPDATADIR}/plasFlow/Unicycler_assemblies/${isolate_name}_uni_assembly/${isolate_name}_plasmid_assembly_trimmed.fasta /DATABASES/star/${ResGANNCBI_srst2_filename}_srst2.fasta ${SAMPDATADIR}/GAMMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}\n" >> "${command_log_file}"
 	#
-	# 	python3 ${src}/GAMMA_ResGANNCBI_file_converter.py ${SAMPDIR}/GAMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.gamma
+	# 	python3 ${src}/GAMMA_ResGANNCBI_file_converter.py ${SAMPDIR}/GAMMA_plasFlow/${isolate_name}.${ResGANNCBI_srst2_filename}.gamma
 	#
 	# 	end=$SECONDS
 	# 	timeplasflow=$((end - start))

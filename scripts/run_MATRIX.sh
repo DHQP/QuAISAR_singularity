@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/bash -l
 
 #
 # Description: Pulls out MLST, AR genes, and plasmid repicons and creates a mashtree for the listed samples and consolidates them into one sheet when run from an alternate or old database
@@ -75,11 +75,15 @@ if [[ ! -d ${output_directory} ]]; then
 	echo "Something went wrong, run folder does not exist"
 	exit
 else
-	if [[ -f ${output_directory}/${run_name}/${run_name}_list.txt ]]; then
-		list_file=${output_directory}/${run_name}/${run_name}_list.txt
+	if [[ -f ${output_directory}/${run_name}_list.txt ]]; then
+		list_file=${output_directory}/${run_name}_list.txt
 	else
 		echo "Something went wrong, there is no sample list file in the run directory"
 		exit
+	fi
+	if [[ -f ${output_directory}/config_${run_name}.sh ]]; then
+		config=${output_directory}/config_${run_name}.sh
+		. ${config}
 	fi
 fi
 
@@ -149,8 +153,8 @@ while IFS= read -r line || [ -n "$line" ]; do
 	sample_name=$(echo "${line}" | awk -F/ '{ print $2}' | tr -d '[:space:]')
 	project=$(echo "${line}" | awk -F/ '{ print $1}' | tr -d '[:space:]')
 	SAMPLE_DATADIR="${output_directory}/${sample_name}"
-	echo "checking for ${SAMPLE_DATADIR}/c-sstar/${sample_name}.${database_and_version}.${gapping}_${sim}_sstar_summary.txt"
-	if [[ -s "${SAMPLE_DATADIR}/c-sstar/${sample_name}.${database_and_version}.${gapping}_${sim}_sstar_summary.txt" ]];
+	echo "checking for ${SAMPLE_DATADIR}/c-sstar/${sample_name}.${database_and_version}.${csstar_gapping}_${sim}_sstar_summary.txt"
+	if [[ -s "${SAMPLE_DATADIR}/c-sstar/${sample_name}.${database_and_version}.${csstar_gapping}_${sim}_sstar_summary.txt" ]];
 	then
 		#echo "${project}/${sample_name} has newest ResGANNCBI for normal csstar already"
 		:
@@ -231,9 +235,9 @@ while IFS= read -r line; do
 	project=$(echo "${line}" | awk -F/ '{ print $1}' | tr -d '[:space:]')
 	SAMPLE_DATADIR="${output_directory}/${sample_name}"
 
-	if [[ -f "${SAMPLE_DATADIR}/c-sstar/${sample_name}.${database_and_version}.${gapping}_${sim}_sstar_summary.txt" ]]; then
+	if [[ -f "${SAMPLE_DATADIR}/c-sstar/${sample_name}.${database_and_version}.${csstar_gapping}_${sim}_sstar_summary.txt" ]]; then
 		csstar_list=""
-		ARDB_full="${SAMPLE_DATADIR}/c-sstar/${sample_name}.${database_and_version}.${gapping}_${sim}_sstar_summary.txt"
+		ARDB_full="${SAMPLE_DATADIR}/c-sstar/${sample_name}.${database_and_version}.${csstar_gapping}_${sim}_sstar_summary.txt"
 		#echo "${ARDB_full}"
 		# Extracts all AR genes from normal csstar output file and creates a lits of all genes that pass the filtering steps
 		while IFS= read -r line; do
@@ -278,7 +282,7 @@ while IFS= read -r line; do
 		echo "${project}	${sample_name}	NO CURRENT FILE" >> ${output_directory}/${run_name}-csstar_summary.txt
 		others=$(ls "${SAMPLE_DATADIR}/csstar")
 		echo "${others}"
-		echo "NOT FOUND - ${SAMPLE_DATADIR}/c-sstar/${sample_name}.${database_and_version}.${gapping}_${sim}_sstar_summary.txt"
+		echo "NOT FOUND - ${SAMPLE_DATADIR}/c-sstar/${sample_name}.${database_and_version}.${csstar_gapping}_${sim}_sstar_summary.txt"
 		csstar_list="NO CURRENT FILE"
 	fi
 
