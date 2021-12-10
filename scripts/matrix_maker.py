@@ -260,7 +260,7 @@ def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim):
 		#print("\n")
 		print("Total plasmid replicons in sample set: 0")
 	else:
-		print("Total plasmid replicons in sample set:", len(all_plasmids_in_file)-1)
+		print("Total plasmid replicons in sample set:", len(all_plasmids_in_file))
 		print(*all_plasmids_in_file, sep= "\n")
 	print()
 	plas_file.close
