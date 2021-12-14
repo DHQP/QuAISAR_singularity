@@ -303,9 +303,9 @@ while IFS= read -r line; do
 				continue
 			fi
 			IFS='	' read -r -a ar_line <<< "$line"
-			percent_BP_ID=$(echo "${ar_line[12]}" | awk '{ printf "%d", ($1*100) }' )
-			percent_codon_ID=$(echo "${ar_line[11]}" | awk '{ printf "%d", ($1*100) }' )
-			percent_length=$(echo "${ar_line[13]}" | awk '{ printf "%d", ($1*100) }' )
+			percent_BP_ID=$(echo "${ar_line[13]}" | awk '{ printf "%d", ($1*100) }' )
+			percent_codon_ID=$(echo "${ar_line[12]}" | awk '{ printf "%d", ($1*100) }' )
+			percent_length=$(echo "${ar_line[14]}" | awk '{ printf "%d", ($1*100) }' )
 			conferred=$(echo "${ar_line[1]}" | rev | cut -d'_' -f2- | rev)
 			contig_number=$(echo "${ar_line[4]}" | rev | cut -d'_' -f3 | rev)
 			gene="${ar_line[3]}"
