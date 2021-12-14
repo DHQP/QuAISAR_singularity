@@ -2175,14 +2175,21 @@ run_task_id=10
 runsumdate=$(date "+%m_%d_%Y_at_%Hh_%Mm")
 ${src}/run_sum.sh ${PROJDATADIR} ${src} ${local_DBs}
 
-# Task: Copy config file to run folder to show configuration used in the run
+# Task: Create matrix summary
 write_Progress
 run_task_id=11
+${src}/run_MATRIX.sh -r ${PROJECT} -c ${config_file}
+
+# Task: Copy config file to run folder to show configuration used in the run
+write_Progress
+run_task_id=12
 echo "Moving config file(${config_file}) to log directory ($log_dir)"
 cp "${config_file}" "${log_dir}/config_${PROJECT}.sh"
 
+
+
 write_Progress
-run_task_id=12
+run_task_id=13
 end_date=$(date "+%m_%d_%Y_at_%Hh_%Mm")
 echo "Run ended at ${end_date}" #>> "${log_file}"
 
