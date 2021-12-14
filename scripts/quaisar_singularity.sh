@@ -2112,7 +2112,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 
 	# Pulls busco info from summary file
 	busco_info="No BUSCO performed"
-	if [[ -s "${SAMPDATADIR}/BUSCO/short_summary_${isolate_name}_BUSCO.txt" ]]; then
+	if [[ -s "${SAMPDATADIR}/BUSCO/short_summary_${isolate_name}.txt" ]]; then
 		while IFS= read -r line; do
 			if [[ ${line} == *"Complete BUSCOs (C)"* ]]
 			then
@@ -2127,7 +2127,7 @@ while IFS= read -r var || [ -n "$var" ]; do
 				#echo "L-"${line}
 				db=$(echo "${line}" | awk -F ' ' '{print $6}')
 			fi
-		done < ${SAMPDATADIR}/BUSCO/short_summary_${isolate_name}_BUSCO.txt
+		done < ${SAMPDATADIR}/BUSCO/short_summary_${isolate_name}.txt
 		busco_info="${found_buscos}/${total_buscos}(${db})"
 	fi
 	# Pulls ANI info from best_ANI_hits file
