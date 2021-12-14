@@ -577,7 +577,7 @@ while IFS= read -r line; do
 	echo -e "${project}\t${sample_name}\t${alt_mlst}\t${alt_alleles}" >> ${output_directory}/${run_name}-alt_mlst_summary.txt
 
 	# Print all extracted info to primary file
-	echo -e "${project}\t${sample_name}\t${project_path}\t${taxonomy}\t${taxonomy_source_type}\t${confidence_info}\t${mlst}\t${alleles}\t${alt_mlst}\t${alt_alleles}\t${csstar_list}\t${srst2_results}\t${GAMMA_list}" >> ${output_directory}/${run_name}-sample_summary.txt
+	echo -e "${project}\t${sample_name}\t${output_dir}\t${taxonomy}\t${taxonomy_source_type}\t${confidence_info}\t${mlst}\t${alleles}\t${alt_mlst}\t${alt_alleles}\t${csstar_list}\t${srst2_results}\t${GAMMA_list}" >> ${output_directory}/${run_name}-sample_summary.txt
 
 	# Goes through the plasmid file of the sample and adds all found plasmid replicons to the summary file
 	#echo "Starting plasmid extraction"
