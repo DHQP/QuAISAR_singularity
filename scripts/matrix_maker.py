@@ -161,9 +161,9 @@ def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim):
 				print (gene)
 	print()
 
-	print("1#", len(samples))
-	for sample in samples:
-		print(sample[1])
+	# print("1#", len(samples))
+	# for sample in samples:
+	# 	print(sample[1])
 
 	#Parse plasmid summary file
 	all_plasmids_in_file=[]
