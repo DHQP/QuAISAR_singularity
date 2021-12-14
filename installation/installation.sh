@@ -152,7 +152,7 @@ echo "local_DBs=${databases}" >> ${installation_location}/new_config.sh
 head -n31 ${install_script_dir}/installation/config_template.sh | tail -n1 >> ${installation_location}/new_config.sh
 CPUs=$(nproc --all)
 echo "procs=${CPUs}" >> ${installation_location}/new_config.sh
-tail -n91 ${install_script_dir}/installation/config_template.sh >> ${installation_location}/new_config.sh
+tail -n83 ${install_script_dir}/installation/config_template.sh >> ${installation_location}/new_config.sh
 echo "source ${HOME}/miniconda3/etc/profile.d/conda.sh" >> ${installation_location}/new_config.sh
 
 # Copy all scripts from this folder to install location

@@ -1,7 +1,6 @@
 #! /usr/bin/env bash
 #!/bin/bash -l
 
-
 #
 # Description: Script to consolidate all configuration type settings for QuAISAR pipeline and any tools contained within
 # 	Just needs to be sourced within a script to acquire all variables stored within
@@ -31,15 +30,9 @@ host=$(echo "${hostname}" | cut -d'.' -f1)
 # local_DBs=""
 # Number of processors requested by numerous applications within the pipeline
 procs=4 # Number of processors
-#
-# if [[ ! -d "${local_DBs}" ]]; then
-#   #echo "Database folder does not exist, please be aware
-#   :
-# fi
+
 
 ############# Application Specific Options #############
-
-
 #####BBDUK specific config options #####
 #requested memory size block
 bbduk_mem=Xmx2g
@@ -89,23 +82,13 @@ spades_max_memory=32
 #Max number of samples to be kept (not including source sample) when creating the mash tree
 max_ani_samples=20
 ani_coverage_threshold=70
-# Shortcuts used to find newest REFSEQ mash sketch
 
-# if [[ -d "${local_DBs}" ]]; then
-#   REFSEQ=$(find ${local_DBs}/ANI -maxdepth 1 -name "REFSEQ_*.msh" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-#   REFSEQ_date=$(echo "${REFSEQ}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f2 | cut -d'.' -f1)
-# else
-#   REFSEQ="NO_DB_FOUND"
-#   REFSEQ_date="NO_DB_FOUND"
-# fi
 
 ##### c-SSTAR standard settings #####
 # gapped versus ungapped
 csstar_gapping="gapped"
 # Value used for %id cutoff in csstar (Identity % 100(p), 99(u), 98(h), 95(m), 80(low))
 csim=98
-# Value used for %id cutoff in csstar_plasFlow (Identity % 100(p), 99(u), 98(h), 95(m), 80(low))
-cpsim=40
 
 
 ##### kraken unclassified threshold ######
@@ -118,14 +101,6 @@ contamination_threshold=25
 # kraken_DB=$(echo "${kraken_DB_path}" | rev | cut -d'/' -f1 | rev)
 
 
-# ##### gottcha #####
-# # gottcha DB
-# gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30.species"
-#
-# #gottcha_DB_path="${local_DBs}/gottcha/GOTTCHA_BACTERIA_c4937_k24_u30__xHUMAN3x.species"
-# gottcha_DB=$(echo ${gottcha_DB_path} | rev | cut -d'/' -f1 | rev)
-
-
 ##### plasmidFinder ######
 #percent identity to match
 plasmidFinder_identity=.95
@@ -133,11 +108,8 @@ plasmidFinder_identity=.95
 plasmidFinder_length=60
 
 
-# # Shortcuts used to reference NEWEST AR database
-# if [[ -d "${local_DBs}" ]]; then
-#   ResGANNCBI_srst2=$(find ${local_DBs}/star -maxdepth 1 -name "ResGANNCBI_*_srst2.fasta" -type f -printf '%p\n' | sort -k2,2 -rt '_' -n | head -n 1)
-#   ResGANNCBI_srst2_filename=$(echo "${ResGANNCBI_srst2}" | rev | cut -d'/' -f1 | rev | cut -d'_' -f1,2)
-# else
-#   ResGANNCBI_srst2="NO_DB_FOUND"
-#   ResGANNCBI_srst2_filename="NO_DB_FOUND"
-# fi
+##### Matrix creation variables #####
+# Minimum % similarity (floor rounded) required to be included in report, otherwise gets placed in rejects file
+project_parser_Percent_sim=98
+# Minimum % length required to be included in report, otherwise gets placed in rejects file
+project_parser_Percent_length=90
