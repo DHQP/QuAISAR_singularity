@@ -104,8 +104,10 @@ project_parser_Percent_identity=${csim}
 . "${src}/get_latest_DBs.sh" "${local_DBs}"
 database_path=$(get_srst2)
 database_and_version=$(get_srst2_filename)
+AR_database_date=$(echo ${database_and_version} | rev | cut -d'_' -f1 | rev)
 ani_database_path=$(get_ANI_REFSEQ)
 ani_database_and_version=$(get_ANI_REFSEQ_Date)
+
 
 echo "AR path and version - ${database_path} and ${database_and_version}"
 echo "ANI path and version - ${ani_database_path} and ${ani_database_and_version}"
@@ -363,7 +365,7 @@ while IFS= read -r line; do
 					#fi
 				fi
 				confers=${confers,,//_resistance/}
-				if [[ "${database_date}" -ge 20210507 ]]; then
+				if [[ "${AR_database_date}" -ge 20210507 ]]; then
 					allele=$(echo "${line}" | cut -d'	' -f4)
 				else
 					allele=$(echo "${line}" | cut -d'	' -f4  | rev | cut -d'_' -f2- | rev)
