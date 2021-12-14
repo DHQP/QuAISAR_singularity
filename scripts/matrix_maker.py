@@ -259,6 +259,8 @@ def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim):
 	if len(all_plasmids_in_file) == 0:
 		#print("\n")
 		print("Total plasmid replicons in sample set: 0")
+	elif len(all_plasmids_in_file) == 1 and all_plasmids_in_file[0] == "No_Plasmids_Found":
+		print("Total plasmid replicons in sample set: 0")
 	else:
 		print("Total plasmid replicons in sample set:", len(all_plasmids_in_file))
 		print(*all_plasmids_in_file, sep= "\n")
