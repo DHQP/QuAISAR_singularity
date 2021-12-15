@@ -286,7 +286,7 @@ def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim, perce
 	#	print ("2:",sample[0])
 	#return
 	for sample in samples:
-		sample_details=[sample[1], sample[2], sample[0], sample[3], sample[4], sample[5], sample[6], sample[7], sample[8], sample[9], DB_name+" (["+percent_sim+"NT/"+perfect_length+"]C:[XNT/"+percent_sim+"AA/"+percent_length"+]G:["+percent_sim+"NT/"+percent_length+"]S)"]
+		sample_details=[sample[1], sample[2], sample[0], sample[3], sample[4], sample[5], sample[6], sample[7], sample[8], sample[9], DB_name+" (["+percent_sim+"NT/"+perfect_length+"]C:[XNT/"+percent_sim+"AA/"+percent_length+"]G:["+percent_sim+"NT/"+percent_length+"]S)"]
 		print("pre:", len(sample),sample)
 		for gene in all_ar_and_plasmids:
 			status=" "
