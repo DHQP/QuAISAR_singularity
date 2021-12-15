@@ -33,7 +33,7 @@ def parseArgs(args=None):
 
 
 # main function that sorts and formats all AR genes found using csstar, GAMA and srst2 that have already been filtered for % identity and % length
-def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim):
+def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim, percent_length):
 	all_ARs_in_file=[]
 	samples=[]
 	input_summary=open(input_summary_AR,'r')
@@ -286,7 +286,7 @@ def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim):
 	#	print ("2:",sample[0])
 	#return
 	for sample in samples:
-		sample_details=[sample[1], sample[2], sample[0], sample[3], sample[4], sample[5], sample[6], sample[7], sample[8], sample[9], DB_name+" (["+percent_sim+"NT/"+length+"]C:[XNT/"+percent_sim+"AA/"+length"+]G:["+percent_sim+"NT/"+length+"]S)"]
+		sample_details=[sample[1], sample[2], sample[0], sample[3], sample[4], sample[5], sample[6], sample[7], sample[8], sample[9], DB_name+" (["+percent_sim+"NT/"+perfect_length+"]C:[XNT/"+percent_sim+"AA/"+percent_length"+]G:["+percent_sim+"NT/"+percent_length+"]S)"]
 		print("pre:", len(sample),sample)
 		for gene in all_ar_and_plasmids:
 			status=" "
@@ -316,4 +316,4 @@ def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim):
 
 print("Parsing project AR files ...\n")
 args = parseArgs()
-do_AR(args.summary, args.plasmid, args.output, args.database, args.sim)
+do_AR(args.summary, args.plasmid, args.output, args.database, args.sim, args.length)
