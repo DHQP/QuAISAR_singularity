@@ -28,6 +28,7 @@ def parseArgs(args=None):
 	parser.add_argument('-o', '--output', required=True, help='output csv filename')
 	parser.add_argument('-d', '--database', required=True, help='database file used in AR discovery')
 	parser.add_argument('-m', '--sim', required=True, help='database %id used for filtering')
+	parser.add_argument('-l', '--length', required=True, help='database % length used for filtering')
 	return parser.parse_args()
 
 
@@ -259,6 +260,7 @@ def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim):
 	if len(all_plasmids_in_file) == 0:
 		#print("\n")
 		print("Total plasmid replicons in sample set: 0")
+		all_plasmids_in_file=["No_Plasmids_Found"]
 	elif len(all_plasmids_in_file) == 1 and all_plasmids_in_file[0] == "No_Plasmids_Found":
 		print("Total plasmid replicons in sample set: 0")
 	else:
@@ -284,8 +286,8 @@ def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim):
 	#	print ("2:",sample[0])
 	#return
 	for sample in samples:
-		sample_details=[sample[1], sample[2], sample[0], sample[3], sample[4], sample[5], sample[6], sample[7], sample[8], sample[9], DB_name+" (["+percent_sim+"NT/90]C:[XNT/"+percent_sim+"AA/90]G:["+percent_sim+"NT/90]S)"]
-		#print("pre:", len(sample),sample)
+		sample_details=[sample[1], sample[2], sample[0], sample[3], sample[4], sample[5], sample[6], sample[7], sample[8], sample[9], DB_name+" (["+percent_sim+"NT/"+length+"]C:[XNT/"+percent_sim+"AA/"+length"+]G:["+percent_sim+"NT/"+length+"]S)"]
+		print("pre:", len(sample),sample)
 		for gene in all_ar_and_plasmids:
 			status=" "
 			#print(sample_details[2], sample_details[3], gene, len(sample))
