@@ -605,7 +605,7 @@ while IFS= read -r line; do
 done < ${list_file}
 
 # Calls script that sorts and formats all isolates info into a matrix for easy viewing
-python3 "${src}/matrix_maker.py" -s "${output_directory}/${run_name}-sample_summary.txt" -p "${output_directory}/${run_name}-plasmid_summary.txt" -o "${output_directory}/${run_name}_matrix.csv" -d "${database_and_version}" -m "${sim} -l ${project_parser_Percent_length}"
+python3 "${src}/matrix_maker.py" -s "${output_directory}/${run_name}-sample_summary.txt" -p "${output_directory}/${run_name}-plasmid_summary.txt" -o "${output_directory}/${run_name}_matrix.csv" -d "${database_and_version}" -m "${sim}" -l "${project_parser_Percent_length}"
 
 if [[ ! -d "${output_directory}/matrix_files" ]]; then
 	mkdir "${output_directory}/matrix_files"
