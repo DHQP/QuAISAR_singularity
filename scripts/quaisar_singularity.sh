@@ -802,7 +802,7 @@ for isolate in "${isolate_list[@]}"; do
 		# 	#echo "Found-${FILE}"
 		# 	#echo "${filename}"
 		#     mv "${FILE}" "${dirname}/${filename}"
-		done
+		# done
 
 		end=$SECONDS
 		timesrst2=$((end - start))
