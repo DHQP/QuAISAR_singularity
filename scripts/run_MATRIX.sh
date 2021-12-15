@@ -89,7 +89,8 @@ fi
 
 # Setting default
 sim=$csim
-project_parser_Percent_identity=${csim}
+### project_parser_Percent_sim and project_parser_Percent_length are set in config file
+
 
 # # Checks that value given for % Identity is one of the presets for csstar
 # if [[ "${sim}" != 80 ]] && [[ "${sim}" != 95 ]] && [[ "${sim}" != 98 ]] && [[ "${sim}" != 99 ]] && [[ "${sim}" != 100 ]]; then
@@ -604,7 +605,7 @@ while IFS= read -r line; do
 done < ${list_file}
 
 # Calls script that sorts and formats all isolates info into a matrix for easy viewing
-python3 "${src}/matrix_maker.py" -s "${output_directory}/${run_name}-sample_summary.txt" -p "${output_directory}/${run_name}-plasmid_summary.txt" -o "${output_directory}/${run_name}_matrix.csv" -d "${database_and_version}" -m "${sim}"
+python3 "${src}/matrix_maker.py" -s "${output_directory}/${run_name}-sample_summary.txt" -p "${output_directory}/${run_name}-plasmid_summary.txt" -o "${output_directory}/${run_name}_matrix.csv" -d "${database_and_version}" -m "${sim} -l ${project_parser_Percent_length}"
 
 if [[ ! -d "${output_directory}/matrix_files" ]]; then
 	mkdir "${output_directory}/matrix_files"
