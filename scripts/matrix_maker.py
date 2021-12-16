@@ -260,7 +260,7 @@ def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim, perce
 	if len(all_plasmids_in_file) == 0:
 		#print("\n")
 		print("Total plasmid replicons in sample set: 0")
-		all_plasmids_in_file=["No_Plasmids_Found"]
+		#all_plasmids_in_file=["No_Plasmids_Found"]
 	elif len(all_plasmids_in_file) == 1 and all_plasmids_in_file[0] == "No_Plasmids_Found":
 		print("Total plasmid replicons in sample set: 0")
 	else:
@@ -287,7 +287,7 @@ def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim, perce
 	#return
 	for sample in samples:
 		sample_details=[sample[1], sample[2], sample[0], sample[3], sample[4], sample[5], sample[6], sample[7], sample[8], sample[9], DB_name+"(["+percent_sim+"NT/"+percent_length+"]C:[XNT/"+percent_sim+"AA/"+percent_length+"]G:["+percent_sim+"NT/"+percent_length+"]S)"]
-		print("pre:", len(sample),sample)
+		#print("pre:", len(sample),sample)
 		for gene in all_ar_and_plasmids:
 			status=" "
 			#print(sample_details[2], sample_details[3], gene, len(sample))
