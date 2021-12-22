@@ -179,6 +179,20 @@ while IFS= read -r var || [ -n "$var" ]; do
 			else
 				notes="${notes}OLD ResGANNCBI DB used in srst2"
 			fi
+		elif [[ "${tool}" == "GAMMA" ]]; then
+			if [[ "${notes}" != "" ]]; then
+				notes="${notes},"
+			fi
+			if [[ "${tool_details}" = *"NO KNOWN AMR genes"* ]]; then
+				if [[ "${tool_details}" = *"(DB NOT up to date!"* ]]; then
+					notes="${notes}No GAMMA AMR found AND OLD ResGANNCBI DB used in srst2"
+				else
+					notes="${notes}No GAMMA AMR found"
+				fi
+			else
+				notes="${notes}OLD ResGANNCBI DB used in GAMMA"
+			fi
+
 		elif [[ "${tool}" == "preClassContam." ]]; then
 			if [[ "${notes}" != "" ]]; then
 				notes="${notes},"

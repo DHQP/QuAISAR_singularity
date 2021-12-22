@@ -248,7 +248,7 @@ def do_AR(input_summary_AR, input_plas, output_file, DB_name, percent_sim, perce
 		counter=counter+1
 
 	for sample_index in range(0,len(samples)):
-		print("Looking for", current_id, ", found", samples[sample_index][0].strip()+"/"+samples[sample_index][1].strip())
+		#print("Looking for", current_id, ", found", samples[sample_index][0].strip()+"/"+samples[sample_index][1].strip())
 		if current_id == samples[sample_index][0]+"/"+samples[sample_index][1].strip():
 			#print(samples[sample_index], "adding", sample_f_plasmids_dict, "and", sample_p_plasmids_dict)
 			samples[sample_index].append(sample_f_plasmids_dict)
