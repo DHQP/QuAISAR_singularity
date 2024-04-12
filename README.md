@@ -1,5 +1,5 @@
 # Quaisar_singularity - 
-# THIS SINGULARITY VERSION IS NO LONGER CURRENT!! An updated Nextflow version will be released soon!!!
+# THIS SINGULARITY VERSION IS NO LONGER CURRENT!! An updated Nextflow version is available at https://github.com/CDCgov/phoenix
 Quality, Assembly, Identification, Sequence type, Annotation, Resistance mechanisms for Hospital acquired infections (QuAISAR-H) is a mash-up of many publicly available tools with a splash of custom scripts with the purpose of producing a multi-layered quality checked report that identifies the taxonomy of and the Anti-microbial Resistance (AMR) elements from a paired end sequenced bacterial isolate.
 This version uses containers to ease the necessity of having many preinstalled tools.
 
